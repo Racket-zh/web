@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <title>Racket Blog (page 5)</title>
+    <meta name="description" content="Racket Blog (page 5)">
+    <meta name="author"      content="The Unknown Author">
+    <meta name="keywords"    content="Chez Scheme, all">
+    <meta name="viewport"    content="width=device-width, initial-scale=1.0">
+    <link rel="icon"      href="/favicon.ico">
+    <link rel="canonical" href="http://blog.racket-lang.org/index-5.html">
+
+
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog-fonts.css">
+    <!-- Feeds -->
+    <link rel="alternate" type="application/atom+xml" href="/feeds/all.atom.xml" title="Atom Feed">
+    <link rel="alternate" type="application/rss+xml" href="/feeds/all.rss.xml" title="RSS Feed">
+    <!-- JS -->
+    </head>
+  <body>
+<row class="one-column" id="logo"><col-1><a href="http://racket-lang.org"><div id="logo-container"><img id="logo" src="/img/racket-logo.svg"/> Racket</div></a></col-1><col-2><p><a href="/index.html">blog</a></p></col-2></row>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>31 Jul 2013</p></col-1>
+
+<col-2>
+  <h1><a href='/2013/07/racketcon-2013-signup.html'>RacketCon 2013 Signup</a></h1>
+  <div class="truncate">
+<p><em>posted by Asumu Takikawa</em></p>
+
+<p>RacketCon sign up is now open! <a href="http://bit.ly/racketconsignup2013">http://bit.ly/racketconsignup2013</a></p>
+
+<p>RacketCon will be held at Northeastern University in Boston on September 29. The details of the event can be found on the website: <a href="http://con.racket-lang.org/">http://con.racket-lang.org</a></p>
+
+<p>We also have a page on Lanyrd for the event: <a href="http://lanyrd.com/2013/racketcon/">http://lanyrd.com/2013/racketcon/</a></p>
+
+<p>More information about the schedule will be posted in the upcoming weeks.</p></div>
+  <a class="more" href='/2013/07/racketcon-2013-signup.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>18 Jun 2013</p></col-1>
+
+<col-2>
+  <h1><a href='/2013/06/racket-v535.html'>Racket v5.3.5</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>Racket version 5.3.5 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a> This is a special-purpose release to match the arrival of “Realm of Racket” in bookstores. Racket v5.3.5 adds a single <code>realm</code> collection to the v5.3.4 release. The new collection contains the source code that readers of Realm may wish to use for experiments.</p></div>
+  <a class="more" href='/2013/06/racket-v535.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>29 May 2013</p></col-1>
+
+<col-2>
+  <h1><a href='/2013/05/marketplace-a-language-for-network-aware-programming.html'>Marketplace: A language for network-aware programming</a></h1>
+  <div class="truncate">
+<p><em>posted by Sam Tobin-Hochstadt</em></p>
+
+<p>We are happy to announce the release of Marketplace, a new programming language for building functional network programs. Marketplace combines two fundamental ideas in a new way: nested virtual machines and publish/subscribe messaging. Nesting allows programs to isolate processes and to delimit conversations. While publish/subscribe generalizes point-to-point and broadcast messaging, it smoothly turns the appearance and disappearance of participants and resources into presence and absence messages. Such messages make it particularly easy to start and stop services and to manage resources based on demand.</p>
+
+<p>Here is a simple TCP echo server written in Marketplace: </p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">marketplace</span>
+
+<span class="p">(</span><span class="n">endpoint</span> <span class="kd">#:subscriber</span> <span class="p">(</span><span class="n">tcp-channel</span> <span class="n">?</span> <span class="p">(</span><span class="n">tcp-listener</span> <span class="mi">5999</span><span class="p">)</span> <span class="n">?</span><span class="p">)</span>
+          <span class="kd">#:conversation</span> <span class="p">(</span><span class="n">tcp-channel</span> <span class="n">from</span> <span class="n">to</span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span><span class="p">)</span>
+          <span class="kd">#:on-presence</span> <span class="p">(</span><span class="n">spawn</span> <span class="kd">#:child</span> <span class="p">(</span><span class="n">echoer</span> <span class="n">from</span> <span class="n">to</span><span class="p">)))</span>
+
+<span class="c1">;; echoer: TcpAddress TcpAddress -&gt; Transition</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">echoer</span> <span class="n">from</span> <span class="n">to</span><span class="p">)</span>
+  <span class="p">(</span><span class="n">transition</span> <span class="n">stateless</span>
+    <span class="p">(</span><span class="n">endpoint</span> <span class="kd">#:subscriber</span> <span class="p">(</span><span class="n">tcp-channel</span> <span class="n">from</span> <span class="n">to</span> <span class="n">?</span><span class="p">)</span>
+              <span class="kd">#:on-absence</span> <span class="p">(</span><span class="n">quit</span><span class="p">)</span>
+              <span class="p">[(</span><span class="n">tcp-channel</span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="n">data</span><span class="p">)</span>
+               <span class="p">(</span><span class="n">send-message</span> <span class="p">(</span><span class="n">tcp-channel</span> <span class="n">to</span> <span class="n">from</span> <span class="n">data</span><span class="p">))])))</span>
+</pre></div>
+
+</div>
+
+<p>The initial endpoint subscribes to TCP messages on port 5999. When a conversational partner appears, the endpoint spawns a new process that runs an echoer process. The latter is stateless and subscribes to TCP messages. When it gets messages with payload data, it sends them back out with the opposite addressing; when the TCP conversation disappears, it quits.</p>
+
+<p>Thus far, we have built several real systems using Marketplace: a DNS server, a DNS proxy, and an SSH server.</p>
+
+<p>The DNS proxy has handled DNS traffic for ourselves and other members of our lab for the last several months.</p>
+
+<p>You can read an overview along with detailed documentation for Marketplace at <a href="http://tonyg.github.io/marketplace/">http://tonyg.github.io/marketplace/</a>.</p>
+
+<p>To get the sources for Marketplace as well as the applications point your browser to <a href="https://github.com/tonyg/marketplace">https://github.com/tonyg/marketplace</a>.</p>
+
+<p>Enjoy!</p>
+
+<p>Tony Garnock-Jones</p>
+
+<p>Sam Tobin-Hochstadt</p>
+
+<p>Matthias Felleisen</p></div>
+  <a class="more" href='/2013/05/marketplace-a-language-for-network-aware-programming.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>08 May 2013</p></col-1>
+
+<col-2>
+  <h1><a href='/2013/05/racket-v534.html'>Racket v5.3.4</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>Racket version 5.3.4 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<ul>
+ <li>
+  <p>Extflonums (80-bit floating-point numbers) are supported on some x86/x86_64 platforms — including Windows, and including platforms where Racket is compiled to use SSE instructions for flonum arithmetic. Thanks to Michael Filonenko.</p></li>
+ <li>
+  <p>OS X: DrRacket and all of the other apps are now signed with an official key.</p></li>
+ <li>
+  <p>Tally Maze: a new game based an enumeration of 2d mazes.</p></li>
+ <li>
+  <p>The Optimization Coach, a DrRacket plugin, has been moved from the Racket distribution to the Racket package repository. Install it with: <code>raco pkg install optimization-coach</code>.</p></li>
+ <li>
+  <p>Redex: <code>define-union-language</code> now merges productions when languages define the same nonterminals. Thanks to William Bowman.</p></li>
+ <li>
+  <p>The <code>srfi/19</code> library is now compatible with the date structure type exported by <code>racket/base</code>.</p></li></ul></div>
+  <a class="more" href='/2013/05/racket-v534.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>08 May 2013</p></col-1>
+
+<col-2>
+  <h1><a href='/2013/05/racketcon-2013.html'>RacketCon 2013</a></h1>
+  <div class="truncate">
+<p><em>posted by Asumu Takikawa</em></p>
+
+<p>We are pleased to announce that (thirdRacketCon) will take place on September 29, 2013 at Northeastern University in Boston. This year, we plan to bring in several speakers from industry, as well as host talks from Racket developers and users.</p>
+
+<p>Lunch will be provided.</p>
+
+<p>On the Saturday (28th) before RacketCon, we plan to hold a hackathon to work on various Racket projects.</p>
+
+<p>Registration will open during the summer, and we will post a detailed schedule of events around the same time. The conference website is at</p>
+
+<p><a href="http://con.racket-lang.org/">http://con.racket-lang.org/</a></p></div>
+  <a class="more" href='/2013/05/racketcon-2013.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>25 Mar 2013</p></col-1>
+
+<col-2>
+  <h1><a href='/2013/03/200.html'>200!</a></h1>
+  <div class="truncate">
+<p><em>posted by Asumu Takikawa</em></p>
+
+<p>About a month ago, inspired by a mailing list post by Tim Brown, Racketeers started to write more solutions to <a href="http://rosettacode.org/wiki/Rosetta_Code">Rosetta Code</a> tasks for Racket. Just today, we&rsquo;ve reached 200 entries in the <a href="http://rosettacode.org/wiki/Category:Racket">Racket category</a>!</p>
+
+<p>This is a nice milestone, but we still have a ways to go. At 200 entries, Racket comes in at around 54th in the <a href="http://rosettacode.org/wiki/RC_POP.OUT">popularity</a> rankings. So if you&rsquo;re looking to practice your Racketeering skills, don&rsquo;t hesitate to work on some of the <a href="http://rosettacode.org/wiki/Reports:Tasks_not_implemented_in_Racket">remaining tasks</a>.</p>
+
+<p>To give you a taste of the kinds of solutions we have so far, here are some examples.</p>
+
+<p>Mandelbrot:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">iterations</span> <span class="n">a</span> <span class="n">z</span> <span class="n">i</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">z′</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._*))" style="color: inherit">*</a></span> <span class="n">z</span> <span class="n">z</span><span class="p">)</span> <span class="n">a</span><span class="p">))</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((quote._~23~25kernel)._if))" style="color: inherit">if</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._or))" style="color: inherit">or</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3d))" style="color: inherit">=</a></span> <span class="n">i</span> <span class="mi">255</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._magnitude))" style="color: inherit">magnitude</a></span> <span class="n">z′</span><span class="p">)</span> <span class="mi">2</span><span class="p">))</span>
+      <span class="n">i</span>
+      <span class="p">(</span><span class="n">iterations</span> <span class="n">a</span> <span class="n">z′</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._add1))" style="color: inherit">add1</a></span> <span class="n">i</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">iter-&gt;color</span> <span class="n">i</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((quote._~23~25kernel)._if))" style="color: inherit">if</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3d))" style="color: inherit">=</a></span> <span class="n">i</span> <span class="mi">255</span><span class="p">)</span>
+      <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/objcreation.html#(def._((lib._racket/private/class-internal..rkt)._make-object))" style="color: inherit">make-object</a></span> <span class="n">color%</span> <span class="s2">"black"</span><span class="p">)</span>
+      <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/objcreation.html#(def._((lib._racket/private/class-internal..rkt)._make-object))" style="color: inherit">make-object</a></span> <span class="n">color%</span> 
+        <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._*))" style="color: inherit">*</a></span> <span class="mi">5</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._modulo))" style="color: inherit">modulo</a></span> <span class="n">i</span> <span class="mi">15</span><span class="p">))</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._*))" style="color: inherit">*</a></span> <span class="mi">32</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._modulo))" style="color: inherit">modulo</a></span> <span class="n">i</span> <span class="mi">7</span><span class="p">))</span> 
+          <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._*))" style="color: inherit">*</a></span> <span class="mi">8</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._modulo))" style="color: inherit">modulo</a></span> <span class="n">i</span> <span class="mi">31</span><span class="p">)))))</span>
+
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">mandelbrot</span> <span class="n">width</span> <span class="n">height</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">target</span> <span class="p">(</span><span class="n">make-screen-bitmap</span> <span class="n">width</span> <span class="n">height</span><span class="p">))</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">dc</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/objcreation.html#(form._((lib._racket/private/class-internal..rkt)._new))" style="color: inherit">new</a></span> <span class="n">bitmap-dc%</span> <span class="p">[</span><span class="n">bitmap</span> <span class="n">target</span><span class="p">]))</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/for.html#(form._((lib._racket/private/base..rkt)._for*))" style="color: inherit">for*</a></span> <span class="p">([</span><span class="n">x</span> <span class="n">width</span><span class="p">]</span> <span class="p">[</span><span class="n">y</span> <span class="n">height</span><span class="p">])</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">real-x</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._*))" style="color: inherit">*</a></span> <span class="mf">3.0</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._/))" style="color: inherit">/</a></span> <span class="n">x</span> <span class="n">width</span><span class="p">))</span> <span class="mf">2.25</span><span class="p">))</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">real-y</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._*))" style="color: inherit">*</a></span> <span class="mf">2.5</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._/))" style="color: inherit">/</a></span> <span class="n">y</span> <span class="n">height</span><span class="p">))</span> <span class="mf">1.25</span><span class="p">))</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/ivaraccess.html#(form._((lib._racket/private/class-internal..rkt)._send))" style="color: inherit">send</a></span> <span class="n">dc</span> <span class="n">set-pen</span> 
+      <span class="p">(</span><span class="n">iter-&gt;color</span> 
+        <span class="p">(</span><span class="n">iterations</span> 
+          <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._make-rectangular))" style="color: inherit">make-rectangular</a></span> <span class="n">real-x</span> <span class="n">real-y</span><span class="p">)</span> <span class="mi">0</span> <span class="mi">0</span><span class="p">))</span> <span class="mi">1</span> <span class="o">'</span><span class="ss">solid</span><span class="p">)</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/ivaraccess.html#(form._((lib._racket/private/class-internal..rkt)._send))" style="color: inherit">send</a></span> <span class="n">dc</span> <span class="n">draw-point</span> <span class="n">x</span> <span class="n">y</span><span class="p">))</span>
+  <span class="n">target</span><span class="p">)</span>
+
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="n">mandelbrot300200</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>Yin and Yang:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">yin-yang</span> <span class="n">d</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">base</span>
+    <span class="p">(</span><span class="n">hc-append</span> <span class="p">(</span><span class="n">inset/clip</span> <span class="p">(</span><span class="n">circle</span> <span class="n">d</span><span class="p">)</span> <span class="mi">0</span> <span class="mi">0</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._/))" style="color: inherit">/</a></span> <span class="n">d</span> <span class="mi">2</span><span class="p">))</span> <span class="mi">0</span><span class="p">)</span>
+               <span class="p">(</span><span class="n">inset/clip</span> <span class="p">(</span><span class="n">disk</span> <span class="n">d</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._/))" style="color: inherit">/</a></span> <span class="n">d</span> <span class="mi">2</span><span class="p">))</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span><span class="p">)))</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">with-top</span>
+    <span class="p">(</span><span class="n">ct-superimpose</span>
+     <span class="n">base</span>
+     <span class="p">(</span><span class="n">cc-superimpose</span> <span class="p">(</span><span class="n">colorize</span> <span class="p">(</span><span class="n">disk</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._/))" style="color: inherit">/</a></span> <span class="n">d</span> <span class="mi">2</span><span class="p">))</span> <span class="s2">"white"</span><span class="p">)</span>
+                     <span class="p">(</span><span class="n">disk</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._/))" style="color: inherit">/</a></span> <span class="n">d</span> <span class="mi">8</span><span class="p">)))))</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">with-bottom</span>
+    <span class="p">(</span><span class="n">cb-superimpose</span>
+     <span class="n">with-top</span>
+     <span class="p">(</span><span class="n">cc-superimpose</span> <span class="p">(</span><span class="n">disk</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._/))" style="color: inherit">/</a></span> <span class="n">d</span> <span class="mi">2</span><span class="p">))</span>
+                     <span class="p">(</span><span class="n">colorize</span> <span class="p">(</span><span class="n">disk</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._/))" style="color: inherit">/</a></span> <span class="n">d</span> <span class="mi">8</span><span class="p">))</span> <span class="s2">"white"</span><span class="p">))))</span>
+  <span class="p">(</span><span class="n">cc-superimpose</span> <span class="n">with-bottom</span> <span class="p">(</span><span class="n">circle</span> <span class="n">d</span><span class="p">)))</span>
+
+
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="n">yin-yang</span> <span class="mi">200</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>Animate a pendulum:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">racket</span>
+
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="n">2htdp/image</span>
+         <span class="n">2htdp/universe</span><span class="p">)</span>
+
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">pendulum</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">accel</span> <span class="n">θ</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._sin))" style="color: inherit">sin</a></span> <span class="n">θ</span><span class="p">)))</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">θ</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._/))" style="color: inherit">/</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((lib._racket/math..rkt)._pi))" style="color: inherit">pi</a></span> <span class="mf">2.5</span><span class="p">))</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">θ′</span> <span class="mi">0</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">θ′′</span> <span class="p">(</span><span class="n">accel</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._/))" style="color: inherit">/</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((lib._racket/math..rkt)._pi))" style="color: inherit">pi</a></span> <span class="mf">2.5</span><span class="p">)))</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">x</span> <span class="n">θ</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="mi">200</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._*))" style="color: inherit">*</a></span> <span class="mi">150</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._sin))" style="color: inherit">sin</a></span> <span class="n">θ</span><span class="p">))))</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">y</span> <span class="n">θ</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._*))" style="color: inherit">*</a></span> <span class="mi">150</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._cos))" style="color: inherit">cos</a></span> <span class="n">θ</span><span class="p">)))</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/lambda.html#(form._((lib._racket/private/base..rkt)._~ce~bb))" style="color: inherit">λ</a></span> <span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">p-image</span> 
+      <span class="p">(</span><span class="n">underlay/xy</span> 
+        <span class="p">(</span><span class="n">add-line</span> 
+          <span class="p">(</span><span class="n">empty-scene</span> <span class="mi">400</span> <span class="mi">200</span><span class="p">)</span> <span class="mi">200</span> <span class="mi">0</span> <span class="p">(</span><span class="n">x</span> <span class="n">θ</span><span class="p">)</span> <span class="p">(</span><span class="n">y</span> <span class="n">θ</span><span class="p">)</span> <span class="s2">"black"</span><span class="p">)</span>
+            <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="p">(</span><span class="n">x</span> <span class="n">θ</span><span class="p">)</span> <span class="mi">5</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="p">(</span><span class="n">y</span> <span class="n">θ</span><span class="p">)</span> <span class="mi">5</span><span class="p">)</span> 
+              <span class="p">(</span><span class="n">circle</span> <span class="mi">5</span> <span class="s2">"solid"</span> <span class="s2">"blue"</span><span class="p">)))</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/set_.html#(form._((quote._~23~25kernel)._set!))" style="color: inherit">set!</a></span> <span class="n">θ</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="n">θ</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._*))" style="color: inherit">*</a></span> <span class="n">θ′</span> <span class="mf">0.04</span><span class="p">)))</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/set_.html#(form._((quote._~23~25kernel)._set!))" style="color: inherit">set!</a></span> <span class="n">θ′</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="n">θ′</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._*))" style="color: inherit">*</a></span> <span class="p">(</span><span class="n">accel</span> <span class="n">θ</span><span class="p">)</span> <span class="mf">0.04</span><span class="p">)))</span>
+    <span class="n">p-image</span><span class="p">))</span>
+
+<span class="p">(</span><span class="n">animate</span> <span class="p">(</span><span class="n">pendulum</span><span class="p">))</span>
+
+
+<span class="n">Jensen</span><span class="o">'</span><span class="ss">s</span> <span class="n">Device:</span>
+
+<span class="o">```</span><span class="ss">racket</span>
+<span class="kn">#lang </span><span class="nn">algol60</span>
+<span class="k"><a href="http://docs.racket-lang.org/reference/begin.html#(form._((quote._~23~25kernel)._begin))" style="color: inherit">begin</a></span>
+   <span class="n">integer</span> <span class="n">i</span><span class="c1">;</span>
+   <span class="n">real</span> <span class="n">procedure</span> <span class="n">sum</span> <span class="p">(</span><span class="n">i</span><span class="o">,</span> <span class="n">lo</span><span class="o">,</span> <span class="n">hi</span><span class="o">,</span> <span class="n">term</span><span class="p">)</span><span class="c1">;</span>
+      <span class="n">value</span> <span class="n">lo</span><span class="o">,</span> <span class="n">hi</span><span class="c1">;</span>
+      <span class="n">integer</span> <span class="n">i</span><span class="o">,</span> <span class="n">lo</span><span class="o">,</span> <span class="n">hi</span><span class="c1">;</span>
+      <span class="n">real</span> <span class="n">term</span><span class="c1">;</span>
+      <span class="n">comment</span> <span class="n">term</span> <span class="n">is</span> <span class="n">passed</span> <span class="n">by-name</span><span class="o">,</span> <span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._and))" style="color: inherit">and</a></span> <span class="n">so</span> <span class="n">is</span> <span class="n">i</span><span class="c1">;</span>
+   <span class="k"><a href="http://docs.racket-lang.org/reference/begin.html#(form._((quote._~23~25kernel)._begin))" style="color: inherit">begin</a></span>
+      <span class="n">real</span> <span class="n">temp</span><span class="c1">;</span>
+      <span class="n">temp</span> <span class="n">:=</span> <span class="mi">0</span><span class="c1">;</span>
+      <span class="k"><a href="http://docs.racket-lang.org/reference/for.html#(form._((lib._racket/private/base..rkt)._for))" style="color: inherit">for</a></span> <span class="n">i</span> <span class="n">:=</span> <span class="n">lo</span> <span class="n">step</span> <span class="mi">1</span> <span class="n">until</span> <span class="n">hi</span> <span class="k"><a href="http://docs.racket-lang.org/reference/for.html#(form._((lib._racket/private/more-scheme..rkt)._do))" style="color: inherit">do</a></span>
+         <span class="n">temp</span> <span class="n">:=</span> <span class="n">temp</span> <span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="n">term</span><span class="c1">;</span>
+      <span class="n">sum</span> <span class="n">:=</span> <span class="n">temp</span>
+   <span class="n">end</span><span class="c1">;</span>
+   <span class="n">comment</span> <span class="n">note</span> <span class="n">the</span> <span class="n">correspondence</span> <span class="n">between</span> 
+   <span class="n">the</span> <span class="n">mathematical</span> <span class="n">notation</span> <span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._and))" style="color: inherit">and</a></span> <span class="n">the</span> <span class="n">call</span> <span class="n">to</span> <span class="n">sum</span><span class="c1">;</span>
+   <span class="n">printnln</span> <span class="p">(</span><span class="n">sum</span> <span class="p">(</span><span class="n">i</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> <span class="mi">100</span><span class="o">,</span> <span class="n">1/i</span><span class="p">))</span>
+<span class="n">end</span>
+</pre></div>
+
+</div>
+
+<p>Thanks to all of the people who have contributed solutions so far!</p></div>
+  <a class="more" href='/2013/03/200.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>15 Feb 2013</p></col-1>
+
+<col-2>
+  <h1><a href='/2013/02/racket-v533.html'>Racket v5.3.3</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>Racket version 5.3.3 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<p>This is a bug-fix release to address a flaw in DrRacket v5.3.2 concerning interactions between the contour window and the syntax coloring.</p></div>
+  <a class="more" href='/2013/02/racket-v533.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>31 Jan 2013</p></col-1>
+
+<col-2>
+  <h1><a href='/2013/01/racket-v532.html'>Racket v5.3.2</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>Racket version 5.3.2 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a> Core Libraries::</p>
+
+<ul>
+ <li>
+  <p>The new <code>math</code> library provides functions and data structures for working with numbers and collections of numbers. Functions include non-elementary (such as gamma, zeta, Lambert&rsquo;s W), number-theoretic (factorization, modular arithmetic), linear algebra (arithmetic, decompositions), and statistical (expected values, order statistics, binning). Data structures include arbitrary-precision bigfloats, probability distributions, and multidimensional arrays.</p></li>
+ <li>
+  <p>The new <code>file/untar</code>, <code>file/untgz</code>, and <code>file/unzip</code> libraries support unpacking widely used archive formats.</p></li>
+ <li>
+  <p>The new <code>lazy-require</code> form allows programs to delay the loading and instantiation of helper modules until they are needed.</p></li>
+ <li>
+  <p>The new <code>data/bit-vector</code> library provides an implementation of bit vectors (a mutable sequence of booleans) supporting popcount.</p></li>
+ <li>
+  <p>The <code>racket/generic</code> library allows the specification of default method implementations for core datatypes.</p></li>
+ <li>
+  <p>The <code>openssl</code> library can verify hostnames and use the operating system&rsquo;s certificate store to verify certificates.</p></li></ul>
+
+<p>Package System::</p>
+
+<ul>
+ <li>
+  <p>A new package system is in beta release. This system will become Planet&rsquo;s successor. It differs significantly from the latter. For details, please read the documentation at <a href="http://docs.racket-lang.org/planet2/">http://docs.racket-lang.org/planet2/</a> and list your packages on the new index at <a href="https://pkg.racket-lang.org/">https://pkg.racket-lang.org/</a>.</p></li>
+ <li>
+  <p>The <code>raco test</code> command supports testing by collection and package, in addition to by directory and file, with the <code>-c</code> and <code>-p</code> options.</p></li></ul>
+
+<p>Teaching Libraries::</p>
+
+<ul>
+ <li>batch-io: the read and write functions work on Unix-style standard input and output.</li></ul>
+
+<p>DrRacket::</p>
+
+<ul>
+ <li>
+  <p>DrRacket&rsquo;s GUI is more responsive.</p></li>
+ <li>
+  <p>The automatic parenthesis insertion mode is improved.</p></li></ul>
+
+<p>Scribble::</p>
+
+<ul>
+ <li>
+  <p>Scribble renders Markdown format files via the <code>--markdown</code> command-line flag. Example use case: Generate documentation hosted on GitHub or BitBucket.</p></li>
+ <li>
+  <p>Documentation cross-reference information is stored in an SQLite3 database, which means that SQLite3 is required for building Racket documentation on Unix/Linux machines (but SQLite3 is included in Racket distributions for Windows and Mac OS X).</p></li></ul>
+
+<p> Using a database for cross-reference information significantly reduces the initial footprint of DrRacket, since DrRacket no longer needs to load all cross-reference information.</p>
+
+<p>Typed Racket::</p>
+
+<ul>
+ <li>
+  <p>Typed Racket programs can require <code>plot/typed</code> to draw plots. List- and vector-accepting functions accept general sequences.</p></li>
+ <li>
+  <p>Typed Racket supports Racket&rsquo;s delimited continuation and continuation mark operators.</p></li></ul>
+
+<p>Redex::</p>
+
+<ul>
+ <li>Added more support for <code>define-judgment-form</code>, including random generation for well-formed judgments and visualization of judgments.</li></ul>
+
+<p>Deprecation::  The following have been removed in this release:</p>
+
+<ul>
+ <li>the <code>planet</code> command-line tool; use <code>raco planet</code> instead.</li></ul>
+
+<p>The following has been deprecated and will be removed in the August 2013 release:</p>
+
+<ul>
+ <li>the <code>mzlib/class100</code> library; use <code>racket/class</code> instead.</li></ul></div>
+  <a class="more" href='/2013/01/racket-v532.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>22 Dec 2012</p></col-1>
+
+<col-2>
+  <h1><a href='/2012/12/simple-test-coverage-a-macro-with-line-numbers-and-lifting.html'>Simple Test Coverage: A Macro with Line Numbers and Lifting</a></h1>
+  <div class="truncate">
+<p><em>posted by Robby Findler</em></p>
+
+<p>Racket&rsquo;s macro system makes it easy to roll your own low-tech line coverage tool. In this post, I&rsquo;ll show how, in 15 lines of code, you can implement a simple test-coverage tool. Using this code is simple: put <code>(line-of-interest)</code> on each line that should be covered.</p>
+
+<p>To start the implementation, we put the code in a module and define two sets:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">racket</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">candidate-lines</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/sets.html#(def._((lib._racket/set..rkt)._set))" style="color: inherit">set</a></span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">touched-lines</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/sets.html#(def._((lib._racket/set..rkt)._set))" style="color: inherit">set</a></span><span class="p">))</span>
+</pre></div>
+
+</div>
+
+<p>The first set holds the line numbers where <code>(line-of-interest)</code> is written in the source and the second holds the set of line numbers where <code>(line-of-interest)</code> has been executed.</p>
+
+<p>Each use of <code>(line-of-interest)</code> is going to expand into a call to visited with the line number for the source location of that use of <code>(line-of-interest)</code>.</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">visited</span> <span class="n">line</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/when_unless.html#(form._((lib._racket/private/letstx-scheme..rkt)._unless))" style="color: inherit">unless</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/sets.html#(def._((lib._racket/set..rkt)._set-member~3f))" style="color: inherit">set-member?</a></span> <span class="n">touched-lines</span> <span class="n">line</span><span class="p">)</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/set_.html#(form._((quote._~23~25kernel)._set!))" style="color: inherit">set!</a></span> <span class="n">touched-lines</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/sets.html#(def._((lib._racket/set..rkt)._set-add))" style="color: inherit">set-add</a></span> <span class="n">touched-lines</span> <span class="n">line</span><span class="p">))</span>
+    <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/Writing.html#(def._((lib._racket/private/misc..rkt)._displayln))" style="color: inherit">displayln</a></span>
+     <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((lib._racket/private/list..rkt)._sort))" style="color: inherit">sort</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/sets.html#(def._((lib._racket/set..rkt)._set-~3elist))" style="color: inherit">set-&gt;list</a></span>
+            <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/sets.html#(def._((lib._racket/set..rkt)._set-subtract))" style="color: inherit">set-subtract</a></span> <span class="n">candidate-lines</span> <span class="n">touched-lines</span><span class="p">))</span>
+           <span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span><span class="p">))))</span>
+</pre></div>
+
+</div>
+
+<p>This function simply checks to see if this line has been executed before and, if not, removes that line number from touched-lines and prints out the current status.</p>
+
+<p>The interesting part of this code is in the definition of line-of-interest itself:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define-syntax))" style="color: inherit">define-syntax</a></span> <span class="p">(</span><span class="n">line-of-interest</span> <span class="n">stx</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt)._with-syntax))" style="color: inherit">with-syntax</a></span> <span class="p">([</span><span class="n">line</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/stxops.html#(def._((quote._~23~25kernel)._syntax-line))" style="color: inherit">syntax-line</a></span> <span class="n">stx</span><span class="p">)])</span>
+    <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/stxtrans.html#(def._((quote._~23~25kernel)._syntax-local-lift-expression))" style="color: inherit">syntax-local-lift-expression</a></span>
+     <span class="o">#'</span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/set_.html#(form._((quote._~23~25kernel)._set!))" style="color: inherit">set!</a></span> <span class="n">candidate-lines</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/sets.html#(def._((lib._racket/set..rkt)._set-add))" style="color: inherit">set-add</a></span> <span class="n">candidate-lines</span> <span class="n">line</span><span class="p">)))</span>
+    <span class="o">#'</span><span class="p">(</span><span class="n">visited</span> <span class="n">line</span><span class="p">)))</span>
+</pre></div>
+
+</div>
+
+<p>The macro first extracts the line number from stx, which gives the source location for the use of <code>(line-of-interest)</code>. This number is then bound to line for use in building later syntax objects. Then the macro calls syntax-local-lift-expression with a syntax object that updates candidate-lines. Expressions passed to syntax-local-lift-expression are lifted to the top-level of the enclosing module making sure that, in this case, each line number is added exactly once without having to execute the code where <code>(line-of-interest)</code> appears. The macro then discards the result of syntax-local-lift-expression and returns a call to the visited function. That&rsquo;s all there is to it!</p>
+
+<p>I originally used this macro to test some changes to DrRacket. I was working on a set of complex GUI interactions and kept losing track of which ones had been tested and which ones hadn&rsquo;t. Here&rsquo;s a simpler program in the same spirit so you can try it out.</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">racket/gui</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">candidate-lines</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/sets.html#(def._((lib._racket/set..rkt)._set))" style="color: inherit">set</a></span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">touched-lines</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/sets.html#(def._((lib._racket/set..rkt)._set))" style="color: inherit">set</a></span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">visited</span> <span class="n">line</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/when_unless.html#(form._((lib._racket/private/letstx-scheme..rkt)._unless))" style="color: inherit">unless</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/sets.html#(def._((lib._racket/set..rkt)._set-member~3f))" style="color: inherit">set-member?</a></span> <span class="n">touched-lines</span> <span class="n">line</span><span class="p">)</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/set_.html#(form._((quote._~23~25kernel)._set!))" style="color: inherit">set!</a></span> <span class="n">touched-lines</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/sets.html#(def._((lib._racket/set..rkt)._set-add))" style="color: inherit">set-add</a></span> <span class="n">touched-lines</span> <span class="n">line</span><span class="p">))</span>
+    <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/Writing.html#(def._((lib._racket/private/misc..rkt)._displayln))" style="color: inherit">displayln</a></span>
+     <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((lib._racket/private/list..rkt)._sort))" style="color: inherit">sort</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/sets.html#(def._((lib._racket/set..rkt)._set-~3elist))" style="color: inherit">set-&gt;list</a></span>
+            <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/sets.html#(def._((lib._racket/set..rkt)._set-subtract))" style="color: inherit">set-subtract</a></span> <span class="n">candidate-lines</span> <span class="n">touched-lines</span><span class="p">))</span>
+           <span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span><span class="p">))))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define-syntax))" style="color: inherit">define-syntax</a></span> <span class="p">(</span><span class="n">line-of-interest</span> <span class="n">stx</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt)._with-syntax))" style="color: inherit">with-syntax</a></span> <span class="p">([</span><span class="n">line</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/stxops.html#(def._((quote._~23~25kernel)._syntax-line))" style="color: inherit">syntax-line</a></span> <span class="n">stx</span><span class="p">)])</span>
+    <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/stxtrans.html#(def._((quote._~23~25kernel)._syntax-local-lift-expression))" style="color: inherit">syntax-local-lift-expression</a></span>
+     <span class="o">#'</span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/set_.html#(form._((quote._~23~25kernel)._set!))" style="color: inherit">set!</a></span> <span class="n">candidate-lines</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/sets.html#(def._((lib._racket/set..rkt)._set-add))" style="color: inherit">set-add</a></span> <span class="n">candidate-lines</span> <span class="n">line</span><span class="p">)))</span>
+    <span class="o">#'</span><span class="p">(</span><span class="n">visited</span> <span class="n">line</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">f</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/objcreation.html#(form._((lib._racket/private/class-internal..rkt)._new))" style="color: inherit">new</a></span> <span class="n">frame%</span> <span class="p">[</span><span class="n">label</span> <span class="s2">""</span><span class="p">]))</span>
+
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">b1</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/objcreation.html#(form._((lib._racket/private/class-internal..rkt)._new))" style="color: inherit">new</a></span> <span class="n">button%</span>
+                <span class="p">[</span><span class="n">label</span> <span class="s2">"1"</span><span class="p">]</span>
+                <span class="p">[</span><span class="n">parent</span> <span class="n">f</span><span class="p">]</span>
+                <span class="p">[</span><span class="n">callback</span>
+                 <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/lambda.html#(form._((lib._racket/private/base..rkt)._~ce~bb))" style="color: inherit">λ</a></span> <span class="p">(</span><span class="n">a</span> <span class="n">b</span><span class="p">)</span>
+                   <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/case.html#(form._((lib._racket/private/more-scheme..rkt)._case))" style="color: inherit">case</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((lib._racket/private/base..rkt)._random))" style="color: inherit">random</a></span> <span class="mi">3</span><span class="p">)</span>
+                     <span class="p">[(</span><span class="mi">0</span><span class="p">)</span>
+                      <span class="p">(</span><span class="n">line-of-interest</span><span class="p">)</span>
+                      <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/ivaraccess.html#(form._((lib._racket/private/class-internal..rkt)._send))" style="color: inherit">send</a></span> <span class="n">b1</span> <span class="n">set-label</span> <span class="s2">"one"</span><span class="p">)]</span>
+                     <span class="p">[(</span><span class="mi">1</span><span class="p">)</span>
+                      <span class="p">(</span><span class="n">line-of-interest</span><span class="p">)</span>
+                      <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/ivaraccess.html#(form._((lib._racket/private/class-internal..rkt)._send))" style="color: inherit">send</a></span> <span class="n">b1</span> <span class="n">set-label</span> <span class="s2">"uno"</span><span class="p">)]</span>
+                     <span class="p">[(</span><span class="mi">2</span><span class="p">)</span>
+                      <span class="p">(</span><span class="n">line-of-interest</span><span class="p">)</span>
+                      <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/ivaraccess.html#(form._((lib._racket/private/class-internal..rkt)._send))" style="color: inherit">send</a></span> <span class="n">b1</span> <span class="n">set-label</span> <span class="s2">"一"</span><span class="p">)]))]))</span>
+
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">b2</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/objcreation.html#(form._((lib._racket/private/class-internal..rkt)._new))" style="color: inherit">new</a></span> <span class="n">button%</span>
+                <span class="p">[</span><span class="n">label</span> <span class="s2">"2"</span><span class="p">]</span>
+                <span class="p">[</span><span class="n">parent</span> <span class="n">f</span><span class="p">]</span>
+                <span class="p">[</span><span class="n">callback</span>
+                 <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/lambda.html#(form._((lib._racket/private/base..rkt)._~ce~bb))" style="color: inherit">λ</a></span> <span class="p">(</span><span class="n">a</span> <span class="n">b</span><span class="p">)</span>
+                   <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/case.html#(form._((lib._racket/private/more-scheme..rkt)._case))" style="color: inherit">case</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((lib._racket/private/base..rkt)._random))" style="color: inherit">random</a></span> <span class="mi">3</span><span class="p">)</span>
+                     <span class="p">[(</span><span class="mi">0</span><span class="p">)</span>
+                      <span class="p">(</span><span class="n">line-of-interest</span><span class="p">)</span>
+                      <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/ivaraccess.html#(form._((lib._racket/private/class-internal..rkt)._send))" style="color: inherit">send</a></span> <span class="n">b2</span> <span class="n">set-label</span> <span class="s2">"two"</span><span class="p">)]</span>
+                     <span class="p">[(</span><span class="mi">1</span><span class="p">)</span>
+                      <span class="p">(</span><span class="n">line-of-interest</span><span class="p">)</span>
+                      <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/ivaraccess.html#(form._((lib._racket/private/class-internal..rkt)._send))" style="color: inherit">send</a></span> <span class="n">b2</span> <span class="n">set-label</span> <span class="s2">"dos"</span><span class="p">)]</span>
+                     <span class="p">[(</span><span class="mi">2</span><span class="p">)</span>
+                      <span class="p">(</span><span class="n">line-of-interest</span><span class="p">)</span>
+                      <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/ivaraccess.html#(form._((lib._racket/private/class-internal..rkt)._send))" style="color: inherit">send</a></span> <span class="n">b2</span> <span class="n">set-label</span> <span class="s2">"二"</span><span class="p">)]))]))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/ivaraccess.html#(form._((lib._racket/private/class-internal..rkt)._send))" style="color: inherit">send</a></span> <span class="n">f</span> <span class="n">show</span> <span class="no">#t</span><span class="p">)</span>
+</pre></div>
+
+</div></div>
+  <a class="more" href='/2012/12/simple-test-coverage-a-macro-with-line-numbers-and-lifting.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>25 Nov 2012</p></col-1>
+
+<col-2>
+  <h1><a href='/2012/11/tutorial-contributing-to-racket.html'>Tutorial: Contributing to Racket</a></h1>
+  <div class="truncate">
+<p><em>posted by Joe Gibbs Politz</em></p>
+
+<p><em>Originally posted on <a href="http://jpolitz.github.com/blog/2012/11/21/racket-contributing-tutorial.html">jpolitz.github.com</a>.</em></p>
+
+<p>I&rsquo;ve been a longtime user and sometimes fanboy of <a href="http://racket-lang.org/">Racket</a>, but aside from a few bug reports, before this week I hadn&rsquo;t contributed anything back to the language. This week, I started using a little helper macro, which wasn&rsquo;t in the core utils, to make some of my testing easier. I mentioned it to the super-friendly Racket community, they told me they liked it, and my pull request was merged within about 12 hours.</p>
+
+<p>I&rsquo;ve been using Racket for a while, so I knew roughly where to lookto put my code, tests, and documentation. A newer user might not know, so this post outlines, in some detail, the steps I went through to put together a tiny feature extension for Racket.</p>
+
+<h2 id="a-tiny-feature">A Tiny Feature</h2>
+
+<p>I&rsquo;m dabbling in the implementation of a <a href="http://github.com/brownplt/pyret-lang">small scripting language called Pyret</a> to study features of scripting objects. The language has a parser, which generates AST nodes. The nodes keep track of their location in the original program for error reporting, unbound identifier reporting, and the like. I wanted to write some test cases for our parser, which generates things like:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="n">parse</span> <span class="s2">"o.x"</span><span class="p">)</span>
+<span class="p">(</span><span class="n">s-block</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/exns.html#(def._((lib._racket/private/base..rkt)._srcloc))" style="color: inherit">srcloc</a></span> <span class="s2">"parse-tests.rkt"</span> <span class="mi">1</span> <span class="mi">0</span> <span class="no">#f</span> <span class="no">#f</span><span class="p">)</span>
+         <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((quote._~23~25kernel)._list))" style="color: inherit">list</a></span> <span class="p">(</span><span class="n">s-dot</span>
+                <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/exns.html#(def._((lib._racket/private/base..rkt)._srcloc))" style="color: inherit">srcloc</a></span> <span class="s2">"parse-tests.rkt"</span> <span class="mi">1</span> <span class="mi">0</span> <span class="no">#f</span> <span class="no">#f</span><span class="p">)</span>
+                <span class="p">(</span><span class="n">s-id</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/exns.html#(def._((lib._racket/private/base..rkt)._srcloc))" style="color: inherit">srcloc</a></span> <span class="s2">"parse-tests.rkt"</span> <span class="mi">1</span> <span class="mi">0</span> <span class="no">#f</span> <span class="no">#f</span><span class="p">)</span> <span class="o">'</span><span class="ss">o</span><span class="p">)</span>
+                <span class="o">'</span><span class="ss">x</span><span class="p">)))</span>
+</pre></div>
+
+</div>
+
+<p>A ton of detail is in the output keeping track of line number information. But I don&rsquo;t want to have to type out the line numbers and get them right for each test. I&rsquo;d like to write:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="n">check-match</span> <span class="p">(</span><span class="n">parse</span> <span class="s2">"o.x"</span><span class="p">)</span>
+<span class="p">(</span><span class="n">s-block</span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((quote._~23~25kernel)._list))" style="color: inherit">list</a></span> <span class="p">(</span><span class="n">s-dot</span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="p">(</span><span class="n">s-id</span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="o">'</span><span class="ss">o</span><span class="p">)</span> <span class="o">'</span><span class="ss">x</span><span class="p">))))</span>
+</pre></div>
+
+</div>
+
+<p>Which checks that all the things I care about for the parse are true: the program parses to a block of code, with a single statement, which is a dot expression of the identifier <code>o</code> and the symbol <code>x</code>. With a little help from <a href="http://www.jonahkagan.me/">Jonah Kagan</a>, I produced a macro that does exactly that, and works nicely with <a href="http://docs.racket-lang.org/rackunit/api.html">RackUnit</a>, Racket&rsquo;s unit-testing framework (<a href="https://github.com/brownplt/pyret-lang/blob/master/src/tests/parse-tests.rkt#L36">see it in action</a>, with a slightly different name).</p>
+
+<p>I thought <code>check-match</code> was pretty useful, and figured I&rsquo;d see if the Racket folks at large would agree. I <a href="http://www.mail-archive.com/dev@racket-lang.org/msg07427.html">wrote a message</a> to the Racket mailing list, figuring someone might think it was neat. There was some <a href="http://www.mail-archive.com/dev@racket-lang.org/msg07429.html">immediate</a> <a href="http://www.mail-archive.com/dev@racket-lang.org/msg07430.html">positive</a> <a href="http://www.mail-archive.com/dev@racket-lang.org/msg07428.html">feedback</a>, so I decided to go ahead and try to add it.</p>
+
+<h2 id="getting-and-extending-racket">Getting and Extending Racket</h2>
+
+<p><a href="http://github.com/plt/racket">Racket&rsquo;s repo</a> is hosted on Github. The easiest way to contribute is to <a href="https://help.github.com/articles/fork-a-repo">fork it</a>, and then check out your own copy. The check-out and build process is fairly standard; you should, however, make a directory called <code>build/</code> to hold the binaries that will be created:</p>
+
+<div class="brush: bash">
+ <div class="pygments">
+  <pre><span></span>$ git clone git://github.com/&lt;your-username&gt;/racket.git
+$ <span class="nb">cd</span> racket/src
+$ mkdir build
+$ <span class="nb">cd</span> build
+$ ../configure
+$ make
+$ make install
+</pre></div>
+
+</div>
+
+<p>This takes about 20&ndash;30 minutes, and installs all the necessary Racket binaries locally in place (no <code>sudo</code> or anything needed).</p>
+
+<p>Next up was to find RackUnit and the code I&rsquo;d need to extend.</p>
+
+<p>Most of what goes on in Racket&rsquo;s core utilities happens in <em>collections</em>, found in the <code>collects/</code> directory of the base directory of the checkout. For my implementation, I&rsquo;d be looking at <code>collects/rackunit</code>.</p>
+
+<p>I want to implement a new kind of <code>check</code>, so let&rsquo;s find that in RackUnit. Here&rsquo;s what the RackUnit directory looks like:</p>
+
+<div class="brush: bash">
+ <div class="pygments">
+  <pre><span></span>$ ls collects/rackunit/
+compiled           gui.rkt   main.rkt  scribblings  tool.rkt
+docs-complete.rkt  info.rkt  private   text-ui.rkt
+</pre></div>
+
+</div>
+
+<p>The <code>private/</code> directory contains most of the internals of the built-in collections&rsquo; behavior, so let&rsquo;s look at that:</p>
+
+<div class="brush: bash">
+ <div class="pygments">
+  <pre><span></span>$ ls collects/rackunit/private/
+base.rkt        counter.rkt     location.rkt        test-case.rkt
+check-info.rkt  format.rkt      monad.rkt           test.rkt
+check.rkt       gui             name-collector.rkt  test-suite.rkt
+compiled        hash-monad.rkt  result.rkt          text-ui-util.rkt
+</pre></div>
+
+</div>
+
+<p>Well, <code>check.rkt</code> seems awfully promising. It defines all of the checks that you can see in the RackUnit docs:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._provide))" style="color: inherit">provide</a></span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt)._......))" style="color: inherit">...</a></span>
+         <span class="n">check-eq?</span>
+         <span class="n">check-eqv?</span>
+         <span class="n">check-equal?</span>
+         <span class="n">check-=</span>
+         <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt)._......))" style="color: inherit">...</a></span><span class="p">)</span>
+
+<span class="p">(</span><span class="n">define-binary-check</span> <span class="p">(</span><span class="n">check-eq?</span> <span class="nb"><a href="http://docs.racket-lang.org/reference/booleans.html#(def._((quote._~23~25kernel)._eq~3f))" style="color: inherit">eq?</a></span> <span class="n">expr1</span> <span class="n">expr2</span><span class="p">))</span>
+
+<span class="p">(</span><span class="n">define-binary-check</span> <span class="p">(</span><span class="n">check-eqv?</span> <span class="nb"><a href="http://docs.racket-lang.org/reference/booleans.html#(def._((quote._~23~25kernel)._eqv~3f))" style="color: inherit">eqv?</a></span> <span class="n">expr1</span> <span class="n">expr2</span><span class="p">))</span>
+
+<span class="p">(</span><span class="n">define-binary-check</span> <span class="p">(</span><span class="n">check-equal?</span> <span class="n">expr1</span> <span class="n">expr2</span><span class="p">)</span>
+  <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/booleans.html#(def._((quote._~23~25kernel)._equal~3f))" style="color: inherit">equal?</a></span> <span class="n">expr1</span> <span class="n">expr2</span><span class="p">))</span>
+
+<span class="p">(</span><span class="n">define-simple-check</span> <span class="p">(</span><span class="n">check-=</span> <span class="n">expr1</span> <span class="n">expr2</span> <span class="n">epsilon</span><span class="p">)</span>
+  <span class="p">(</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._magnitude))" style="color: inherit">magnitude</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="n">expr1</span> <span class="n">expr2</span><span class="p">))</span> <span class="n">epsilon</span><span class="p">))</span>
+
+<span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt)._......))" style="color: inherit">...</a></span>
+</pre></div>
+
+</div>
+
+<p>But before I go sticking my code in there willy-nilly, it&rsquo;s important to realize there are three things that need to go with a commit like this:</p>
+
+<ul>
+ <li>
+  <p>Tests</p></li>
+ <li>
+  <p>Implementation</p></li>
+ <li>
+  <p>Documentation</p></li></ul>
+
+<p>We&rsquo;ll build up our commit in those stages.</p>
+
+<h2 id="adding-tests">Adding Tests</h2>
+
+<p>First, I need to know how I&rsquo;m going to test this to make sure I don&rsquo;t screw anything up with my edits. There&rsquo;s actually a whole collection for tests in <code>collects/tests/</code>, which includes a RackUnit subdirectory. Conveniently, this has been further divided into files that correspond to the files from the RackUnit collection itself:</p>
+
+<div class="brush: bash">
+ <div class="pygments">
+  <pre><span></span>$ ls collects/tests/rackunit/
+all-rackunit-tests.rkt  monad-test.rkt                
+base-test.rkt           pr10950.rkt                   
+check-info-test.rkt     result-test.rkt               
+check-test.rkt          run-tests.rkt                 
+counter-test.rkt        standalone-check-test.rkt     
+format-test.rkt         standalone.rkt                
+hash-monad-test.rkt     standalone-test-case-test.rkt
+location-test.rkt       test-case-test.rkt
+</pre></div>
+
+</div>
+
+<p>So, we can add a few expected uses to <code>check-test.rkt</code>, which will be tested against the implementation. I found the end of the check-tests, and inserted some simple test cases there, using the existing style of the file:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt)._......))" style="color: inherit">...</a></span>
+   <span class="c1">;; existing tests</span>
+   <span class="p">(</span><span class="n">test-case</span> <span class="s2">"Use of check as expression"</span>
+              <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((lib._racket/private/map..rkt)._for-each))" style="color: inherit">for-each</a></span> <span class="n">check-false</span> <span class="o">'</span><span class="p">(</span><span class="no">#f</span> <span class="no">#f</span> <span class="no">#f</span><span class="p">)))</span>
+   <span class="p">(</span><span class="n">test-case</span> <span class="s2">"Use of <a href="http://docs.racket-lang.org/reference/local.html#(form._((lib._racket/local..rkt)._local))" style="color: inherit">local</a> check as expression"</span>
+              <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/let.html#(form._((lib._racket/private/letstx-scheme..rkt)._let))" style="color: inherit">let</a></span> <span class="p">()</span>
+                <span class="p">(</span><span class="n">define-simple-check</span> <span class="p">(</span><span class="n">check-symbol?</span> <span class="n">x</span><span class="p">)</span>
+                  <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/symbols.html#(def._((quote._~23~25kernel)._symbol~3f))" style="color: inherit">symbol?</a></span> <span class="n">x</span><span class="p">))</span>
+                <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((lib._racket/private/map..rkt)._for-each))" style="color: inherit">for-each</a></span> <span class="n">check-symbol?</span> <span class="o">'</span><span class="p">(</span><span class="ss">a</span> <span class="ss">b</span> <span class="ss">c</span><span class="p">))))</span>
+   <span class="c1">;; my added tests</span>
+   <span class="p">(</span><span class="n">test-case</span> <span class="s2">"Trivial check-match test"</span>
+              <span class="p">(</span><span class="n">check-match</span> <span class="s2">"dirigible"</span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span><span class="p">))</span>
+
+   <span class="p">(</span><span class="n">test-case</span> <span class="s2">"Simple check-match test"</span>
+              <span class="p">(</span><span class="n">check-match</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((quote._~23~25kernel)._list))" style="color: inherit">list</a></span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((quote._~23~25kernel)._list))" style="color: inherit">list</a></span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="mi">3</span><span class="p">)))</span>
+
+   <span class="p">(</span><span class="n">test-case</span> <span class="s2">"check-match with a nested struct"</span>
+              <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/let.html#(form._((lib._racket/private/letstx-scheme..rkt)._let))" style="color: inherit">let</a></span> <span class="p">()</span>
+                <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define-struct.html#(form._((lib._racket/private/base..rkt)._struct))" style="color: inherit">struct</a></span> <span class="n">data</span> <span class="p">(</span><span class="n">f1</span> <span class="n">f2</span> <span class="n">f3</span><span class="p">))</span>
+                <span class="p">(</span><span class="n">check-match</span> <span class="p">(</span><span class="n">data</span> <span class="mi">1</span> <span class="mi">2</span> <span class="p">(</span><span class="n">data</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">))</span>
+                             <span class="p">(</span><span class="n">data</span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="mi">2</span> <span class="p">(</span><span class="n">data</span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span><span class="p">)))))</span>
+</pre></div>
+
+</div>
+
+<h2 id="implementation-and-running-tests">Implementation and Running Tests</h2>
+
+<p>With the tests written, it&rsquo;s safe to go back and add my implementation to <code>check.rkt</code>, since I&rsquo;ll know if I&rsquo;ve succeeded or not via these tests. I added my implementation there, with some comment caveats about how <code>check-match</code> differs from other checks:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="c1">;; NOTE(jpolitz): This match form isn&#39;t eager like the others, hence</span>
+<span class="c1">;; the define-syntax and the need to carry around location information</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define-syntax))" style="color: inherit">define-syntax</a></span> <span class="p">(</span><span class="n">check-match</span> <span class="n">stx</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt)._syntax-case))" style="color: inherit">syntax-case</a></span> <span class="n">stx</span> <span class="p">()</span>
+   <span class="p">((</span><span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="n">actual</span> <span class="n">expected</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/Legacy_Forms.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._pred))" style="color: inherit">pred</a></span><span class="p">)</span>
+     <span class="c1">;;... implementation here ...</span>
+   <span class="p">)))</span>
+</pre></div>
+
+</div>
+
+<p>The actual implementation of <code>check-match</code> is turns the pieces into an instance of <code>match</code> that yields true or false depending on if the value was matched. Here&rsquo;s the essence:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define-syntax))" style="color: inherit">define-syntax</a></span> <span class="n">check-match</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt)._syntax-rules))" style="color: inherit">syntax-rules</a></span> <span class="p">()</span>
+    <span class="p">[(</span><span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="n">actual</span> <span class="n">expected</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/Legacy_Forms.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._pred))" style="color: inherit">pred</a></span><span class="p">)</span>
+     <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/let.html#(form._((lib._racket/private/letstx-scheme..rkt)._let))" style="color: inherit">let</a></span> <span class="p">([</span><span class="n">actual-val</span> <span class="n">actual</span><span class="p">])</span>
+      <span class="p">(</span><span class="n">check-true</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/match.html#(form._((lib._racket/match..rkt)._match))" style="color: inherit">match</a></span> <span class="n">actual-val</span>
+                   <span class="p">[</span><span class="n">expected</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/Legacy_Forms.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._pred))" style="color: inherit">pred</a></span><span class="p">]</span>
+                   <span class="p">[</span><span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="no">#f</span><span class="p">])))))]</span>
+    <span class="p">[(</span><span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="n">actual</span> <span class="n">expected</span><span class="p">)</span>
+     <span class="p">(</span><span class="n">check-match</span> <span class="n">actual</span> <span class="n">expected</span> <span class="no">#t</span><span class="p">)]</span><span class="err">))</span>
+</pre></div>
+
+</div>
+
+<p>In reality, this gives lousy error reporting, so the <a href="https://github.com/plt/racket/blob/e264e4148884f0675bd21e889525ccb7239eb4b4/collects/rackunit/private/check.rkt#L286">actual implementation</a> leverages the helpful <a href="http://docs.racket-lang.org/rackunit/api.html#(form._((lib._rackunit/main..rkt)._with-check-info))">with-check-info</a> form to populate the test with reporting information for failures.</p>
+
+<p>With the implementation in place, it&rsquo;s time to run the tests, and figure out if what I did broke anything. To run a particular test suite, Racket provides a tool called <code>raco</code> that was built by the <code>make install</code> above. To run our tests, we do (from the base <code>racket/</code> directory):</p>
+
+<div class="brush: bash">
+ <div class="pygments">
+  <pre><span></span>$ ./bin/raco <span class="nb">test</span> collects/tests/rackunit
+</pre></div>
+
+</div>
+
+<p>I iterated through this a few times to suss out all the minor bugs in what I&rsquo;d written. I also wanted to check that my tests were actually adding to the count, so I compared to the version without my changes by doing:</p>
+
+<div class="brush: bash">
+ <div class="pygments">
+  <pre><span></span>$ git stash
+<span class="c1"># stores my edits temporarily in git&#39;s stash</span>
+$ ./bin/raco <span class="nb">test</span> collects/tests/rackunit
+<span class="c1"># Output including "120 tests passed, 0 tests failed"</span>
+$ git stash apply
+<span class="c1"># re-applies my edits</span>
+$ ./bin/raco <span class="nb">test</span> collects/tests/rackunit
+<span class="c1"># Output including "127 tests passed, 0 tests failed", which seems good,</span>
+<span class="c1"># since I wrote 7 new tests</span>
+</pre></div>
+
+</div>
+
+<p>So, I&rsquo;m happy with my implementation. All that&rsquo;s left is to write something down about this feature that others will be able to find it and use it in the future.</p>
+
+<h2 id="adding-documentation">Adding Documentation</h2>
+
+<p>Racket uses a tool called <a href="http://docs.racket-lang.org/scribble/index.html">Scribble</a> for documentation, and by convention, a collection&rsquo;s documentation is stored in the <code>scribblings/</code> subdirectory of the collection:</p>
+
+<div class="brush: bash">
+ <div class="pygments">
+  <pre><span></span>$ ls collects/rackunit/scribblings/
+acknowledgements.scrbl  control-flow.scrbl  philosophy.scrbl
+api.scrbl               file.rkt            quick-start.scrbl
+base.rkt                file-test.rkt       rackunit.scrbl
+check.scrbl             internals.scrbl     release-notes.scrbl
+compiled                misc.scrbl          ui.scrbl
+compound-testing.scrbl  overview.scrbl      utils.scrbl
+</pre></div>
+
+</div>
+
+<p>Keeping with the theme, we&rsquo;ll be editing <code>check.scrbl</code> which is the file that&rsquo;s used to generate <a href="http://docs.racket-lang.org/rackunit/api.html#(part._.Checks)">this section</a> of the RackUnit documentation.</p>
+
+<p>Reading over the existing docs, I notice that our new feature is violating one of the principles of the existing documentation:</p>
+
+<blockquote>
+ <p>Although checks are implemented as macros, which is necessary to grab source location, they are conceptually functions. This means, for instance, checks always evaluate their arguments.</p></blockquote>
+
+<p>Based on <a href="http://www.mail-archive.com/dev@racket-lang.org/msg07435.html">Robby&rsquo;s recommendation</a> (the mailing list is helpful and responsive again!) I simply added a caveat "(with the exception of @racket[check-match] below)", and moved on to adding actual documentation for <code>check-match</code>.</p>
+
+<p>Scribble does two very cool things when documenting definitions. First, it has explicit syntax for telling the documentation system that you&rsquo;re introducing a new identifier that should be indexed and linkable. Second, it lets you write Racket code examples directly into the documentation, and even runs them and renders their results inline into the documenation. Here&rsquo;s a snippet of what I add:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="n">@defform*</span><span class="p">[((</span><span class="n">check-match</span> <span class="n">v</span> <span class="n"><a href="http://docs.racket-lang.org/syntax/stxparse-specifying.html#(form._((lib._syntax/parse..rkt)._pattern))" style="color: inherit">pattern</a></span><span class="p">)</span>
+           <span class="p">(</span><span class="n">check-match</span> <span class="n">v</span> <span class="n"><a href="http://docs.racket-lang.org/syntax/stxparse-specifying.html#(form._((lib._syntax/parse..rkt)._pattern))" style="color: inherit">pattern</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/Legacy_Forms.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._pred))" style="color: inherit">pred</a></span><span class="p">))]{</span>
+
+<span class="n">A</span> <span class="n">check</span> <span class="n">that</span> <span class="n"><a href="http://docs.racket-lang.org/syntax/stxparse-specifying.html#(form._((lib._syntax/parse..rkt)._pattern))" style="color: inherit">pattern</a></span> <span class="n">matches</span> <span class="n">on</span> <span class="n">the</span> <span class="n">test</span> <span class="n">value.</span>  <span class="n">Matches</span> <span class="n">the</span> <span class="n">test</span> <span class="n">value</span>
+<span class="n">@racket</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="n">against</span> <span class="n">@racket</span><span class="p">[</span><span class="n"><a href="http://docs.racket-lang.org/syntax/stxparse-specifying.html#(form._((lib._syntax/parse..rkt)._pattern))" style="color: inherit">pattern</a></span><span class="p">]</span> <span class="n">as</span> <span class="n">a</span> <span class="n">@racket</span><span class="p">[</span><span class="k"><a href="http://docs.racket-lang.org/reference/match.html#(form._((lib._racket/match..rkt)._match))" style="color: inherit">match</a></span><span class="p">]</span> <span class="n">clause.</span>  <span class="n">If</span> <span class="n">no</span>
+<span class="n">@racket</span><span class="p">[</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Legacy_Forms.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._pred))" style="color: inherit">pred</a></span><span class="p">]</span> <span class="n">is</span> <span class="n">provided</span><span class="o">,</span> <span class="n">then</span> <span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((quote._~23~25kernel)._if))" style="color: inherit">if</a></span> <span class="n">the</span> <span class="k"><a href="http://docs.racket-lang.org/reference/match.html#(form._((lib._racket/match..rkt)._match))" style="color: inherit">match</a></span> <span class="n">succeeds</span><span class="o">,</span> <span class="n">the</span> <span class="n">entire</span> <span class="n">check</span>
+<span class="n">succeeds.</span>  <span class="n">For</span> <span class="n">example</span><span class="o">,</span> <span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._this))" style="color: inherit">this</a></span> <span class="n">use</span> <span class="n">succeeds:</span>
+
+<span class="n">@interaction</span><span class="p">[</span><span class="kd">#:eval</span> <span class="n">rackunit-eval</span>
+  <span class="p">(</span><span class="n">check-match</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((quote._~23~25kernel)._list))" style="color: inherit">list</a></span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((quote._~23~25kernel)._list))" style="color: inherit">list</a></span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="mi">3</span><span class="p">))</span>
+<span class="p">]</span>
+
+<span class="n">This</span> <span class="n">check</span> <span class="n">fails</span> <span class="n">to</span> <span class="n">match:</span>
+
+<span class="n">@interaction</span><span class="p">[</span><span class="kd">#:eval</span> <span class="n">rackunit-eval</span>
+  <span class="p">(</span><span class="n">check-match</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((quote._~23~25kernel)._list))" style="color: inherit">list</a></span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((quote._~23~25kernel)._list))" style="color: inherit">list</a></span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span> <span class="mi">4</span><span class="p">))</span>
+<span class="p">]</span>
+</pre></div>
+
+</div>
+
+<p>There are a few things going on here:</p>
+
+<ul>
+ <li>
+  <p><code>@defform</code> tells Scribble that this is a new syntactic form that should be indexed. Scribble figures out the the name is <code>check-match</code>, and adds links for it to the table of contents and enters it in the search index.</p></li>
+ <li>
+  <p><code>@racket[v]</code> tells Scribble to render <code>v</code> as Racket code, and Scribble is also smart enough to know that <code>v</code> is the same <code>v</code> in the definition, and creates a back link for it.</p></li>
+ <li>
+  <p><code>@interaction[#:eval rackunit-eval ... ]</code> blocks indicate expressions that should be run, with their output rendered after them. This makes for beautiful docs with examples inline to show users exactly what their getting. To build the docs, we run:</p></li></ul>
+
+<div class="brush: bash">
+ <div class="pygments">
+  <pre><span></span>$ ./bin/raco setup collects/rackunit
+</pre></div>
+
+</div>
+
+<p>Then, the docs will appear in the local documentation directory. I can then open them up in a web browser and see the results (note the local url ending api.html; that&rsquo;s the local path to the documentation that&rsquo;s been installed):</p>
+
+<p>Looks good!</p>
+
+<h2 id="letting-racketeers-know">Letting Racketeers Know</h2>
+
+<p>I packaged everything up in a <a href="https://github.com/jpolitz/racket/commit/023d2278c1bb9819451790d774ae8e67a5d46f22">single commit</a>, and sent the whole thing off to the Racket folks with a <a href="https://github.com/plt/racket/pull/171">pull request</a>. They then reviewed it and incorporated it into <a href="https://github.com/plt/racket/commit/e264e4148884f0675bd21e889525ccb7239eb4b4">their HEAD</a> the next day.</p>
+
+<p>The Racket folks maintain a list of <a href="https://github.com/plt/racket/wiki/Intro-Projects">Intro Projects</a>, so there&rsquo;s easy places to start if you want to follow this tutorial and get involved!</p></div>
+  <a class="more" href='/2012/11/tutorial-contributing-to-racket.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<footer>
+ <ul class="pagination">
+  <li><a href="/index-4.html">
+    <quote>&larr;</quote></a></li>
+  <li><a href="/index.html">1</a></li>
+  <li><a href="/index-2.html">2</a></li>
+  <li><a href="/index-3.html">3</a></li>
+  <li><a href="/index-4.html">4</a></li>
+  <li class="active"><a href="/index-5.html">5</a></li>
+  <li><a href="/index-6.html">6</a></li>
+  <li><a href="/index-7.html">7</a></li>
+  <li><a href="/index-8.html">8</a></li>
+  <li><a href="/index-9.html">9</a></li>
+  <li><a href="/index-10.html">10</a></li>
+  <li><a href="/index-11.html">11</a></li>
+  <li><a href="/index-12.html">12</a></li>
+  <li><a href="/index-13.html">13</a></li>
+  <li><a href="/index-14.html">14</a></li>
+  <li><a href="/index-15.html">15</a></li>
+  <li><a href="/index-6.html">
+    <quote>&rarr;</quote></a></li></ul></footer>
+
+<row class="one-column" id="bottom"><col-1></col-1><col-2>
+<p>Made with <a href="https://github.com/greghendershott/frog">Frog</a>, a static-blog generator written in Racket.
+<br /><a href="https://github.com/racket/racket-lang-org">Source code</a> for this blog.</col-2></row>
+  </body>
+</html>

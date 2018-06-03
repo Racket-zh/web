@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <title>Racket v6.10</title>
+    <meta name="description" content="_posted by Vincent St-Amour_  Racket version 6.10 is now available from http://racket-lang.org/  Note: Graphical Racket programs such as DrRacket are affected by a bug in the Windows 10 Creators update which can lead to blue screens and require reboots. W...">
+    <meta name="author"      content="The Unknown Author">
+    <meta name="keywords"    content="">
+    <meta name="viewport"    content="width=device-width, initial-scale=1.0">
+    <link rel="icon"      href="/favicon.ico">
+    <link rel="canonical" href="http://blog.racket-lang.org/2017/07/racket-v6-10.html">
+    <link rel="next" href="/2017/04/racket-v6-9.html">
+    <link rel="prev" href="/2017/09/racket-v6-10-1.html">
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog-fonts.css">
+    <!-- Feeds -->
+    <link rel="alternate" type="application/atom+xml" href="/feeds/all.atom.xml" title="Atom Feed">
+    <link rel="alternate" type="application/rss+xml" href="/feeds/all.rss.xml" title="RSS Feed">
+    <!-- JS -->
+    </head>
+  <body>
+<row class="one-column" id="logo"><col-1><a href="http://racket-lang.org"><div id="logo-container"><img id="logo" src="/img/racket-logo.svg"/> Racket</div></a></col-1><col-2><p><a href="/index.html">blog</a></p></col-2></row>
+<article>
+<row>
+
+<col-1>
+  <p class='date-and-tags'>31 Jul 2017</p>
+
+</col-1>
+
+<col-2>
+  <header>
+  <h1>Racket v6.10</h1>
+  </header>
+
+<p><em>posted by Vincent St-Amour</em></p>
+
+<p>Racket version 6.10 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<p>Note: Graphical Racket programs such as DrRacket are affected by a bug in the Windows 10 Creators update which can lead to blue screens and require reboots. We are aware of the issue, and have mitigated it in DrRacket, which reduces the incidence of crashes. Microsoft has diagnosed the issue and will release a fix in a future Windows update. Additional details are available here:  <a href="https://github.com/racket/racket/issues/1671">https://github.com/racket/racket/issues/1671</a></p>
+
+<ul>
+ <li>
+  <p>Internally, Racket&rsquo;s intermediate compatibility layer over operating-system facilities has been moved into its own library, &ldquo;rktio&rdquo;, so it can be used in future Racket implementations. This change should be transparent, but the refactoring moves code that has many compiler and OS dependencies, so we expect a new glitch or two in less-common build and execution environments. Please report problems at <a href="https://github.com/racket/racket/issues">https://github.com/racket/racket/issues</a>.</p></li>
+ <li>
+  <p>Racket supports cross-compilation of executables in more cases, including executables that depend on packages for foreign libraries.</p></li>
+ <li>
+  <p>The <code>struct</code> form supports an <code>#:authentic</code> annotation to declare that chaperones and impersonators are never allowed on instances of the declared structure type. This annotation is intended for use on a library&rsquo;s internal data structures, where it won&rsquo;t interfere with contracts or other forms of extension at a library&rsquo;s interface. It can sometimes provide a small performance boost.</p></li>
+ <li>
+  <p>RackUnit adds <code>nested-info</code> and <code>string-info</code> to grant custom checks more control over the display and layout of check failure info.</p></li>
+ <li>
+  <p>The <code>raco test</code> command provides the <code>++arg</code> and <code>++args</code> flags to pass arguments to tested programs.</p></li>
+ <li>
+  <p>Typed Racket has types for immutable, mutable, and weak hashtables; in other words the type <code>(HashTable K V)</code> is a union <code>(U (Immutable-HashTable K V) (Mutable-HashTable K V) (Weak-HashTable K V))</code>. Standard library functions may have more specific return types. For example, <code>hash-set</code> has type <code>(-&gt; (HashTable K V) K V (Immutable-HashTable K V))</code>. When an immutable hashtable flows from untyped code to typed code, Typed Racket may use a flat contract to verify its type (provided the table&rsquo;s key and value types are flat).</p></li>
+ <li>
+  <p>The Typed Racket Optimizer is disabled in untrusted contexts (e.g., sandboxes). This prevents unsoundness in the Typed Racket type system from being used to get access to unsafe operations.</p></li>
+ <li>
+  <p>Racket&rsquo;s internal runtime adds a <code>scheme_atexit</code> procedure with identical behavior as <code>atexit</code> defined in libc.</p></li></ul>
+
+<p>The following people contributed to this release: Alex Knauth, Alexander McLin, Alexis King, Andrew Kent, Ben Greenman, Ben Noordhuis, Carlo Dapor, Conor Finegan, Daniel Feltey, Ethan Estrada, Georges Dupéron, Gary F. Baumgartner, Gianluca Ciccarelli, Gustavo Massaccesi, Harold Carr, Jack Firth, Jay McCarthy, John Clements, Kimball Germane, Leandro Facchinetti, Lehi Toskin, Leif Andersen, Matthew Butterick, Matthew Flatt, Matthias Felleisen, Michael Orlitzky, Milo Turner, Mohsen Keyhani, Philip McGrath, Robby Findler, Rob Bassi, Ryan Culpepper, Sam Caldwell, Sam Tobin-Hochstadt, Scott Moore, Spencer Florence, Stephen Chang, Stephen De Gabrielle, Vincent St-Amour, WarGrey Gyoudmon Ju, and William J. Bowman.</p>
+
+<p>Feedback Welcome</p>
+<!-- more-->
+<col-2>
+
+</row>
+
+<footer>
+<row>
+<col-1>
+</col-1>
+<col-2>
+<h2><span class="label">next</span> <a class="next" href="/2017/09/racket-v6-10-1.html">Racket v6.10.1</a></h2>
+
+<h2><span class="label">prev</span> <a class="previous" href="/2017/04/racket-v6-9.html">Racket v6.9</a></h2>
+
+</col-2>
+</row>
+</footer>
+
+</article>
+
+<row class="one-column" id="bottom"><col-1></col-1><col-2>
+<p>Made with <a href="https://github.com/greghendershott/frog">Frog</a>, a static-blog generator written in Racket.
+<br /><a href="https://github.com/racket/racket-lang-org">Source code</a> for this blog.</col-2></row>
+  </body>
+</html>

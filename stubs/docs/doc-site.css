@@ -1,0 +1,11 @@
+.docsite-logo
+{
+ float: right;
+ position: relative;
+ top: -2.5em;
+ left: 1.3em;
+ }
+.docsite-logo img
+{
+ width: 8em;
+ }

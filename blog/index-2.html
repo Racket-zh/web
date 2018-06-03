@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <title>Racket Blog (page 2)</title>
+    <meta name="description" content="Racket Blog (page 2)">
+    <meta name="author"      content="The Unknown Author">
+    <meta name="keywords"    content="Chez Scheme, all">
+    <meta name="viewport"    content="width=device-width, initial-scale=1.0">
+    <link rel="icon"      href="/favicon.ico">
+    <link rel="canonical" href="http://blog.racket-lang.org/index-2.html">
+
+
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog-fonts.css">
+    <!-- Feeds -->
+    <link rel="alternate" type="application/atom+xml" href="/feeds/all.atom.xml" title="Atom Feed">
+    <link rel="alternate" type="application/rss+xml" href="/feeds/all.rss.xml" title="RSS Feed">
+    <!-- JS -->
+    </head>
+  <body>
+<row class="one-column" id="logo"><col-1><a href="http://racket-lang.org"><div id="logo-container"><img id="logo" src="/img/racket-logo.svg"/> Racket</div></a></col-1><col-2><p><a href="/index.html">blog</a></p></col-2></row>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>03 Mar 2017</p></col-1>
+
+<col-2>
+  <h1><a href='/2017/03/languages-as-dotfiles.html'>Languages as Dotfiles</a></h1>
+  <div class="truncate">
+<p><em>posted by Leif Andersen and Ben Greenman</em></p>
+
+<p>Tired of writing <code>(require (for-syntax syntax/parse))</code> at the top of your Racket programs? This post shows how to make a <code>#lang</code> to customize your default programming environment.</p></div>
+  <a class="more" href='/2017/03/languages-as-dotfiles.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>05 Feb 2017</p></col-1>
+
+<col-2>
+  <h1><a href='/2017/02/on-application.html'>On Application</a></h1>
+  <div class="truncate">
+<p><em>posted by Jack Firth</em></p>
+
+<p>Today I wanted to write about function application. Specifically, how to redefine and customize application with Racket. We&rsquo;ll also look at some Racket packages that define interesting and useful forms of function application.</p>
+
+<h2 id="the-theory">The theory</h2>
+
+<p>Application is the process of combining a function and arguments to evaluate a result. Application defines one half of <em>lambda calculus</em>, the formal model underlying much of modern functional programming. The other half is <em>abstraction</em>, which is creating new functions. Creating and applying functions is the heart of Racket and many other functional languages.</p>
+
+<p>So how are functions applied in Racket? What makes <code>(if (&lt; 5 10) 'foo 'bar)</code> a macro use and <code>(&lt; 5 10)</code> a function use?</p>
+
+<p>That&rsquo;s actually a trick question, because function application <em>is</em> a macro in Racket. During <a href="http://docs.racket-lang.org/reference/syntax-model.html#%28part._expand-steps%29">macro expansion</a>, the Racket expander inspects the first element of an expression to determine if it has a binding to a macro. If it doesn&rsquo;t, rather than assume the expression is a function application, the expander inserts an <em>artificial</em> identifier named <code><a href="http://docs.racket-lang.org/reference/application.html#(form._((lib._racket/private/base..rkt)._~23~25app))" style="color: inherit">#%app</a></code> into the expression. So in the above example, the expression <code>(&lt; 5 10)</code> is converted to <code>(#%app &lt; 5 10)</code>. This <code><a href="http://docs.racket-lang.org/reference/application.html#(form._((lib._racket/private/base..rkt)._~23~25app))" style="color: inherit">#%app</a></code> identifier doesn&rsquo;t refer to a single specific <code><a href="http://docs.racket-lang.org/reference/application.html#(form._((lib._racket/private/base..rkt)._~23~25app))" style="color: inherit">#%app</a></code> like the <code><a href="http://docs.racket-lang.org/reference/if.html#(form._((quote._~23~25kernel)._if))" style="color: inherit">if</a></code> refers to <code><a href="http://docs.racket-lang.org/reference/if.html#(form._((quote._~23~25kernel)._if))" style="color: inherit">if</a></code> from <code>racket/base</code>, rather it refers to whatever the enclosing environment defines <code><a href="http://docs.racket-lang.org/reference/application.html#(form._((lib._racket/private/base..rkt)._~23~25app))" style="color: inherit">#%app</a></code> to be (which by default means ordinary function application from <code>racket/base</code>).</p>
+
+<p>However, imported modules can provide their own definitions of function application by providing an <code><a href="http://docs.racket-lang.org/reference/application.html#(form._((lib._racket/private/base..rkt)._~23~25app))" style="color: inherit">#%app</a></code> macro. Let&rsquo;s define our own <code><a href="http://docs.racket-lang.org/reference/application.html#(form._((lib._racket/private/base..rkt)._~23~25app))" style="color: inherit">#%app</a></code> that, in addition to applying a function, prints out a trace message. First let&rsquo;s define a helper function to implement the tracing:</p></div>
+  <a class="more" href='/2017/02/on-application.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>24 Jan 2017</p></col-1>
+
+<col-2>
+  <h1><a href='/2017/01/racket-v6-8.html'>Racket v6.8</a></h1>
+  <div class="truncate">
+<p><em>posted by Vincent St-Amour</em></p>
+
+<p>Racket version 6.8 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<ul>
+ <li>
+  <p>Racket sports a new logo, courtesy of Matthew Butterick.</p></li>
+ <li>
+  <p>MacBook Pro laptops with touch bars are supported.</p></li>
+ <li>
+  <p>Support for FreeBSD on PowerPC.</p></li>
+ <li>
+  <p>Initial support for GTK3 on Wayland is available. GL contexts, GC blits, and dialog placement currently do not work.</p></li>
+ <li>
+  <p>The macro stepper provides a command-line interface via the <code>raco macro-stepper</code> command.</p></li>
+ <li>
+  <p>Typed Racket more efficiently represents and computes types and propositions, resulting in faster type checking for many programs. For more details, see <a href="https://pnwamk.github.io/blog/2017/01/08/some-changes-in-typed-racket-v6-8/">this blog post by Andrew Kent</a>.</p></li>
+ <li>
+  <p>The bytecode optimizer can reduce more expressions of the form <code>(equal? x y)</code> to <code>(eqv? x y)</code> or <code>(eq? x y)</code> when the type of <code>x</code> or <code>y</code> is known.</p></li>
+ <li>
+  <p>The bytecode optimizer avoids dropping stack frames in some reductions. This provides better stack traces for errors when errotrace is enabled.</p></li>
+ <li>
+  <p>The bytecode compiler detects more optimization opportunities, including when variables always hold a boolean value. In particular in expressions like <code>(or (symbol? x) (something))</code>, the optimizations avoid the creation of an intermediate variable to store the result of <code>(symbol? x)</code>.</p></li>
+ <li>
+  <p>The <code>syntax</code> form preserves syntax properties on all template pieces.</p></li>
+ <li>
+  <p>The <code>scribble/html/extra</code> module provides renderers for HTML elements that are part of the WHATWG HTML standard but not part of the <code>scribble/html</code> language by default (e.g., <code>map</code>, <code>time</code>, <code>video</code>).</p></li>
+ <li>
+  <p>The DeinProgramm teaching languages support pattern matching using the <code>match</code> form.</p></li>
+ <li>
+  <p>In the DeinProgramm languages, <code>define-record-procedures</code> supports specifying signatures as part of the form, instantly enabling properties quantifying over such records.</p></li></ul>
+
+<p>The following people contributed to this release:</p>
+
+<p>Aleksej Saushev, Alex Knauth, Alexander Hedges, Alexander Shopov, Alexis King, Andrew Kent, Asumu Takikawa, Ben Greenman, Celeste Hollenbeck, Craig Allen, Don March, Georges Dupéron, Gustavo Massaccesi, James Bornholt, Jay McCarthy, Jerry James, John Clements, Juan Francisco Cantero Hurtado, Leandro Facchinetti, Leif Andersen, Matthew Butterick, Matthew Flatt, Matthias Felleisen, Max New, Mike Sperber, Phil Nguyen, Reid D McKenzie, Reuben Thomas, Robby Findler, Ryan Culpepper, Sam Tobin-Hochstadt, Shu-Hung You, Spencer Florence, Stephen Chang, Tim Brown, Tony Garnock-Jones, Vincent St-Amour, WarGrey Gyoudmon Ju, and William G Hatch.</p>
+
+<p>Feedback Welcome</p></div>
+  <a class="more" href='/2017/01/racket-v6-8.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>20 Jan 2017</p></col-1>
+
+<col-2>
+  <h1><a href='/2017/01/seventh-racketcon.html'>(seventh RacketCon)</a></h1>
+  <div class="truncate">
+<p><em>posted by Vincent St-Amour</em></p>
+
+<p>Racketeers,</p>
+
+<p>(seventh RacketCon) will be held on October 7th, followed by Racketeer Office Hours on October 8th. This year, RacketCon will be in Seattle, WA, with support from the Racket group at the University of Washington.</p>
+
+<p>RacketCon is a yearly event where members of the Racket community get together, featuring talks and demos about the things you do with Racket.</p>
+
+<p>Racketeer Office Hours is a new event that we&rsquo;re trying out this year. It is a free-form day for Racketeers to get together and collaborate on ongoing projects, start new ones, and get help and advice from other members of the community.</p>
+
+<p>Registration is not open yet, but we&rsquo;ll let you know when it is.</p>
+
+<p>See you in Seattle!</p>
+
+<p>Vincent St-Amour, Matthew Butterick, and Matthew Flatt with help from Emina Torlak and Amanda Robles at UW</p></div>
+  <a class="more" href='/2017/01/seventh-racketcon.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>14 Dec 2016</p></col-1>
+
+<col-2>
+  <h1><a href='/2016/12/the-redesigned-racket-blog.html'>The redesigned Racket blog</a></h1>
+  <div class="truncate">
+<p><em>posted by Matthew Butterick</em></p>
+
+<p>I love Racket. But a few months ago, I really wanted to kill this blog.</p>
+
+<p>Why? Because who reads blogs, right? It&rsquo;s like getting 4% interest on your savings — so 2006. This is Racket. We&rsquo;re from the future. No, really. We even have a <a href="http://docs.racket-lang.org/future-visualizer">futures visualizer</a>. Take a look. Do you visualize any blogs?</p>
+
+<p>But my amigo <a href="http://homes.soic.indiana.edu/samth/">Sam Tobin-Hochstadt</a> had some wise words. &ldquo;MB,&rdquo; he said, &ldquo;we&rsquo;re not killing the blog. But tell you what: we&rsquo;ll let you redesign it.&rdquo;</p>
+
+<p>&ldquo;OK! Yeah! I&rsquo;ll show you!&rdquo;</p>
+
+<p>And this is really Sam&rsquo;s genius. After you talk to him, not only have you entirely changed your mind, you&rsquo;ve volunteered to do all the work.</p>
+
+<p>But man, blogs. Have you seen the first blog ever, from 1994? Good news — <a href="http://www.links.net/vita/web/start/original.html">it&rsquo;s still online</a>. For the first couple years they were known as <em>personal websites</em>. Then they were called <em>weblogs</em>. Then just <em>blogs</em>. For a while after that, it seemed like everyone was starting a blog. Then everyone was redesigning a blog. Then everyone was ignoring a blog.</p>
+
+<p>Racket didn&rsquo;t have an official blog back then — this one was started in 2007 — but there are some interesting blog-like records in the archives. For instance, the <a href="https://github.com/racket/racket/blob/ddf6985020d7dd11d17cd42b1746bd853667fc2b/racket/collects/racket/HISTORY.txt"><code>HISTORY.txt</code></a> file in the main repo. It chronicles every release back to version 0.27, in September 1995. AFAIK that code is still used today.</p>
+
+<p>Today, blogging persists. But most of today&rsquo;s tools are calculated to make it as easy as possible. Too easy, perhaps? Not to sound curmudgeonly. But to my mind, the diaristic aspects of blogs were always incidental. Their most important purpose was to give millions of nerds a pretext to learn about web technology. In the ’70s, these nerds were typing out <a href="http://www.vintage-basic.net/games.html">BASIC computer games</a>. These days, I suppose they&rsquo;re all writing their own JavaScript front-end frameworks. Ten years from now, what — harvesting dilithium crystals in the delta quadrant? (I&rsquo;m being coy. I do have a <a href="http://docs.racket-lang.org/future-visualizer">futures visualizer</a>.)</p>
+
+<p>So, the Racket blog. My major objection is that until yesterday, it was built on the moldering skeleton of <a href="http://blogger.com">Blogger</a>, which has, against all odds, stumbled into this century. Merely a small cut above <a href="http://gizmodo.com/5983574/remember-the-hilarious-horror-of-geocities-with-this-website">Geocities</a>. Surely we Racketeers could do better.</p>
+
+<p>I turned to Greg Hendershott&rsquo;s static-blog engine <a href="https://github.com/greghendershott/frog">Frog</a>. A very slick Racket package that turns Markdown source files into HTML. If you must blog — please try it.</p>
+
+<p>The rest of the design draws on the typography &amp; color themes I used for the <a href="http://docs.racket-lang.org">Racket documentation</a> — still the best-looking docs in the business. For the headlines, I added something new — the <a href="https://www.cooperhewitt.org/open-source-at-cooper-hewitt/cooper-hewitt-the-typeface-by-chester-jenkins/">Cooper Hewitt typeface</a>, designed for the namesake Smithsonian museum. Very lovely and totally free.</p>
+
+<p>Thank you to Sam Tobin-Hochstadt, Greg Hendershott, Vincent St-Amour, and Robby Findler for helping me complete this project. As Matthias Felleisen did in <a href="/2007/05/macros-matter.html">his first post</a> for this blog, I dedicate my work &ldquo;to all things macros and everything else that matters in Racket.&rdquo;</p>
+
+<p>PS. I did succeed in killing the comments form. Not everything from the ’90s needs to be preserved.</p></div>
+  <a class="more" href='/2016/12/the-redesigned-racket-blog.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>26 Oct 2016</p></col-1>
+
+<col-2>
+  <h1><a href='/2016/10/racket-v67.html'>Racket v6.7</a></h1>
+  <div class="truncate">
+<p><em>posted by Vincent St-Amour</em></p>
+
+<p>Racket version 6.7 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<ul>
+ <li>
+  <p>Racket supports building graphical applications on Android through the <code>racket-android</code> project: https://github.com/jeapostrophe/racket-android</p></li>
+ <li>
+  <p>The Racket REPL comes with line-editing, command and result history, and various meta-commands out of the box, via the <code>racket/interactive</code> module. See the <code>racket/interactive</code> and <code>xrepl</code> documentation for details.</p></li>
+ <li>
+  <p>The package system supports authentication when installing packages from git, using the <code>raco pkg config git-checkout-credentials</code> configuration option.</p></li>
+ <li>
+  <p>HTTP libraries, as well as <code>raco pkg</code>, support proxying via HTTP CONNECT.</p></li>
+ <li>
+  <p>Typed Racket provides typed versions of <code>racket/os</code> and <code>racket/db/sqlite</code>.</p></li>
+ <li>
+  <p>The <code>PLT_COMPILED_FILE_CHECK</code> environment variable provides more fine-grained control over when <code>.zo</code> files are consulted.</p></li>
+ <li>
+  <p>The documentation search supports searching for <code>#lang</code>s and <code>#reader</code>s via the &ldquo;L:&rdquo; and &ldquo;R:&rdquo; search prefixes.</p></li>
+ <li>
+  <p>The <code>file/glob</code> module implements globbing for path-strings.</p></li>
+ <li>
+  <p>Optimizations in the bytecode compiler improve performance for structure, list, string, and byte-string operations.</p></li></ul>
+
+<p>The following people contributed to this release:</p>
+
+<p>Alex Knauth, Alex Harsanyi, Alexis King, Andrew Kent, Asumu Takikawa, Ben Greenman, Brian Lachance, Chongkai Zhu, Daniel Feltey, Georges Dupéron, Gustavo Massaccesi, Jay McCarthy, John Clements, Jonathan Schuster, Leif Andersen, Marc Burns, Matthew Butterick, Matthew Flatt, Matthias Felleisen, Mike Sperber, Robby Findler, Rohin Shah, Ryan Culpepper, Sam Tobin-Hochstadt, Spencer Florence, Stephen Chang, Stephen De Gabrielle, Tim Brown, Tony Garnock-Jones, Vincent St-Amour, WarGrey Gyoudmon Ju, and William J. Bowman.</p>
+
+<p>Feedback Welcome</p></div>
+  <a class="more" href='/2016/10/racket-v67.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>22 Jul 2016</p></col-1>
+
+<col-2>
+  <h1><a href='/2016/07/racket-v66.html'>Racket v6.6</a></h1>
+  <div class="truncate">
+<p><em>posted by Vincent St-Amour</em></p>
+
+<p>Racket version 6.6 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<ul>
+ <li>
+  <p>The new Macro Profiler command-line tool (<code>raco macro-profiler</code>) shows how macros contribute to the final expanded code size of a program.</p></li>
+ <li>
+  <p>Typed Racket supports intersection types. This allows the type system to track more information, and for programmers to express more precise types.</p></li>
+ <li>
+  <p>Typed Racket produces up to 4x smaller compiled files compared with Racket 6.5, reducing the size of the Racket distribution by 50M.</p></li>
+ <li>
+  <p>Typed Racket issues warnings in cases where the contract generated for <code>Any</code> was not strict enough in the past. These warnings will become errors in a future release. Warnings are enabled via View -&gt; Show Log in DrRacket, and shown by default on command-line Racket.</p></li>
+ <li>
+  <p>Typed Racket enforces uses of <code>cast</code> more correctly, by checking both the &ldquo;casted-to&rdquo; and &ldquo;casted-from&rdquo; types. Previously, only the former were checked. In some cases, this will produce contract errors in programs that did not have errors before.</p></li>
+ <li>
+  <p><code>syntax-parse</code> raises an error when an ellipsis pattern has an empty match rather than diverging, and it logs a warning when it statically detects a nullable pattern, such as <code>((~seq) ...)</code>. In the next version of Racket, it will reject the pattern instead, and it will remove special handling that currently makes some uses of such patterns terminate.</p></li>
+ <li>
+  <p><code>htdp/dir</code>: The <code>create-dir</code> function delivers data information for files in a new field. The domain of its functions are backwards compatible.</p></li></ul>
+
+<p>The following people contributed to this release:</p>
+
+<p>Alex Knauth, Alexander Shopov, Alexis King, Andrew Kent, Asumu Takikawa, Ben Greenman, Bernardo Sulzbach, Brian Lachance, Chris Jester-Young, Dan Feltey, Eric Dobson, Georges Dupéron, Gustavo Massaccesi, James Bornholt, Jay McCarthy, John Clements, Leandro Facchinetti, Leif Andersen, Maksim Kochkin, Matthew Flatt, Matthias Felleisen, Mike Sperber, Paul Stansifer, Pedro Caldeira, Philip McGrath, Robby Findler, Ryan Culpepper, Sam Tobin-Hochstadt, Spencer Florence, Stephen Chang, Stephen De Gabrielle, Tim Brown, Tony Garnock-Jones, Vincent St-Amour, WarGrey Gyoudmon Ju, William J. Bowman, and Zeina Migeed.</p>
+
+<p>Feedback Welcome</p></div>
+  <a class="more" href='/2016/07/racket-v66.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>28 Apr 2016</p></col-1>
+
+<col-2>
+  <h1><a href='/2016/04/racket-v65.html'>Racket v6.5</a></h1>
+  <div class="truncate">
+<p><em>posted by Ryan Culpepper</em></p>
+
+<p>Racket version 6.5 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<ul>
+ <li>
+  <p>Typed Racket and the <code>racket/contract</code> library generate code with lower overhead, speeding up typed/untyped interaction in a number of gradual typing programs we studied.</p></li>
+ <li>
+  <p>Macros written using <code>syntax-parse</code> automatically emit more accurate error messages.</p></li>
+ <li>
+  <p>The contract profiler captures costs from more contract combinators, including all those in the main distribution.</p></li>
+ <li>
+  <p>Hash table and set iteration, via both existing and new non-generic sequences, performs better, up to twice as fast on microbenchmarks.</p></li>
+ <li>
+  <p>The Racket optimizer detects many more optimization opportunities, including when variables always hold numbers.</p></li>
+ <li>
+  <p>The db library supports single-result CALL statements in MySQL.</p></li>
+ <li>
+  <p>The <code>net/dns</code> library supports SRV records.</p></li>
+ <li>
+  <p>The <code>racket/unix-socket</code> library supports listen and accept operations.</p></li></ul>
+
+<p>The following people contributed to this release:</p>
+
+<p>Adrien Tateno, Alex Knauth, Alexander Shopov, Alexis King, Andrew Kent, Asumu Takikawa, Ben Greenman, Chen Xiao, Chris Jester-Young, Daniel Feltey, Eric Dobson, Georges Dupéron, Gustavo Massaccesi, Ian Harris, Jay McCarthy, Jens Axel Søgaard, John Clements, Leandro Facchinetti, Lehi Toskin, Leif Andersen, Łukasz Dąbek, Marc Kaufmann, Matthew Flatt, Matthias Felleisen, Michael McConville, Mike Sperber, Paul Stansifer, Philippe Meunier, Robby Findler, Rodrigo Setti, Ryan Culpepper, Sam Caldwell, Sam Tobin-Hochstadt, Sorawee Porncharoenwase, Spencer Florence, Stephen Chang, Tony Garnock-Jones, Vincent St-Amour, WarGrey Gyoudmon Ju, and William J. Bowman.</p>
+
+<p>Feedback Welcome</p></div>
+  <a class="more" href='/2016/04/racket-v65.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>08 Feb 2016</p></col-1>
+
+<col-2>
+  <h1><a href='/2016/02/racket-web-server-security-vulnerability.html'>Racket Web Server Security Vulnerability</a></h1>
+  <div class="truncate">
+<p><em>posted by Sam Tobin-Hochstadt</em></p>
+
+<p>We recently discovered a serious security vulnerability in the Racket web server, which can lead to unintended disclosure of files on the machine running the web server. This vulnerability is fixed in <a href="../../2016/02/racket-v64.html">Racket version 6.4</a>, just released, and we encourage people to upgrade to that version.</p>
+
+<p>The vulnerability affects web servers that serve static files using the <code>#:extra-files-paths</code> option, including the default value of this option. If you do not use the Racket web serve to serve static files, or you do so via a mechanism that does not use the <code>make-url-&gt;path</code> function, then you are likely not vulnerable. Affected web serves will allow specially-crafted URLs to access files outside of the specified paths, potentially exposing any file that the web server process is able to read.</p>
+
+<p>If you cannot immediately upgrade to version 6.4, we have provided a package catalog with updated versions of the &ldquo;web-server-lib&rdquo; package for versions of Racket back to 6.0. That catalog is located at</p>
+
+<p><a href="http://download.racket-lang.org/patches/web-server-1/">http://download.racket-lang.org/patches/web-server&ndash;1/</a></p>
+
+<p>To use it to upgrade your Racket installation, add it as a catalog using <code>raco pkg config</code>. To make this process easier, you can download the Racket script available <a href="https://gist.github.com/samth/c81e1e2fabc744759970">here</a>. Then run:</p>
+
+<div class="brush: bash">
+ <div class="pygments">
+  <pre><span></span>$ racket add-catalog.rkt
+$ raco pkg update -i web-server-lib
+</pre></div>
+
+</div>
+
+<p>If you need advice on updating Racket installations older than version 6.0, please let us know and we will provide them.</p>
+
+<p>To test that your Racket installation is fixed, you can run <a href="https://gist.github.com/samth/740cc39eb6c0d9bd7bc3">the program here</a>. It will print whether your installation is out of date.</p></div>
+  <a class="more" href='/2016/02/racket-web-server-security-vulnerability.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>08 Feb 2016</p></col-1>
+
+<col-2>
+  <h1><a href='/2016/02/racket-v64.html'>Racket v6.4</a></h1>
+  <div class="truncate">
+<p><em>posted by Ryan Culpepper</em></p>
+
+<p>Racket version 6.4 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<ul>
+ <li>
+  <p>We fixed a security vulnerability in the web server. The existing web server is vulnerable to a navigation attack if it is also enabled to serve files statically; that is, any file readable by the web server is accessible remotely. For more information, see <a href="../../2016/02/racket-web-server-security-vulnerability.html">this post</a>.</p></li>
+ <li>
+  <p>DrRacket&rsquo;s scrolling is faster.</p></li>
+ <li>
+  <p>Incremental garbage-collection mode can eliminate long pauses in a program. For example, incremental mode is useful for avoiding pauses in games and animations.</p></li></ul>
+
+<p>Programs must specifically request incremental mode with <code>(collect-garbage 'incremental)</code>, but libraries such as <code>2htdp/universe</code> include the request as part of the library&rsquo;s implementation.</p>
+
+<ul>
+ <li>
+  <p>The default package catalog is an HTTPS address instead of HTTP, and package operations properly validate server certificates when using HTTPS.</p></li>
+ <li>
+  <p>Documentation may define their own categories for the manual top-level page by using strings, rather than only symbols that name pre-defined categories.</p></li>
+ <li>
+  <p>The Racket cheat sheet is included in the main distribution.</p></li>
+ <li>
+  <p>DrRacket is available in Bulgarian, thanks to Alexander Shopov.</p></li>
+ <li>
+  <p>The contract Typed Racket generates for the <code>Any</code> type is more permissive, allowing more typed/untyped programs to work without contract errors.</p></li>
+ <li>
+  <p>Redex supports binding specifications; describe which variables bind in which expressions and your metafunctions and reduction relations automatically become scope-sensitive. Thanks to Paul Stansifer for this improvement.</p></li>
+ <li>
+  <p>All <code>pict</code> functions accept <code>pict-convertible</code>s. This allows for transparent interoperability between <code>pict</code> and libraries like <code>2htdp/image</code>.</p></li>
+ <li>
+  <p>The <code>raco profile</code> and <code>raco contract-profile</code> commands provide easy access to profiling tools, without requiring program modifications.</p></li></ul>
+
+<p>Feedback Welcome</p></div>
+  <a class="more" href='/2016/02/racket-v64.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<footer>
+ <ul class="pagination">
+  <li><a href="/index.html">
+    <quote>&larr;</quote></a></li>
+  <li><a href="/index.html">1</a></li>
+  <li class="active"><a href="/index-2.html">2</a></li>
+  <li><a href="/index-3.html">3</a></li>
+  <li><a href="/index-4.html">4</a></li>
+  <li><a href="/index-5.html">5</a></li>
+  <li><a href="/index-6.html">6</a></li>
+  <li><a href="/index-7.html">7</a></li>
+  <li><a href="/index-8.html">8</a></li>
+  <li><a href="/index-9.html">9</a></li>
+  <li><a href="/index-10.html">10</a></li>
+  <li><a href="/index-11.html">11</a></li>
+  <li><a href="/index-12.html">12</a></li>
+  <li><a href="/index-13.html">13</a></li>
+  <li><a href="/index-14.html">14</a></li>
+  <li><a href="/index-15.html">15</a></li>
+  <li><a href="/index-3.html">
+    <quote>&rarr;</quote></a></li></ul></footer>
+
+<row class="one-column" id="bottom"><col-1></col-1><col-2>
+<p>Made with <a href="https://github.com/greghendershott/frog">Frog</a>, a static-blog generator written in Racket.
+<br /><a href="https://github.com/racket/racket-lang-org">Source code</a> for this blog.</col-2></row>
+  </body>
+</html>

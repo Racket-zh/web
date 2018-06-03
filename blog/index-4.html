@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <title>Racket Blog (page 4)</title>
+    <meta name="description" content="Racket Blog (page 4)">
+    <meta name="author"      content="The Unknown Author">
+    <meta name="keywords"    content="Chez Scheme, all">
+    <meta name="viewport"    content="width=device-width, initial-scale=1.0">
+    <link rel="icon"      href="/favicon.ico">
+    <link rel="canonical" href="http://blog.racket-lang.org/index-4.html">
+
+
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog-fonts.css">
+    <!-- Feeds -->
+    <link rel="alternate" type="application/atom+xml" href="/feeds/all.atom.xml" title="Atom Feed">
+    <link rel="alternate" type="application/rss+xml" href="/feeds/all.rss.xml" title="RSS Feed">
+    <!-- JS -->
+    </head>
+  <body>
+<row class="one-column" id="logo"><col-1><a href="http://racket-lang.org"><div id="logo-container"><img id="logo" src="/img/racket-logo.svg"/> Racket</div></a></col-1><col-2><p><a href="/index.html">blog</a></p></col-2></row>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>04 Nov 2014</p></col-1>
+
+<col-2>
+  <h1><a href='/2014/11/racket-v611.html'>Racket v6.1.1</a></h1>
+  <div class="truncate">
+<p><em>posted by Ryan Culpepper</em></p>
+
+<p>Racket version 6.1.1 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<ul>
+ <li>
+  <p>The Mac OS X Yosemite compatibility problems are fixed. We bundled a patched Pango text-drawing library with Racket.</p></li>
+ <li>
+  <p>The Windows [32-bit] releases fixes the window-update crashes. We bundled a patched Cairo drawing library with Racket.</p></li>
+ <li>
+  <p>Typed Racket closes two safety holes in the exception system. The revised type system restricts <code>raise</code> to send only instances of the <code>exn</code> structure type and flat data to handlers. It also checks exception handlers properly. Note: Previously well-typed programs may fail to typecheck.</p></li>
+ <li>
+  <p>Typed Racket&rsquo;s typed regions support casts and predicates.</p></li>
+ <li>
+  <p>2htdp/image&rsquo;s notion of equality ignores an image&rsquo;s baseline.</p></li>
+ <li>
+  <p>The package manager supports a binary library installation mode, which allows users to install packages without source or documentation. Use the <code>--binary-lib</code> option with <code>raco pkg install</code>.</p></li>
+ <li>
+  <p>The new drracket-tool-lib package factors out parts of DrRacket&rsquo;s IDE so that they can be reused with other editors, such as Emacs.</p></li>
+ <li>
+  <p>The compiler&rsquo;s use-before-defined analysis has been repaired for certain forms of nested <code>letrec</code>, some <code>let</code> forms, and some uses of <code>set!</code> or <code>with-continuation-mark</code>.</p></li>
+ <li>
+  <p>The compiler performs additional bytecode optimizations. Thanks to Gustavo Massaccesi.</p></li>
+ <li>
+  <p>The CML library comes with a new <code>replace-evt</code> event constructor. Thanks to Jan Dvořák.</p></li>
+ <li>
+  <p>Redex&rsquo;s benchmark suite comes with a description of the benchmark programs.</p></li>
+ <li>
+  <p>Redex&rsquo;s metafunctions can be typeset using the &ldquo;large left brace&rdquo; notation for conditionals.</p></li>
+ <li>
+  <p>The contract library comes with an improved <code>contract-stronger?</code>. Its error messages note that the contract itself might be wrong.</p></li>
+ <li>
+  <p>The GUI library is DPI-aware on Windows.</p></li>
+ <li>
+  <p>The openssl library supports Server Name Indication for servers. Thanks to Jay Kominek.</p></li>
+ <li>
+  <p>The syntax/parse library allows the definition of new pattern forms via pattern expanders, similar to match expanders. Thanks to Alex Knauth.</p></li>
+ <li>
+  <p>OpenGL on Linux no longer depends on libgtkgl, and core profiles are supported (see <code>set-legacy?</code>).</p></li>
+ <li>
+  <p>The teaching languages&rsquo; unit test framework supports <code>check-satisfied</code>, a construct for checking whether a result satisfies a predicate, e.g.:</p></li></ul>
+
+<p><code>(check-satisfied (sort l) sorted?)</code></p>
+
+<p>Feedback Welcome</p></div>
+  <a class="more" href='/2014/11/racket-v611.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>07 Oct 2014</p></col-1>
+
+<col-2>
+  <h1><a href='/2014/10/plt-redex-summer-school-call-for-participation.html'>PLT Redex Summer School, Call for Participation</a></h1>
+  <div class="truncate">
+<p><em>posted by Robby Findler</em></p>
+
+<p>LOCATION: University of Utah, Salt Lake City</p>
+
+<p>DATES: July 27 - July 31, 2015</p>
+
+<p><a href="http://www.cs.utah.edu/~mflatt/plt-redex/">http://www.cs.utah.edu/~mflatt/plt-redex/</a></p>
+
+<p>PLT Redex is a lightweight, embedded DSL for modeling programming languages, their reduction semantics, and their type systems. It comes with an IDE and a toolbox for exploring, testing, debugging, and type-setting language models. The PLT research group has successfully used Redex to model and analyze a wide spectrum of published models.</p>
+
+<p>The summer school will introduce students to the underlying theory of reduction semantics, programming in the Redex language, and using its tool suite effectively. The course is intended for PhD students and researchers in programming languages. Enrollment is limited to 25 attendees.</p>
+
+<p>While the workshop itself is free, attendees must pay for travel, room, and board. We expect room and board to be around $500, assuming an arrival in the evening of Sunday July 26 and leaving Friday July 31 or August 1. Partial financial support for PhD students is available.</p>
+
+<p>To register, send email to Matthew Flatt (mflatt@cs.utah.edu). If you are a PhD student and requesting financial support, CC your advisor and ask for a one-line confirmation email.</p>
+
+<p>Literature</p>
+
+<p> Matthias Felleisen, Robert Bruce Findler, Matthew Flatt. <em>Semantics Engineering with PLT Redex</em>. MIT Press, 2012.</p>
+
+<p> Casey Klein, John Clements, Christos Dimoulas, Carl Eastlund, Matthias Felleisen, Matthew Flatt, Jay McCarthy, Jon Rafkind, Sam Tobin-Hochstadt, Robert Bruce Findler. <em>Run Your Research: On the Effectiveness of Lightweight Mechanization</em>. POPL 2012.</p></div>
+  <a class="more" href='/2014/10/plt-redex-summer-school-call-for-participation.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>02 Aug 2014</p></col-1>
+
+<col-2>
+  <h1><a href='/2014/08/racket-v61.html'>Racket v6.1</a></h1>
+  <div class="truncate">
+<p><em>posted by Ryan Culpepper</em></p>
+
+<p>PLT Design Inc. announces the release of Racket version 6.1 at</p>
+
+<p><a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<p>The major innovation concerns local recursive variable definitions. Instead of initializing variables with an <code>undefined</code> value, Racket raises an exception when such a variable is used before its definition. (Thanks to Claire Alvis for adapting Dybvig&rsquo;s &ldquo;Fixing Letrec&rdquo; work.)</p>
+
+<p>Since programs are rarely intended to produce <code>#&lt;undefined&gt;</code>, raising an exception provides early and improved feedback. Module-level variables have always triggered such an exception when used too early, and this change finally gives local bindings — including class fields — the same meaning.</p>
+
+<p>This change is backwards-incompatible with prior releases of Racket. Aside from exposing a few bugs, the change will mainly affect programs that include</p>
+
+<p><code>(define undefined (letrec ([x x]) x))</code></p>
+
+<p>to obtain the <code>#&lt;undefined&gt;</code> value. In its stead, Racket provides the same value via the <code>racket/undefined</code> library (which was introduced in the previous release). Programmers are encouraged to use it in place of the pattern above to obtain the &ldquo;undefined&rdquo; value.</p>
+
+<p>The release also includes the following small changes:</p>
+
+<ul>
+ <li>
+  <p>Plumbers generalize the flush-on-exit capability of primitive output ports to enable arbitrary flushing actions and to give programmers control over the timing of flushes (i.e., a composable <code>atexit</code>). New functions include <code>current-plumber</code>, <code>plumber-add-flush!</code>, and <code>plumber-flush-all</code>.</p></li>
+ <li>
+  <p>Contracts: the contract system&rsquo;s random testing facility has been strengthened so that it can easily find simple mistakes in contracted data structure implementations (e.g. an accidental reverse of a conditional in a heap invariant check).</p></li>
+ <li>
+  <p>Redex: the semantics of mis-match patterns (variables followed by <code>_!_</code>) inside ellipses has changed in a backwards-incompatible way. This change simplifies the patterns&rsquo; semantics and increases the usefulness of these patterns.</p></li>
+ <li>
+  <p>Teaching languages: <code>check-random</code> is an addition to the preferred unit testing framework in the teaching languages. It enables the testing of students&rsquo; functions that use random-number generation. (Thanks to David Van Horn (UMaryland) for proposing this idea.)</p></li>
+ <li>
+  <p>Upgraded and normalized versions of graphics libraries and dependencies (Pango, Cairo, GLib, etc.) that are bundled with Racket on Windows and Mac OS X. For example, FreeType support is consistently enabled.</p></li>
+ <li>
+  <p>Typed Racket: its standard library includes contracted exports from the Racket standard library, such as the formatting combinators of <code>racket/format</code>. It also supports Racket&rsquo;s asynchronous channels; see the <code>typed/racket/async-channel</code> library.</p></li>
+ <li>
+  <p>SSL: The <code>openssl</code> library supports forward secrecy via DHE and ECDHE cipher suites (thanks to Edward Lee) and Server Name Indication (thanks to Jay Kominek).</p></li>
+ <li>
+  <p>The <code>mzlib/class100</code> library has been removed. Use <code>racket/class</code> instead.</p></li></ul></div>
+  <a class="more" href='/2014/08/racket-v61.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>26 Jul 2014</p></col-1>
+
+<col-2>
+  <h1><a href='/2014/07/scheme-workshop-2014.html'>Scheme Workshop 2014</a></h1>
+  <div class="truncate">
+<p><em>posted by John Clements</em></p>
+
+<p>DEADLINE: 5 September 2014, (23:59 UTC&ndash;12)</p>
+
+<p>WEBSITE: <a href="http://homes.soic.indiana.edu/jhemann/scheme-14/">http://homes.soic.indiana.edu/jhemann/scheme&ndash;14/</a></p>
+
+<p>LOCATION: Washington, DC (co-located with Clojure/conj)</p>
+
+<p>DATE: 19 November 2014</p>
+
+<p>The 2014 Scheme and Functional Programming Workshop is calling for submissions. Submissions related to Scheme and functional programming are welcome and encouraged. Topics of interest include but are not limited to:</p>
+
+<ul>
+ <li>
+  <p>Program-development environments, debugging, testing</p></li>
+ <li>
+  <p>Implementation (interpreters, compilers, tools, benchmarks, etc)</p></li>
+ <li>
+  <p>Syntax, macros, and hygiene</p></li>
+ <li>
+  <p>Distributed computing, concurrency, parallelism</p></li>
+ <li>
+  <p>Interoperability with other languages, FFIs</p></li>
+ <li>
+  <p>Continuations, modules, object systems, types</p></li>
+ <li>
+  <p>Theory, formal semantics, correctness</p></li>
+ <li>
+  <p>History, evolution and standardization of Scheme</p></li>
+ <li>
+  <p>Applications, experience and industrial uses of Scheme</p></li>
+ <li>
+  <p>Education</p></li>
+ <li>
+  <p>Scheme pearls (elegant, instructive uses of Scheme)</p></li></ul>
+
+<p>We also welcome papers related to dynamic or multiparadigmatic languages and programming techniques.</p>
+
+<p>Full papers are due 5 September 2014.</p>
+
+<p>Authors will be notified by 10 October 2014.</p>
+
+<p>Camera-ready versions are due 24 Oct 2014.</p>
+
+<p>All deadlines are (23:59 UTC&ndash;12), &ldquo;Anywhere on Earth&rdquo;.</p>
+
+<p>For more information, please see: <a href="http://homes.soic.indiana.edu/jhemann/scheme-14/">http://homes.soic.indiana.edu/jhemann/scheme&ndash;14/</a></p>
+
+<p>See you there!</p></div>
+  <a class="more" href='/2014/07/scheme-workshop-2014.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>08 May 2014</p></col-1>
+
+<col-2>
+  <h1><a href='/2014/05/racket-v601.html'>Racket v6.0.1</a></h1>
+  <div class="truncate">
+<p><em>posted by Ryan Culpepper</em></p>
+
+<p>Racket version 6.0.1 is now available from</p>
+
+<p><a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<ul>
+ <li>A new <code>racket/undefined</code> library exports <code>undefined</code> as the value currently produced by</li></ul>
+
+<p>(letrec ([x x]) x) This library anticipates a future where that expression will raise an exception. The <code>racket/undefined</code> library will continue to offer the <code>undefined</code> value as a bridge between versions and as a last resort.</p>
+
+<ul>
+ <li>
+  <p>The drawing and GUI libraries provide improved support for high-resolution bitmaps and their use on Retina displays. For example, <code>read-bitmap</code> includes a <code>#:try-@2x?</code> option to trigger substitutions through the usual "@2x" naming convention.</p></li>
+ <li>
+  <p>Check Syntax cooperates with Typed Racket to show arrows and other Check Syntax highlighting even when there is a type error.</p></li>
+ <li>
+  <p>Functions provided via <code>contract-out</code> that have first-order contracts perform better.</p></li>
+ <li>
+  <p>The contract boundary between typed/untyped modules is much less expensive. Typed Racket now avoids generating contracts for places where contracts failures cannot happen.</p></li>
+ <li>
+  <p>Occurrence typing now works better with <code>when</code>/<code>unless</code>. Example:</p></li></ul>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/let.html#(form._((lib._racket/private/letstx-scheme..rkt)._let))" style="color: inherit">let</a></span> <span class="p">((</span><span class="n">x</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/Reading.html#(def._((quote._~23~25kernel)._read))" style="color: inherit">read</a></span><span class="p">)))</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/when_unless.html#(form._((lib._racket/private/letstx-scheme..rkt)._unless))" style="color: inherit">unless</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/number-types.html#(def._((quote._~23~25kernel)._number~3f))" style="color: inherit">number?</a></span> <span class="n">x</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/exns.html#(def._((quote._~23~25kernel)._error))" style="color: inherit">error</a></span> <span class="o">'</span><span class="ss">bad-input</span><span class="p">))</span>
+  <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._add1))" style="color: inherit">add1</a></span> <span class="n">x</span><span class="p">))</span>
+</pre></div>
+
+</div>
+
+<ul>
+ <li>
+  <p>Types in Typed Racket are now pretty-printed.</p></li>
+ <li>
+  <p>Function types can now be written in prefix style, which is now preferred and is used for printing. Infix function types are still accepted for backwards compatibility.</p></li>
+ <li>
+  <p>A new <code>-&gt;*</code> type constructor is used for writing types for functions with optional and keyword arguments. The notation is similar to the matching contract combinator.</p></li>
+ <li>
+  <p>Typed Racket forms do not have a <code>:</code> suffix by default now. For example, the <code>struct</code> form replaces <code>struct:</code>. The suffixed versions are all provided for backwards compatibility.</p></li>
+ <li>
+  <p>Typed Racket now has preliminary support for classes and objects. However, it is still experimental and the APIs are subject to change.</p></li>
+ <li>
+  <p>Type aliases in Typed Racket now support recursion and mutual recursion. For example, <code>(define-type (MyList X) (U Null (Pair X (MyList X))))</code> is now a valid type alias.</p></li>
+ <li>
+  <p>Plot correctly renders intersecting 3D graphs and non-grid-aligned 3D rectangles.</p></li>
+ <li>
+  <p>Elements in plots output in PDF/PS format have the same relative scale as in other formats. In particular, it is not necessary to adjust <code>plot-font-size</code> to make PDF plots look the same as PNG.</p></li></ul></div>
+  <a class="more" href='/2014/05/racket-v601.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>24 Apr 2014</p></col-1>
+
+<col-2>
+  <h1><a href='/2014/04/registration-for-fourth-racketcon.html'>Registration for (fourth RacketCon)</a></h1>
+  <div class="truncate">
+<p><em>posted by Asumu Takikawa</em></p>
+
+<p>Registration for (fourth RacketCon) is now open. Tickets are 30$.</p>
+
+<p><a href="https://www.eventbrite.com/e/racketcon-2014-tickets-11408046775">https://www.eventbrite.com/e/racketcon&ndash;2014-tickets&ndash;11408046775</a></p>
+
+<p>(fourth RacketCon) will be held on September 20th, and will be co-located with <a href="https://thestrangeloop.com/">Strange Loop</a> in St. Louis.</p>
+
+<p>RacketCon is a yearly event where members of the Racket community get together, featuring talks and demos about the things you do with Racket.</p>
+
+<p>To get you excited, here&rsquo;s a sneak peek at the roster of speakers so far:</p>
+
+<ul>
+ <li>
+  <p>Michael Fogus (keynote)</p></li>
+ <li>
+  <p>Matthew Butterick</p></li>
+ <li>
+  <p>Matthew Flatt</p></li>
+ <li>
+  <p>Jay McCarthy</p></li>
+ <li>
+  <p>Daniel Prager</p></li>
+ <li>
+  <p>Neil Toronto</p></li></ul>
+
+<p>We still have room for more speakers. If you&rsquo;ve built something cool with Racket, we want to hear about it!</p>
+
+<p>Hope to see you there!</p>
+
+<p>Vincent, for the Racket team</p></div>
+  <a class="more" href='/2014/04/registration-for-fourth-racketcon.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>12 Mar 2014</p></col-1>
+
+<col-2>
+  <h1><a href='/2014/03/the-new-racket-home-page.html'>The new Racket home page</a></h1>
+  <div class="truncate">
+<p><em>posted by Asumu Takikawa</em></p>
+
+<p>Racket now has a new look for its web presence. You can see it at<a href="http://racket-lang.org/"> http://racket-lang.org</a> (modulo DNS propagation).</p>
+
+<p>The new pages improve on the old in several ways:</p>
+
+<ul>
+ <li>
+  <p>More information is now on the front page.</p></li>
+ <li>
+  <p>The site works much better small devices, such as phones.</p></li>
+ <li>
+  <p>It&rsquo;s easier to find important parts of the site, like the package directory.</p></li>
+ <li>
+  <p>The download process is more streamlined &mdash; now it&rsquo;s only 2 clicks.</p></li></ul>
+
+<p>We also wanted to have a new look, and a description that talks about why Racket is exciting.</p>
+
+<p>Finally, we&rsquo;ve taken this opportunity to shift our web hosting entirely to Amazon S3, for which Greg Hendershott&rsquo;s <a href="https://github.com/greghendershott/aws">aws</a> package has been very helpful.</p>
+
+<p>While the new pages have been under development for quite a while, we&rsquo;re still happy to take bug reports, suggestions and (especially) patches: all of the site can be found here:</p>
+
+<p> <a href="https://github.com/plt/racket/tree/master/pkgs/plt-services/meta/new-web">https://github.com/plt/racket/tree/master/pkgs/plt-services/meta/new-web</a></p>
+
+<p>with the framework for building the site here:</p>
+
+<p> <a href="https://github.com/plt/racket/tree/master/pkgs/plt-web-pkgs">https://github.com/plt/racket/tree/master/pkgs/plt-web-pkgs</a></p>
+
+<p>The site is built using Eli&rsquo;s <a href="http://www.cs.utah.edu/plt/snapshots/current/doc/scribble-pp/html.html">scribble/html</a> library, which is very nice to use.</p>
+
+<p>I&rsquo;d especially like to thank Eli and Matthew for their help with this &mdash; going from my hacked-up HTML prototype to the smooth-building and well-organized code we have now has taken lots of work.</p>
+
+<p>Sam</p></div>
+  <a class="more" href='/2014/03/the-new-racket-home-page.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>26 Feb 2014</p></col-1>
+
+<col-2>
+  <h1><a href='/2014/02/racket-v60.html'>Racket v6.0</a></h1>
+  <div class="truncate">
+<p><em>posted by Ryan Culpepper</em></p>
+
+<p>Racket version 6.0 is now available from</p>
+
+<p><a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<p>Racket 6.0 has a new package system, including a catalog of hundreds of already-available packages. Please visit</p>
+
+<p><a href="http://pkgs.racket-lang.org/">http://pkgs.racket-lang.org/</a></p>
+
+<p>for an overview of the packages.</p>
+
+<p>Racket versions 5.3.4 through 5.3.6 included &ldquo;beta&rdquo; versions of the package system. Racket version 6.0 incorporates many improvements suggested by preliminary experiences in those versions:</p>
+
+<ul>
+ <li>
+  <p>A package is treated as a single collection by default, so it is even easier to use a GitHub repository as a package. Get started quickly:<a href="http://docs.racket-lang.org/pkg/getting-started.html"> http://docs.racket-lang.org/pkg/getting-started.html</a></p></li>
+ <li>
+  <p>DrRacket includes a new package manager GUI, available via the File|Package Manager &hellip; menu item. The GUI is also available as a stand-alone program via the &ldquo;gui-pkg-manager&rdquo; package.</p></li>
+ <li>
+  <p>The main Racket distribution has been separated into about 200 packages. The Racket installer combines the core system with bundled versions of these packages.</p></li></ul>
+
+<p>Alternatively, you may now install a Minimal Racket distribution — which is about 1/10 the size of the main distribution — and add only those packages that you need.</p>
+
+<ul>
+ <li>Package installation supports pre-built packages that include compiled byte code and rendered documentation, meaning packages can be installed quickly when built versions are available. All packages in the main distribution are available in pre-built form.</li></ul>
+
+<p>The recent 5.92 and 5.93 releases served as release candidates for 6.0, and 6.0 includes a few additional repairs related to the package system.</p>
+
+<p>Further improvements to the package system are in the works, notably including package documentation on the package-catalog web site.</p>
+
+<p>COMPATIBILITY NOTE: PLaneT, the previous Racket package system, will remain in place for the foreseeable future, but we expect all package work to shift to the new system.</p>
+
+<p>Beyond the package system, this release brings a number of other changes:</p>
+
+<ul>
+ <li>
+  <p>Racket&rsquo;s HTML documentation has a new and improved look, thanks to Matthew Butterick.</p></li>
+ <li>
+  <p>The documentation includes a style guide, <a href="http://docs.racket-lang.org/style/">&ldquo;How to Program Racket&rdquo;</a>.</p></li>
+ <li>
+  <p>Racket&rsquo;s JIT compiler supports the ARM architecture.</p></li>
+ <li>
+  <p>Racket supports the Mac&rsquo;s Retina display mode.</p></li>
+ <li>
+  <p>The performance of the Typed Racket compiler improved by 50% on some typed programs; e.g., see <a href="http://bit.ly/1d0Ye4z">http://bit.ly/1d0Ye4z</a></p></li>
+ <li>
+  <p>The profiler provides a new mode that uses the errortrace library to produce fine-grained profiles.</p></li>
+ <li>
+  <p>A new contract profiler reports how much time programs spend checking contracts, and which contracts are most expensive.</p></li>
+ <li>
+  <p>The math/flonum library exports fast 105-bit precision operations.</p></li>
+ <li>
+  <p>Check Syntax handles generated identifiers, especially those introduced by struct (e.g. field selectors) and Redex (e.g., e_1, e_2)</p></li>
+ <li>
+  <p>2htdp/batch-io includes functions for dealing with html/xml in files and web sites as X-expressions plus conveniences for web-based graph traversals.</p></li>
+ <li>
+  <p>The `gen:set&rsquo; generic interface extends set operations to work on user-defined types that implement set methods, as well as on other set-like built-in types, such as lists.</p></li>
+ <li>
+  <p>Picts support conversion to SVG format.</p></li>
+ <li>
+  <p>Under unix, Racket provides desktop entries (.desktop files) for its graphical executables.</p></li></ul></div>
+  <a class="more" href='/2014/02/racket-v60.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>17 Dec 2013</p></col-1>
+
+<col-2>
+  <h1><a href='/2013/12/typed-racket-and-classes.html'>Typed Racket and Classes</a></h1>
+  <div class="truncate">
+<p><em>posted by Asumu Takikawa</em></p>
+
+<p>Recently we had our inaugural <a href="https://dekvek.com/racket-salon/">Racket Salon</a> meetup here in Boston, graciously organized by Dan King. At the meetup I gave a short demo about the upcoming support for classes and object-oriented programming in Typed Racket. In this blog post, I’ll go over the concepts I presented in my demo.</p>
+
+<p>Background</p>
+
+<hr />
+
+<p>As many readers already know, <a href="http://www.cs.utah.edu/plt/snapshots/current/doc/ts-guide/index.html">Typed Racket</a> is a gradually-typed sister language to Racket. That means it’s a <a href="http://en.wikipedia.org/wiki/Static_typing#Static_type-checking">statically-typed</a> language that accommodates the idioms of Racket. Programs written in Racket should seamlessly port to Typed Racket with the addition of type annotations here and there. You can even keep some parts of the program dynamically-typed and Typed Racket will make sure those parts won’t break the type invariants via <a href="http://www.cs.utah.edu/plt/snapshots/current/doc/guide/contracts.html">contracts</a>.</p>
+
+<p>Of course, supporting all Racket idioms is quite a lot of work, especially since it’s a constantly evolving language. One of the big pieces missing from Typed Racket right now is support for <a href="http://www.cs.utah.edu/plt/snapshots/current/doc/guide/classes.html">classes and objects</a>. Since the GUI library heavily uses the class system, it’s important to support the object-oriented subset of Racket.</p>
+
+<p>Supporting classes isn’t trivial though. There are a bunch of issues, but the main ones are: (1) the class system is built as a complex macro and so reconstructing the information needed to type-check is tricky, and (2) we need to make sure that interoperation between Racket and Typed Racket using classes/objects can be done safely.</p>
+
+<p>I won’t go over the technical details about the implementation in this blog post, but contact me if you’re interested. In the rest of the blog post, I’ll show some examples to demonstrate what programming in Typed Racket with classes looks like. Just so you know, these examples won’t work in the current version of Typed Racket but will be supported in a future release.</p>
+
+<p>Side note: If you like to live dangerously, you can track the experimental branch with support for classes <a href="https://github.com/takikawa/racket/tree/tr-classes">here</a>.</p>
+
+<h2 id="fishes-and-types">Fishes and types</h2>
+
+<p>To start out, let’s look at an untyped example from the Racket Guide on classes and objects. The following snippet defines a fish% class. The class has several features: an initialization argument named size, a private field named current-size, three methods get-size, grow, and eat.</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">fish%</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._class))" style="color: inherit">class</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/createclass.html#(def._((lib._racket/private/class-internal..rkt)._object~25))" style="color: inherit">object%</a></span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._init))" style="color: inherit">init</a></span> <span class="n">size</span><span class="p">)</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">current-size</span> <span class="n">size</span><span class="p">)</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/objcreation.html#(form._((lib._racket/private/class-internal..rkt)._super-new))" style="color: inherit">super-new</a></span><span class="p">)</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._define/public))" style="color: inherit">define/public</a></span> <span class="p">(</span><span class="n">get-size</span><span class="p">)</span>
+      <span class="n">current-size</span><span class="p">)</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._define/public))" style="color: inherit">define/public</a></span> <span class="p">(</span><span class="n">grow</span> <span class="n">amt</span><span class="p">)</span>
+      <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/set_.html#(form._((quote._~23~25kernel)._set!))" style="color: inherit">set!</a></span> <span class="n">current-size</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="n">amt</span> <span class="n">current-size</span><span class="p">)))</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._define/public))" style="color: inherit">define/public</a></span> <span class="p">(</span><span class="n">eat</span> <span class="n">other-fish</span><span class="p">)</span>
+      <span class="p">(</span><span class="n">grow</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/ivaraccess.html#(form._((lib._racket/private/class-internal..rkt)._send))" style="color: inherit">send</a></span> <span class="n">other-fish</span> <span class="n">get-size</span><span class="p">)))))</span>
+</pre></div>
+
+</div>
+
+<p>The notation should seem mostly familiar if you’ve programmed in Java or other object-oriented languages. The % suffix is a convention for identifiers that are bound to class values. The object% value is the superclass of fish% and is the root class of all class hierarchies. The initialization argument size is used when constructing an instance of a class:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/objcreation.html#(form._((lib._racket/private/class-internal..rkt)._new))" style="color: inherit">new</a></span> <span class="n">fish%</span> <span class="p">[</span><span class="n">size</span> <span class="mi">3</span><span class="p">])</span>
+<span class="p">(</span><span class="n">object:fish%</span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt)._......))" style="color: inherit">...</a></span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>Note that in Racket, classes are just values that can be passed around like anything else. For example, you can even do silly things like define nested inheriting classes:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/objcreation.html#(form._((lib._racket/private/class-internal..rkt)._new))" style="color: inherit">new</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._class))" style="color: inherit">class</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._class))" style="color: inherit">class</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/createclass.html#(def._((lib._racket/private/class-internal..rkt)._object~25))" style="color: inherit">object%</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/objcreation.html#(form._((lib._racket/private/class-internal..rkt)._super-new))" style="color: inherit">super-new</a></span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/Writing.html#(def._((lib._racket/private/misc..rkt)._displayln))" style="color: inherit">displayln</a></span> <span class="s2">"superclass"</span><span class="p">))</span>
+         <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/objcreation.html#(form._((lib._racket/private/class-internal..rkt)._super-new))" style="color: inherit">super-new</a></span><span class="p">)</span>
+         <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/Writing.html#(def._((lib._racket/private/misc..rkt)._displayln))" style="color: inherit">displayln</a></span> <span class="s2">"subclass"</span><span class="p">)))</span>
+<span class="n">superclass</span>
+<span class="n">subclass</span>
+<span class="p">(</span><span class="n">object:eval:4:0</span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt)._......))" style="color: inherit">...</a></span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>In practice, this feature is quite useful since it lets you define <a href="http://www.cs.utah.edu/plt/snapshots/current/doc/guide/classes.html#%28part._.Mixins%29">mixins</a> easily. That’s a topic for another blog post.</p>
+
+<p>Side note: In other words, Racket has first-class classes. This is a term you might see used in the programming language literature.</p>
+
+<p>Adding types to the fish program is easy. First, we can introduce a type definition for the fish class.</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed/racket/base..rkt)._define-type))" style="color: inherit">define-type</a></span> <span class="n">Fish%</span>
+  <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Typed_Classes.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Class))" style="color: inherit">Class</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._init))" style="color: inherit">init</a></span> <span class="p">[</span><span class="n">size</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Real))" style="color: inherit">Real</a></span><span class="p">])</span>
+         <span class="p">[</span><span class="n">get-size</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Real))" style="color: inherit">Real</a></span><span class="p">)]</span>
+         <span class="p">[</span><span class="n">grow</span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Real))" style="color: inherit">Real</a></span> <span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Void))" style="color: inherit">Void</a></span><span class="p">)]</span>
+         <span class="p">[</span><span class="n">draw</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="n">Pict</span><span class="p">)]</span>
+         <span class="p">[</span><span class="n">eat</span> <span class="p">((</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Typed_Classes.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Instance))" style="color: inherit">Instance</a></span> <span class="n">Fish%</span><span class="p">)</span> <span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Void))" style="color: inherit">Void</a></span><span class="p">)]))</span>
+</pre></div>
+
+</div>
+
+<p>This type definition says that Fish% is a class type with the given initialization argument and methods types. Note that the type of the fish class Fish% is not the same as the type of its instances (Instance Fish%). This is an important distinction to make, since both the fish class value and fish object values may appear in the same program.</p>
+
+<p>Side note: If you’re familiar with Typed Racket, you may be surprised that the recursive reference to Fish% in the type definition works. Future versions of Typed Racket will support implicit recursive type definitions.</p>
+
+<p>With the type definition in hand, we can just annotate the class value with the type:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">fish%</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">Fish%</span><span class="p">)</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">fish%</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._class))" style="color: inherit">class</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/createclass.html#(def._((lib._racket/private/class-internal..rkt)._object~25))" style="color: inherit">object%</a></span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._init))" style="color: inherit">init</a></span> <span class="n">size</span><span class="p">)</span>
+    <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">current-size</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Real))" style="color: inherit">Real</a></span><span class="p">)</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">current-size</span> <span class="n">size</span><span class="p">)</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/objcreation.html#(form._((lib._racket/private/class-internal..rkt)._super-new))" style="color: inherit">super-new</a></span><span class="p">)</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._define/public))" style="color: inherit">define/public</a></span> <span class="p">(</span><span class="n">get-size</span><span class="p">)</span>
+      <span class="n">current-size</span><span class="p">)</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._define/public))" style="color: inherit">define/public</a></span> <span class="p">(</span><span class="n">grow</span> <span class="n">amt</span><span class="p">)</span>
+      <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/set_.html#(form._((quote._~23~25kernel)._set!))" style="color: inherit">set!</a></span> <span class="n">current-size</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="n">amt</span> <span class="n">current-size</span><span class="p">)))</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._define/public))" style="color: inherit">define/public</a></span> <span class="p">(</span><span class="n">eat</span> <span class="n">other-fish</span><span class="p">)</span>
+      <span class="p">(</span><span class="n">grow</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/ivaraccess.html#(form._((lib._racket/private/class-internal..rkt)._send))" style="color: inherit">send</a></span> <span class="n">other-fish</span> <span class="n">get-size</span><span class="p">)))))</span>
+</pre></div>
+
+</div>
+
+<p>We do need an extra type annotation on the private field because its type isn’t included in the type definition above. This fish definition is a bit boring, so let’s spice it up a bit by making fishes drawable:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed/racket/base..rkt)._define-type))" style="color: inherit">define-type</a></span> <span class="n">Fish%</span>
+  <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Typed_Classes.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Class))" style="color: inherit">Class</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._init))" style="color: inherit">init</a></span> <span class="p">[</span><span class="n">size</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Real))" style="color: inherit">Real</a></span><span class="p">])</span>
+         <span class="p">(</span><span class="n">get-size</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Real))" style="color: inherit">Real</a></span><span class="p">))</span>
+         <span class="p">[</span><span class="n">grow</span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Real))" style="color: inherit">Real</a></span> <span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Void))" style="color: inherit">Void</a></span><span class="p">)]</span>
+         <span class="c1">; a type for the new method</span>
+         <span class="p">[</span><span class="n">draw</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="n">Pict</span><span class="p">)]</span>
+         <span class="p">[</span><span class="n">eat</span> <span class="p">((</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Typed_Classes.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Instance))" style="color: inherit">Instance</a></span> <span class="n">Fish%</span><span class="p">)</span> <span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Void))" style="color: inherit">Void</a></span><span class="p">)]))</span>
+<span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">fish%</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">Fish%</span><span class="p">)</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">fish%</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._class))" style="color: inherit">class</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/createclass.html#(def._((lib._racket/private/class-internal..rkt)._object~25))" style="color: inherit">object%</a></span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._init))" style="color: inherit">init</a></span> <span class="n">size</span><span class="p">)</span>
+    <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">current-size</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Real))" style="color: inherit">Real</a></span><span class="p">)</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">current-size</span> <span class="n">size</span><span class="p">)</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/objcreation.html#(form._((lib._racket/private/class-internal..rkt)._super-new))" style="color: inherit">super-new</a></span><span class="p">)</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._define/public))" style="color: inherit">define/public</a></span> <span class="p">(</span><span class="n">get-size</span><span class="p">)</span>
+      <span class="n">current-size</span><span class="p">)</span>
+    <span class="c1">; new draw method</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._define/public))" style="color: inherit">define/public</a></span> <span class="p">(</span><span class="n">draw</span><span class="p">)</span>
+      <span class="p">(</span><span class="n">standard-fish</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._*))" style="color: inherit">*</a></span> <span class="n">current-size</span> <span class="mi">10</span><span class="p">)</span>
+                     <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._*))" style="color: inherit">*</a></span> <span class="n">current-size</span> <span class="mi">5</span><span class="p">)))</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._define/public))" style="color: inherit">define/public</a></span> <span class="p">(</span><span class="n">grow</span> <span class="n">amt</span><span class="p">)</span>
+      <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/set_.html#(form._((quote._~23~25kernel)._set!))" style="color: inherit">set!</a></span> <span class="n">current-size</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="n">amt</span> <span class="n">current-size</span><span class="p">)))</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/createclass.html#(form._((lib._racket/private/class-internal..rkt)._define/public))" style="color: inherit">define/public</a></span> <span class="p">(</span><span class="n">eat</span> <span class="n">other-fish</span><span class="p">)</span>
+      <span class="p">(</span><span class="n">grow</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/ivaraccess.html#(form._((lib._racket/private/class-internal..rkt)._send))" style="color: inherit">send</a></span> <span class="n">other-fish</span> <span class="n">get-size</span><span class="p">)))))</span>
+</pre></div>
+
+</div>
+
+<p>The new draw method that’s been added to the fish relies on some functions from the pict library. Since that’s not currently included in Typed Racket’s standard libraries, we need to give its exports some types:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="c1">; this would go at the top of the file before fish%</span>
+<span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._require/typed))" style="color: inherit">require/typed</a></span> <span class="n">pict</span>
+               <span class="p">[</span><span class="kd">#:opaque</span> <span class="n">Pict</span> <span class="n">pict?</span><span class="p">]</span>
+               <span class="p">[</span><span class="n">standard-fish</span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Real))" style="color: inherit">Real</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Real))" style="color: inherit">Real</a></span> <span class="p">[</span><span class="kd">#:color</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.String))" style="color: inherit">String</a></span><span class="p">]</span> <span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="n">Pict</span><span class="p">)])</span>
+</pre></div>
+
+</div>
+
+<p>The <code>#:opaque</code> import form in Typed Racket lets you create a new type that corresponds to some predicate, in this case pict?. It’s useful for bringing in datatypes from dynamically-typed Racket libraries. With that new type, we can give a type for the standard-fish function.</p>
+
+<p>In the end, you can interact with some fish and draw them:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">dory</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/objcreation.html#(form._((lib._racket/private/class-internal..rkt)._new))" style="color: inherit">new</a></span> <span class="n">fish%</span> <span class="p">[</span><span class="n">size</span> <span class="mi">5</span><span class="p">]))</span>
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="n">dory</span>
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Typed_Classes.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Instance))" style="color: inherit">Instance</a></span> <span class="n">Fish%</span><span class="p">)</span>
+<span class="p">(</span><span class="n">object:fish%</span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt)._......))" style="color: inherit">...</a></span><span class="p">)</span>
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/ivaraccess.html#(form._((lib._racket/private/class-internal..rkt)._send))" style="color: inherit">send</a></span> <span class="n">dory</span> <span class="n">draw</span><span class="p">)</span>
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">Pict</span>
+<span class="n">image</span>
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/ivaraccess.html#(form._((lib._racket/private/class-internal..rkt)._send))" style="color: inherit">send</a></span> <span class="n">dory</span> <span class="n">eat</span> <span class="n">dory</span><span class="p">)</span>
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/ivaraccess.html#(form._((lib._racket/private/class-internal..rkt)._send))" style="color: inherit">send</a></span> <span class="n">dory</span> <span class="n">draw</span><span class="p">)</span>
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">Pict</span>
+<span class="n">image</span>
+</pre></div>
+
+</div>
+
+<p>Conclusion:  At Racket Salon, I talked about a few other things including mixins and converting a slightly larger program that uses the GUI library. They didn’t translate well to a blog setting so I didn’t include them here. Racket Salon was a fun event, so I encourage anyone in the Boston area to attend!</p>
+
+<p>Typed Racket’s support for classes will land in a future version of Racket, possibly the release after v6.0.</p></div>
+  <a class="more" href='/2013/12/typed-racket-and-classes.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>10 Aug 2013</p></col-1>
+
+<col-2>
+  <h1><a href='/2013/08/racket-v536.html'>Racket v5.3.6</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>Racket version 5.3.6 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a> Racket v5.3.6 is a bug-fix release. It eliminates errors from v5.3.5 that people have found over the summer.</p></div>
+  <a class="more" href='/2013/08/racket-v536.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<footer>
+ <ul class="pagination">
+  <li><a href="/index-3.html">
+    <quote>&larr;</quote></a></li>
+  <li><a href="/index.html">1</a></li>
+  <li><a href="/index-2.html">2</a></li>
+  <li><a href="/index-3.html">3</a></li>
+  <li class="active"><a href="/index-4.html">4</a></li>
+  <li><a href="/index-5.html">5</a></li>
+  <li><a href="/index-6.html">6</a></li>
+  <li><a href="/index-7.html">7</a></li>
+  <li><a href="/index-8.html">8</a></li>
+  <li><a href="/index-9.html">9</a></li>
+  <li><a href="/index-10.html">10</a></li>
+  <li><a href="/index-11.html">11</a></li>
+  <li><a href="/index-12.html">12</a></li>
+  <li><a href="/index-13.html">13</a></li>
+  <li><a href="/index-14.html">14</a></li>
+  <li><a href="/index-15.html">15</a></li>
+  <li><a href="/index-5.html">
+    <quote>&rarr;</quote></a></li></ul></footer>
+
+<row class="one-column" id="bottom"><col-1></col-1><col-2>
+<p>Made with <a href="https://github.com/greghendershott/frog">Frog</a>, a static-blog generator written in Racket.
+<br /><a href="https://github.com/racket/racket-lang-org">Source code</a> for this blog.</col-2></row>
+  </body>
+</html>

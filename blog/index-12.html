@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <title>Racket Blog (page 12)</title>
+    <meta name="description" content="Racket Blog (page 12)">
+    <meta name="author"      content="The Unknown Author">
+    <meta name="keywords"    content="Chez Scheme, all">
+    <meta name="viewport"    content="width=device-width, initial-scale=1.0">
+    <link rel="icon"      href="/favicon.ico">
+    <link rel="canonical" href="http://blog.racket-lang.org/index-12.html">
+
+
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog-fonts.css">
+    <!-- Feeds -->
+    <link rel="alternate" type="application/atom+xml" href="/feeds/all.atom.xml" title="Atom Feed">
+    <link rel="alternate" type="application/rss+xml" href="/feeds/all.rss.xml" title="RSS Feed">
+    <!-- JS -->
+    </head>
+  <body>
+<row class="one-column" id="logo"><col-1><a href="http://racket-lang.org"><div id="logo-container"><img id="logo" src="/img/racket-logo.svg"/> Racket</div></a></col-1><col-2><p><a href="/index.html">blog</a></p></col-2></row>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>24 Nov 2008</p></col-1>
+
+<col-2>
+  <h1><a href='/2008/11/simple-gnuplotting.html'>Simple GnuPLoTting</a></h1>
+  <div class="truncate">
+<p><em>posted by vyzo</em></p>
+
+<p><a href="http://www.gnuplot.info/">gnuplot</a> is a very powerful and widely used interactive data plotting program. It can generate two-dimenational and three-dimensional surface plots, either on screen or print to files with a wide-array of supported formats. If you are not familiar with it, you can get an idea of its capabilities <a href="http://gnuplot.sourceforge.net/demo/">here</a></p>
+
+<p>A new package, <a href="http://planet.plt-scheme.org/display.ss?package=gnuplot.plt&amp;amp;owner=vyzo">gnuplot.plt</a>, is now available on planet which allows you to programmatically interact with gnuplot processes and generate plots on the fly. The package provides a simple interface that abstracts gnuplot&rsquo;s quirky syntax and takes care of data marshalling using temporary files.</p>
+
+<p>Without further ado, here is to every computer scientist&rsquo;s favorite growth curves:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._planet))" style="color: inherit">planet</a></span> <span class="n">vyzo/gnuplot</span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">gplot</span> <span class="p">(</span><span class="n">gnuplot-spawn</span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">data</span> 
+  <span class="p">(</span><span class="n">gnuplot-data</span>
+   <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((lib._racket/private/list..rkt)._build-list))" style="color: inherit">build-list</a></span> <span class="mi">90</span>
+     <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/lambda.html#(form._((lib._racket/private/base..rkt)._lambda))" style="color: inherit">lambda</a></span> <span class="p">(</span><span class="n">x</span><span class="p">)</span> 
+       <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/let.html#(form._((lib._racket/private/letstx-scheme..rkt)._let))" style="color: inherit">let</a></span> <span class="p">((</span><span class="n">x</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._add1))" style="color: inherit">add1</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._/))" style="color: inherit">/</a></span> <span class="n">x</span> <span class="mf">10.</span><span class="p">))))</span>
+         <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((quote._~23~25kernel)._list))" style="color: inherit">list</a></span> <span class="n">x</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._log))" style="color: inherit">log</a></span> <span class="n">x</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._*))" style="color: inherit">*</a></span> <span class="n">x</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._log))" style="color: inherit">log</a></span> <span class="n">x</span><span class="p">))</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._expt))" style="color: inherit">expt</a></span> <span class="n">x</span> <span class="mi">2</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._expt))" style="color: inherit">expt</a></span> <span class="mi">2</span> <span class="n">x</span><span class="p">)))))))</span>
+<span class="c1">;; png output options</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">png</span> <span class="o">'</span><span class="p">(</span><span class="ss">png</span> <span class="ss">enhanced</span> <span class="ss">transparent</span> <span class="ss">font</span> <span class="p">(</span><span class="ss">str</span> <span class="ss">arial</span><span class="p">)))</span>
+<span class="c1">;; on screen plot</span>
+<span class="p">(</span><span class="n">gnuplot-set</span> <span class="n">gplot</span> <span class="o">'</span><span class="p">(</span><span class="ss">title</span> <span class="p">(</span><span class="ss">str</span> <span class="s2">"growth curves"</span><span class="p">)))</span>
+<span class="p">(</span><span class="n">gnuplot-plot</span> <span class="n">gplot</span> 
+  <span class="kd">#:range</span> <span class="o">'</span><span class="p">(()</span> <span class="p">(</span><span class="mi">1</span> <span class="mi">1000</span><span class="p">))</span>
+  <span class="p">(</span><span class="n">gnuplot-item</span> <span class="n">data</span> <span class="o">'</span><span class="p">(</span><span class="ss">using</span> <span class="p">(</span><span class="ss">seq:</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">)</span> <span class="ss">title</span> <span class="p">(</span><span class="ss">str</span> <span class="s2">"x"</span><span class="p">)</span> <span class="ss">with</span> <span class="ss">line</span><span class="p">))</span>
+  <span class="p">(</span><span class="n">gnuplot-item</span> <span class="n">data</span> <span class="o">'</span><span class="p">(</span><span class="ss">using</span> <span class="p">(</span><span class="ss">seq:</span> <span class="mi">1</span> <span class="mi">2</span><span class="p">)</span> <span class="ss">title</span> <span class="p">(</span><span class="ss">str</span> <span class="s2">"log(x)"</span><span class="p">)</span> <span class="ss">with</span> <span class="ss">line</span><span class="p">))</span>
+  <span class="p">(</span><span class="n">gnuplot-item</span> <span class="n">data</span> <span class="o">'</span><span class="p">(</span><span class="ss">using</span> <span class="p">(</span><span class="ss">seq:</span> <span class="mi">1</span> <span class="mi">3</span><span class="p">)</span> <span class="ss">title</span> <span class="p">(</span><span class="ss">str</span> <span class="s2">"xlog(x)"</span><span class="p">)</span> <span class="ss">with</span> <span class="ss">line</span><span class="p">))</span>
+  <span class="p">(</span><span class="n">gnuplot-item</span> <span class="n">data</span> <span class="o">'</span><span class="p">(</span><span class="ss">using</span> <span class="p">(</span><span class="ss">seq:</span> <span class="mi">1</span> <span class="mi">4</span><span class="p">)</span> <span class="ss">title</span> <span class="p">(</span><span class="ss">str</span> <span class="s2">"x^2"</span><span class="p">)</span> <span class="ss">with</span> <span class="ss">line</span><span class="p">))</span>
+  <span class="p">(</span><span class="n">gnuplot-item</span> <span class="n">data</span> <span class="o">'</span><span class="p">(</span><span class="ss">using</span> <span class="p">(</span><span class="ss">seq:</span> <span class="mi">1</span> <span class="mi">5</span><span class="p">)</span> <span class="ss">title</span> <span class="p">(</span><span class="ss">str</span> <span class="s2">"2^x"</span><span class="p">)</span> <span class="ss">with</span> <span class="ss">line</span><span class="p">)))</span>
+<span class="c1">;; replot to png</span>
+<span class="p">(</span><span class="n">gnuplot-hardcopy</span> <span class="n">gplot</span> <span class="s2">"/tmp/grow.png"</span> <span class="kd">#:term</span> <span class="n">png</span><span class="p">)</span>
+<span class="c1">;; redo with logscale</span>
+<span class="p">(</span><span class="n">gnuplot-set</span> <span class="n">gplot</span> <span class="o">'</span><span class="p">(</span><span class="ss">logscale</span> <span class="ss">y</span><span class="p">))</span>
+<span class="p">(</span><span class="n">gnuplot-replot</span> <span class="n">gplot</span><span class="p">)</span>
+<span class="p">(</span><span class="n">gnuplot-hardcopy</span> <span class="n">gplot</span> <span class="s2">"/tmp/loggrow.png"</span> <span class="kd">#:term</span> <span class="n">png</span><span class="p">)</span>
+</pre></div>
+
+</div></div>
+  <a class="more" href='/2008/11/simple-gnuplotting.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>21 Nov 2008</p></col-1>
+
+<col-2>
+  <h1><a href='/2008/11/plt-scheme-v413.html'>PLT Scheme v4.1.3</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>PLT Scheme version 4.1.3 is now available from  <a href="http://plt-scheme.org/">http://plt-scheme.org/</a> This is a bug-fix release.</p>
+
+<p>Notable changes:</p>
+
+<ul>
+ <li>Web Server:</li>
+ <li>Documentation rewritten to separate servlet APIs and server extension APIs</li>
+ <li>HTTPS supported on the &ldquo;plt-web-server&rdquo; command-line with "&mdash;ssl" option</li>
+ <li>Stateless servlets supported in default configuration through &rsquo;stateless interface-version</li>
+ <li>`web-server/servlet-env&rsquo; supports top-level servlets through #:servlet-path</li>
+ <li>Servlets are served from anywhere in the htdocs directory by default</li>
+ <li>A template system based on the Scribble syntax has been added, see web-server/templates in the documentationAnd many other internal modifications to make extension easier!</li></ul>
+
+<p>[Note that mirror sites can take a while to catch up with the new downloads.]</p>
+
+<p>Feedback Welcome.</p></div>
+  <a class="more" href='/2008/11/plt-scheme-v413.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>28 Oct 2008</p></col-1>
+
+<col-2>
+  <h1><a href='/2008/10/plt-scheme-v412.html'>PLT Scheme v4.1.2</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>PLT Scheme version 4.1.2 is now available from  <a href="http://plt-scheme.org/">http://plt-scheme.org/</a> This is a bug-fix release.</p>
+
+<p>[Note that mirror sites can take a while to catch up with the new downloads.]</p>
+
+<p>Feedback Welcome.</p></div>
+  <a class="more" href='/2008/10/plt-scheme-v412.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>06 Oct 2008</p></col-1>
+
+<col-2>
+  <h1><a href='/2008/10/web-application-development-in-plt-scheme.html'>Web Application Development in PLT Scheme</a></h1>
+  <div class="truncate">
+<p><em>posted by Jay McCarthy</em></p>
+
+<p>Many users often post to the <code>plt-scheme</code> mailing list asking for introductions to Web application development in PLT Scheme. They&rsquo;ve heard of the continuation-based PLT Web Server and want a gentle introduction. Unfortunately, there has been a distinct lack of good documentation and tutorials for the server. Taking the cue from two users: <a href="http://www.scheme.dk/blog/2007/01/introduction-to-web-development-with.html">Jens Axel Soegaard</a> and <a href="http://alwaysmovefast.com/category/plt-scheme/">David Reynolds</a>, we&rsquo;ve written a tutorial with Danny Yoo.</p>
+
+<p>The tutorial is available at <a href="http://docs.plt-scheme.org/continue/index.html">http://docs.plt-scheme.org/continue/index.html</a>. It walks through the creation of a blog application, introducing features slowly and culminates in an SQL-backed database for the posts. Of particular interest, is the <a href="http://docs.plt-scheme.org/web-server/insta.html">fast start servlet setup</a> based on the Instaservlet package from <a href="http://www.untyped.com/">Untyped</a>.</p>
+
+<p>Please take a look and pass along this as a pointer to those who may be interested in PLT Scheme.</p></div>
+  <a class="more" href='/2008/10/web-application-development-in-plt-scheme.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>05 Oct 2008</p></col-1>
+
+<col-2>
+  <h1><a href='/2008/10/plt-scheme-v411.html'>PLT Scheme v4.1.1</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>PLT Scheme version 4.1.1 is now available from  <a href="http://plt-scheme.org/">http://plt-scheme.org/</a>Notable changes:</p>
+
+<ul>
+ <li>
+  <p>web-server: New servlet development tutorial; quick launching of servlets from DrScheme via the `web-server/insta&rsquo; language; new form abstraction through formlets.</p></li>
+ <li>
+  <p>misc: mzc can &ldquo;decompile&rdquo; bytecode files; `#lang&rsquo; lines wired to the top of DrScheme&rsquo;s definition window; improved searching in DrScheme; some foreign interface extensions.[Note that mirror sites can take a while to catch up with the new downloads.]</p></li></ul>
+
+<p>Feedback Welcome.</p></div>
+  <a class="more" href='/2008/10/plt-scheme-v411.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>12 Aug 2008</p></col-1>
+
+<col-2>
+  <h1><a href='/2008/08/plt-scheme-v41.html'>PLT Scheme v4.1</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>PLT Scheme version 4.1 is now available from  <a href="http://plt-scheme.org/">http://plt-scheme.org/</a></p>
+
+<ul>
+ <li>DrScheme changes:
+  <ul>
+   <li>The Module language now has an automatically inserted <code>#lang</code> declaration, so the interactions window is available right away for new windows.</li>
+   <li>Searching is now interactive (see the manual for details).</li>
+   <li>Memory limits are now enabled by default.</li></ul></li>
+ <li>
+  <p>Typed Scheme supports a novel type checking mechanism for homogeneous and heterogeneous variable-arity function definitions and applications.</p></li>
+ <li>
+  <p>Redex (a domain-specific language for testing operational semantics) is now included in the distribution. See also <code>[redex.plt-scheme.org](http://redex.plt-scheme.org/)</code>.</p></li>
+ <li>
+  <p>Lots of improvement to the documentation, including: better searching, table-of-contents, and language-sensitive help (in the teaching languages).</p></li>
+ <li>
+  <p>The world.ss teachpack no longer supports <code>end-of-time</code>, only <code>stop-when</code>.</p></li>
+ <li>
+  <p>MzScheme has now a logging facility, search the documentationfor &ldquo;logger&rdquo; for more details.</p></li>
+ <li>Bug fixes:
+  <ul>
+   <li><code>begin</code> in R5RS (and derived languages),</li>
+   <li><code>#lang planet</code>,</li>
+   <li><code>eval</code> works with phases.</li></ul></li></ul>
+
+<p>Feedback Welcome.</p></div>
+  <a class="more" href='/2008/08/plt-scheme-v41.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>29 Jul 2008</p></col-1>
+
+<col-2>
+  <h1><a href='/2008/07/search-in-drscheme.html'>Search in DrScheme</a></h1>
+  <div class="truncate">
+<p><em>posted by Robby Findler</em></p>
+
+<p>I&rsquo;ve just overhauled search in DrScheme. Instead of popping up a dialog box and asking you for a search string, you get a new editor along the bottom of the DrScheme window where you can type a search string and DrScheme responds by circling (in purple) all of the occurrences of the search string in the file, both in the main window and in the contour window.</p>
+
+<p>From there, you can use the new menu shortcuts to navigate forwards and backwards through the hits, optionally replacing occurrences of the search string with the replace strings (see the Edit menu).</p>
+
+<p>With the default settings, typing a search string does not move around in the main window. Specifically (unlike Emacs, Safari, or Firefox), you don&rsquo;t move immediately to the first occurrence of the search string. You have to hit return or one of the search keys (in the Edit menu) for that to happen. But you can enable this in the General pane of the Editing tab in the preferences dialog. Click on &ldquo;Search using anchors&rdquo;. Now, when you search for a string, DrScheme will whizz you right to it and when you edit the search string, DrScheme will shift the insertion point based on the search string. In order for you to keep track of where edits will go, you&rsquo;ll see a funny looking little red dongle in your text. That&rsquo;s where the insertion point was when you started your search, and that&rsquo;s where DrScheme starts all of these implicit searches from.</p>
+
+<p>Try it out and let us know what you think! In particular, is the anchor-based search or the non-anchor-based search more intuitive for you?</p></div>
+  <a class="more" href='/2008/07/search-in-drscheme.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>04 Jul 2008</p></col-1>
+
+<col-2>
+  <h1><a href='/2008/07/plt-scheme-v402.html'>PLT Scheme v4.0.2</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>PLT Scheme version 4.0.2 is now available from</p>
+
+<p> <a href="http://plt-scheme.org/">http://plt-scheme.org/</a> This release fixes a bug that caused PLaneT packages to install abnormally slow in 4.0.1.</p>
+
+<p>[ For those that use the nightly builds, subversion, or 4.0.1tsrj2008, you already have this fix (and even more fixes). You do not need to upgrade. The version in svn is now 4.0.2.3 to minimize confusion. ]</p>
+
+<p>Feedback Welcome.</p></div>
+  <a class="more" href='/2008/07/plt-scheme-v402.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>22 Jun 2008</p></col-1>
+
+<col-2>
+  <h1><a href='/2008/06/plt-scheme-v401.html'>PLT Scheme v4.0.1</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>PLT Scheme version 4.0.1 is now available from</p>
+
+<p> <code>[http://plt-scheme.org/](http://plt-scheme.org/)</code></p>
+
+<p>This release fixes a number of bugs. Most noteworthy, the &ldquo;Internal Error&rdquo; message when requiring a PLaneT package has been fixed and user-defined teachpacks now work properly.</p>
+
+<p>Feedback Welcome.</p></div>
+  <a class="more" href='/2008/06/plt-scheme-v401.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>12 Jun 2008</p></col-1>
+
+<col-2>
+  <h1><a href='/2008/06/plt-scheme-v40.html'>PLT Scheme v4.0</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>PLT Scheme version 4.0 is now available from <code>[http://plt-scheme.org/](http://plt-scheme.org/)</code> This major new release offers many improvements over version 372, and we encourage everyone to upgrade.</p>
+
+<ul>
+ <li>
+  <p>The PLT Scheme language now provides better syntax for modules, better support for optional and keyword arguments to functions, a more complete syntax for structure types, new syntax for list comprehensions and iterations, a more complete and consistent set of list operations, a more complete set of string operations, and streamlined hash-table operations.</p></li>
+ <li>
+  <p>The documentation has been re-organized and re-written. New tutorials and overviews offer a clearer introduction to Scheme and PLT Scheme.</p></li>
+ <li>
+  <p>New documentation tools help programmers create and install documentation for libraries and Planet packages. All installed documentation can be read though the user&rsquo;s web browser, and even searching within the browser works on local files. The language for writing documentation is an extension of Scheme, and document sources are linked to implementations through the module system. The module connection allows, for example, reliable automatic hyperlinking of identifiers mentioned in documentation to their specifications in other documentation.</p></li>
+ <li>
+  <p>R6RS programs are supported in two ways: though the <code>plt-r6rs</code> executable and through the <code>#!r6rs</code> prefix. The latter allows an R6RS library or program to serve as a PLT Scheme module.</p></li>
+ <li>
+  <p>Legacy R5RS support is improved, partly through a separate <code>plt-r5rs</code> executable.</p></li>
+ <li>
+  <p>Pairs are immutable within the PLT Scheme language; mutable pairs (which are the same as R6RS and R5RS pairs) are provided as a separate datatype. For more information, see &ldquo;Getting rid of <code>set-car!</code> and <code>set-cdr!</code>&rdquo;</p></li>
+ <li>
+  <p>ProfessorJ uses a new and improved parser, it evaluates programs faster, and it includes a Java-specific indenter.</p></li>
+ <li>
+  <p>Testing frameworks for the HtDP and HtDC (ProfessorJ) teaching languages have been unified. Both support systematic unit testing in a comprehensive fashion. When programs lack tests, students are asked to add test cases. When all tests succeed, a simple message says so; otherwise, a pop-up window (dockable) displays URLs to the failed test cases and explains why the cases failed.</p></li>
+ <li>
+  <p>Typed Scheme, a statically typed dialect of Scheme, is now included with PLT Scheme. While Typed Scheme is still in its early stages of development, it supports modular programming with types and full interaction with existing untyped code. Safe interactions between typed and untyped modules are enforced via contracts. Typed Scheme also features a novel type system designed to accommodate Scheme programming idioms. For more information, see the <a href="http://www.ccs.neu.edu/~samth/typed-scheme/">Typed Scheme</a> page.</p></li></ul>
+
+<p>Feedback Welcome.</p></div>
+  <a class="more" href='/2008/06/plt-scheme-v40.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<footer>
+ <ul class="pagination">
+  <li><a href="/index-11.html">
+    <quote>&larr;</quote></a></li>
+  <li><a href="/index.html">1</a></li>
+  <li><a href="/index-2.html">2</a></li>
+  <li><a href="/index-3.html">3</a></li>
+  <li><a href="/index-4.html">4</a></li>
+  <li><a href="/index-5.html">5</a></li>
+  <li><a href="/index-6.html">6</a></li>
+  <li><a href="/index-7.html">7</a></li>
+  <li><a href="/index-8.html">8</a></li>
+  <li><a href="/index-9.html">9</a></li>
+  <li><a href="/index-10.html">10</a></li>
+  <li><a href="/index-11.html">11</a></li>
+  <li class="active"><a href="/index-12.html">12</a></li>
+  <li><a href="/index-13.html">13</a></li>
+  <li><a href="/index-14.html">14</a></li>
+  <li><a href="/index-15.html">15</a></li>
+  <li><a href="/index-13.html">
+    <quote>&rarr;</quote></a></li></ul></footer>
+
+<row class="one-column" id="bottom"><col-1></col-1><col-2>
+<p>Made with <a href="https://github.com/greghendershott/frog">Frog</a>, a static-blog generator written in Racket.
+<br /><a href="https://github.com/racket/racket-lang-org">Source code</a> for this blog.</col-2></row>
+  </body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if IE 9]>    <html class="no-js ie9" lang="en"> <![endif]-->
+<!--[if gt IE 9]><!--> <html class="no-js" lang="en" itemscope itemtype="http://schema.org/Product"> <!--<![endif]-->
+<html>
+<head>
+<title>Racket: Mailing lists: <MM-List-Name></title>
+<meta name="generator" content="Racket" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<link rel="icon" href="/plticon-1-2.ico" type="image/ico" />
+<link rel="shortcut icon" href="/plticon-1-2.ico" type="image/x-icon" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<link rel="stylesheet" href="/gumby-1-2.css" />
+<script src="/modernizr-2.6.2.min.js"></script>
+<style>
+h1 {
+  text-align: center;
+  background-color: #99ccff;
+  padding: 0.5em;
+  font-size: 150%;
+  font-weight: bold;
+}
+h2 {
+  text-align: left;
+  padding: 0.1em 0.5em;
+  background-color: #ffddaa;
+  font-size: 120%;
+  font-weight: bold;
+}
+.users-subscribe { display: none; }
+.dev-subscribe { display: none; }
+.subp {
+  margin: 0.5ex 0 0.5ex 1em;
+}
+</style>
+</head>
+<body><div class="navbar gumby-content" style="position: fixed;" gumby-fixed="top" id="nav1"><div class="row"><a class="toggle" gumby-trigger="#nav1 &gt; .row &gt; ul" href="#"><i class="icon-menu"></i></a>
+<a class="four columns logo" href="https://racket-lang.org/"><img class="logo" src="/logo-and-text-1-2.png" width="198" height="60" alt="Racket" /></a>
+<span class="one colums"></span> <ul class="five columns">
+
+
+</ul></div></div><div style="height: 60px;"></div>
+<div class="bodycontent"><div class="row"><div class="ten columns centered"><!--
+Based on the Mailman file "listinfo.html", revision: 5865
+Modified to fit the racket pages, add a mail-archive searchbox for
+public lists.
+-->
+<h1><MM-List-Name>: <MM-List-Description></h1>
+<h2>About the <MM-List-Name> list
+<span style="float: right; font-weight: normal; font-size: 80%; margin-top: 4px;"><MM-Lang-Form-Start><MM-displang-box> <MM-list-langs><MM-Form-End></span></h2>
+<div class="subp"><MM-List-Info></div>
+<div class="subp">To post a message to the list, send email to
+<a href="mailto:<MM-Posting-Addr>"><MM-Posting-Addr></a>.</div>
+<div class="<MM-List-Name>-subscribe"><div class="subp">To see the collection of prior postings to the list, visit the
+<MM-Archive><MM-List-Name> archives</MM-Archive>.
+<MM-Restricted-List-Message></div>
+<form action="http://www.mail-archive.com/search" method="get"><div class="subp"><input type="hidden" name="l" value="<MM-Posting-Addr>" />
+Archives are also available at
+<a href="http://www.mail-archive.com/<MM-Posting-Addr>/">mail-archive.com</a>,
+search it here:
+<input type="text" name="q" value="" size="16" /></div>
+<div class="subp">(<a href="/">More information</a> on other ways to use this list
+and other public Racket lists.)</div></form></div>
+<div class="<MM-List-Name>-subscribe"><h2><a name="subscribers"><MM-List-Name> subscribers</a></h2>
+<div class="subp"><MM-Options-Form-Start><MM-Editing-Options><MM-Form-End></div>
+<h2>Subscribing to <MM-List-Name></h2>
+<div class="subp">Subscribe to <MM-List-Name> by filling out the following form.
+<MM-List-Subscription-Msg></div>
+<div class="subp"><MM-Subscribe-Form-Start><table cellspacing="2" cellpadding="2" width="90%" align="center"><tr><td bgcolor="#dddddd">Your email address:</td>
+<td><MM-Subscribe-Box></td>
+<td>&nbsp;</td></tr>
+<tr><td bgcolor="#dddddd">Your name (optional):</td>
+<td><MM-fullname-box></td>
+<td>&nbsp;</td></tr>
+<tr><td colspan="3" style="font-size: 82.5%;"><p>You may enter a privacy password below.  This provides
+only mild security, but should prevent others from messing
+with your subscription. <b>Do not use a valuable password</b>
+as it will occasionally be emailed back to you in
+cleartext.</p>
+<p>If you choose not to enter a password, one will be
+automatically generated for you, and it will be sent to you
+once you've confirmed your subscription.  You can always
+request a mail-back of your password when you edit your
+personal options.</p>
+<MM-Reminder></td></tr>
+<tr><td bgcolor="#dddddd">Pick a password:</td>
+<td><MM-New-Password-Box></td>
+<td>&nbsp;</td></tr>
+<tr><td bgcolor="#dddddd">Reenter password to confirm:</td>
+<td><MM-Confirm-Password></td>
+<td>&nbsp;</td></tr>
+<tr><td bgcolor="#dddddd">Which language do you prefer to display your messages?</td>
+<td><MM-list-langs></td>
+<td>&nbsp;</td></tr>
+<MM-digest-question-start>
+<tr><td>Would you like to receive list mail batched in a daily
+digest?</td>
+<td><MM-Undigest-Radio-Button> No
+<MM-Digest-Radio-Button>   Yes</td>
+<td>&nbsp;</td></tr>
+<MM-digest-question-end>
+<tr><td colspan="3"><p style="text-align: center;"><MM-Subscribe-Button></p></td></tr></table><MM-Form-End></div></div>
+<h2>&nbsp;</h2>
+<MM-Mailman-Footer></div></div></div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+//<![CDATA[
+window.jQuery || document.write('<script src=/jquery-1.9.1.min.js><\/script>')
+//]]>
+</script>
+<script src="/gumby.min.js"></script>
+<script src="/plugins.js"></script>
+<script src="/main.js"></script>
+</body></html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <title>Racket v6.11</title>
+    <meta name="description" content="_posted by Vincent St-Amour_  Racket version 6.11 is now available from http://racket-lang.org/      A bug preventing OneDrive users on Windows 10 Fall Creators update  from opening files has been fixed.     Typed Racket supports refinement types and depe...">
+    <meta name="author"      content="The Unknown Author">
+    <meta name="keywords"    content="">
+    <meta name="viewport"    content="width=device-width, initial-scale=1.0">
+    <link rel="icon"      href="/favicon.ico">
+    <link rel="canonical" href="http://blog.racket-lang.org/2017/10/racket-v6-11.html">
+    <link rel="next" href="/2017/10/tutorial-creating-a-package.html">
+    <link rel="prev" href="/2017/11/adding-refinement-types.html">
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog-fonts.css">
+    <!-- Feeds -->
+    <link rel="alternate" type="application/atom+xml" href="/feeds/all.atom.xml" title="Atom Feed">
+    <link rel="alternate" type="application/rss+xml" href="/feeds/all.rss.xml" title="RSS Feed">
+    <!-- JS -->
+    </head>
+  <body>
+<row class="one-column" id="logo"><col-1><a href="http://racket-lang.org"><div id="logo-container"><img id="logo" src="/img/racket-logo.svg"/> Racket</div></a></col-1><col-2><p><a href="/index.html">blog</a></p></col-2></row>
+<article>
+<row>
+
+<col-1>
+  <p class='date-and-tags'>30 Oct 2017</p>
+
+</col-1>
+
+<col-2>
+  <header>
+  <h1>Racket v6.11</h1>
+  </header>
+
+<p><em>posted by Vincent St-Amour</em></p>
+
+<p>Racket version 6.11 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<ul>
+ <li>
+  <p>A bug preventing OneDrive users on Windows 10 Fall Creators update  from opening files has been fixed.</p></li>
+ <li>
+  <p>Typed Racket supports refinement types and dependent function types.  Previously an experimental feature, refinement types allow types to  describe more interesting properties of values, especially integers.  For example, this type shows that the <code>max</code> function always produces a  number at least as big as its inputs:  <code>(-&gt; ([x : Integer] [y : Integer])
+       (Refine [z : Integer] (and (&gt;= z x) (&gt;= z y))))</code></p></li>
+ <li>
+  <p>DrRacket&rsquo;s Program Contour is significantly more efficient; using it  no longer hurts DrRacket&rsquo;s interactivity.</p></li>
+ <li>
+  <p>The <code>web-server/formlets</code> library produces formlets that are  serializable, facilitating dynamic uses of formlets in stateless #lang  web-server servlets. The new <code>web-server/formlets/stateless</code> and  <code>web-server/formlets/unsafe</code> libraries provide additional support with  the same API.</p></li>
+ <li>
+  <p>The <code>db</code> library supports the Cassandra database.</p></li></ul>
+
+<p>The following people contributed to this release: Alex Knauth, Andrew Gwozdziewycz, Andrew Kent, Asumu Takikawa, Ben Greenman, Ben Noordhuis, Carlo Dapor, Daniel Feltey, David Christiansen, David Van Horn, Eric Dobson, Gustavo Massaccesi, Harold Carr, Jack Firth, Jay McCarthy, Jeannie Tran, Jens Axel Søgaard, jgreco, John Clements, Jordan Johnson, Justin Slepak, Leandro Facchinetti, Leif Andersen, Matthew Butterick, Matthew Flatt, Matthias Felleisen, Michael Ballantyne, Milo Turner, Nadeem Abdul Hamid, Philip McGrath, rain, Robby Findler, Royall Spence, Ryan Culpepper, Ryan Davis, Sam Tobin-Hochstadt, Shu-Hung You, Spencer Florence, Stephen Chang, Vincent St-Amour, WarGrey Gyoudmon Ju, and Weng Shiwei.</p>
+
+<p>Feedback Welcome</p>
+<!-- more-->
+<col-2>
+
+</row>
+
+<footer>
+<row>
+<col-1>
+</col-1>
+<col-2>
+<h2><span class="label">next</span> <a class="next" href="/2017/11/adding-refinement-types.html">Refinement Types in Typed Racket</a></h2>
+
+<h2><span class="label">prev</span> <a class="previous" href="/2017/10/tutorial-creating-a-package.html">Tutorial: Creating a Package</a></h2>
+
+</col-2>
+</row>
+</footer>
+
+</article>
+
+<row class="one-column" id="bottom"><col-1></col-1><col-2>
+<p>Made with <a href="https://github.com/greghendershott/frog">Frog</a>, a static-blog generator written in Racket.
+<br /><a href="https://github.com/racket/racket-lang-org">Source code</a> for this blog.</col-2></row>
+  </body>
+</html>

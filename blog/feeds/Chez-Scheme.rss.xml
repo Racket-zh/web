@@ -1,0 +1,1322 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<rss version="2.0">
+ <channel>
+  <title>Racket Blog: Posts tagged 'Chez Scheme'</title>
+  <description>Racket Blog: Posts tagged 'Chez Scheme'</description>
+  <link>http://blog.racket-lang.org/tags/Chez-Scheme.html</link>
+  <lastBuildDate>Thu, 04 Jan 2018 16:00:00 UT</lastBuildDate>
+  <pubDate>Thu, 04 Jan 2018 16:00:00 UT</pubDate>
+  <ttl>1800</ttl>
+  <item>
+   <title>Racket-on-Chez Status: January 2018</title>
+   <link>http://blog.racket-lang.org/2018/01/racket-on-chez-status.html?utm_source=Chez-Scheme&amp;utm_medium=RSS</link>
+   <guid isPermaLink="false">urn:http-blog-racket-lang-org:-2018-01-racket-on-chez-status-html</guid>
+   <pubDate>Thu, 04 Jan 2018 16:00:00 UT</pubDate>
+   <author>The Unknown Author</author>
+   <description>
+&lt;p&gt;&lt;span style="font-style: italic"&gt;posted by Matthew Flatt with thanks to collaborators
+Kent Dybvig, Andy Keep, Gustavo Massaccesi, Sarah Spall, Sam Tobin-Hochstadt, and Jon Zeppieri&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;It&amp;rsquo;s been almost a year since we
+&lt;a href="https://groups.google.com/d/msg/racket-dev/2BV3ElyfF8Y/4RSd3XbECAAJ"&gt;decided
+to try&lt;/a&gt; running &lt;a href="https://racket-lang.org/"&gt;Racket&lt;/a&gt; on
+&lt;a href="https://www.scheme.com/"&gt;Chez Scheme&lt;/a&gt;, and it has been
+almost six months since my last
+&lt;a href="https://groups.google.com/d/msg/racket-dev/rkXuHNAmQaA/hjgPZHErAwAJ"&gt;status
+report&lt;/a&gt;. As of &lt;a href="https://con.racket-lang.org/"&gt;RacketCon
+2017&lt;/a&gt;, DrRacket could start up on Chez Scheme (but just barely, and
+just in time for the demo).&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href="https://github.com/racket/racket7/"&gt;current
+implementation&lt;/a&gt; is now &lt;a data-pltdoc="x" href="#%28part._functionality%29"&gt;considerably more
+complete&lt;/a&gt;. DrRacket still doesn&amp;rsquo;t run well, but Racket-on-Chez can
+build a full Racket distribution in &lt;a data-pltdoc="x" href="#%28part._build%29"&gt;reasonable time
+and space&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;With the current Racket-on-Chez compilation strategy, runtime
+performance is &lt;a data-pltdoc="x" href="#%28part._benchmarks%29"&gt;plausible on traditional
+benchmarks&lt;/a&gt;, but cross-module optimization is needed to bring the
+results fully in line with our expectations.
+&lt;a data-pltdoc="x" href="#%28part._startup%29"&gt;Startup and load times&lt;/a&gt; are much slower than we
+would like. &lt;a data-pltdoc="x" href="#%28part._build%29"&gt;Compile/build times&lt;/a&gt; are a factor of 4
+slower than the current version of Racket.&lt;/p&gt;
+
+&lt;blockquote class="refpara"&gt;
+ &lt;blockquote class="refcolumn"&gt;
+  &lt;blockquote class="refcontent"&gt;
+   &lt;p&gt;&lt;/p&gt;
+   &lt;div class="SIntrapara"&gt;Glossary of implementations:
+&lt;/div&gt;
+   &lt;div class="SIntrapara"&gt;
+    &lt;ul&gt;
+     &lt;li&gt;
+      &lt;p&gt;&lt;span style="font-weight: bold"&gt;Racket&lt;/span&gt; &amp;#8212;
+       &lt;wbr /&gt; the current Racket release, version 6.x&lt;/p&gt;&lt;/li&gt;
+     &lt;li&gt;
+      &lt;p&gt;&lt;span style="font-weight: bold"&gt;&lt;span class="stt"&gt;racket7&lt;/span&gt;&lt;/span&gt; &amp;#8212;
+       &lt;wbr /&gt; mostly the same as Racket, but using a new,
+                        Racket-implemented macro expander;
+                        the source is in the
+                        &lt;a href="https://github.com/racket/racket7"&gt;&lt;span class="url"&gt;https://github.com/racket/racket7&lt;/span&gt;&lt;/a&gt; repo&lt;/p&gt;&lt;/li&gt;
+     &lt;li&gt;
+      &lt;p&gt;&lt;span style="font-weight: bold"&gt;Chez Scheme&lt;/span&gt; &amp;#8212;
+       &lt;wbr /&gt; a completely different implementation of
+                       Scheme that we&amp;rsquo;re trying to use as a replacement
+                       for part of Racket&lt;/p&gt;&lt;/li&gt;
+     &lt;li&gt;
+      &lt;p&gt;&lt;span style="font-weight: bold"&gt;Racket-on-Chez&lt;/span&gt; &amp;#8212;
+       &lt;wbr /&gt; Chez Scheme plus additional layers to make
+                          it implement the same language as Racket;
+                          the source is also in the
+                          &lt;a href="https://github.com/racket/racket7"&gt;&lt;span class="url"&gt;https://github.com/racket/racket7&lt;/span&gt;&lt;/a&gt; repo&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;/blockquote&gt;&lt;/blockquote&gt;&lt;/blockquote&gt;
+
+&lt;h1&gt;&lt;a name="(part._.Approach)"&gt;&lt;/a&gt;Approach&lt;/h1&gt;
+
+&lt;p&gt;Our overall goal is to improve Racket&amp;rsquo;s implementation and
+make it more portable to different runtime systems. To a first
+approximation, improving Racket and making it more portable means
+&amp;ldquo;less C code.&amp;rdquo; Building on a Chez Scheme is a promising means toward
+that end.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;table cellpadding="0" cellspacing="0"&gt;
+ &lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td&gt;
+    &lt;p class="SubFlow"&gt;&lt;/p&gt;
+    &lt;p&gt;The picture on the right illustrates the current Racket distribution.
+The parts in blue are implemented in &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;Racket&lt;/span&gt;&lt;/span&gt;,
+while the part in red is implemented in &lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;C&lt;/span&gt;&lt;/span&gt;. The green
+block is &lt;span style="color: forestgreen"&gt;&lt;span style="font-weight: bold"&gt;Scribble&lt;/span&gt;&lt;/span&gt; documentation source.&lt;/p&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;
+    &lt;p&gt;The numbers next to each block are a rough lines-of-code counts, and
+the blocks are scaled to those counts. The
+&lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;collects&lt;/span&gt;&lt;/span&gt; block represents the content of the
+main &lt;span class="stt"&gt;"collects"&lt;/span&gt; directory; along with the
+&lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;core&lt;/span&gt;&lt;/span&gt; block, it&amp;rsquo;s roughly the code in a Minimal Racket
+distribution. The &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;pkgs&lt;/span&gt;&lt;/span&gt; block is the part of the
+main distribution that is available in separate packages but bundled
+with the main distribution. The &lt;span style="color: forestgreen"&gt;&lt;span style="font-weight: bold"&gt;docs&lt;/span&gt;&lt;/span&gt; block is
+spread across the same packages as the &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;pkgs&lt;/span&gt;&lt;/span&gt;
+code.&lt;/p&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;
+    &lt;p&gt;Porting Racket to Chez Scheme is all about the &lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;core&lt;/span&gt;&lt;/span&gt;
+part. The goal is to make no changes to existing
+&lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;Racket&lt;/span&gt;&lt;/span&gt; and &lt;span style="color: forestgreen"&gt;&lt;span style="font-weight: bold"&gt;Scribble&lt;/span&gt;&lt;/span&gt; code,
+although we&amp;rsquo;ll inevitably have to make small changes to support
+multiple Racket implementations.&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict.png" alt="image" height="338.0" style="vertical-align: -0.0px; margin: -3px -3px -3px -3px;" width="90.46142578125" /&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;table cellpadding="0" cellspacing="0"&gt;
+ &lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td&gt;
+    &lt;p class="SubFlow"&gt;&lt;/p&gt;
+    &lt;p&gt;Let&amp;rsquo;s zoom into the &lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;core&lt;/span&gt;&lt;/span&gt; part. (From now on, all the
+pictures on the right are at this scale.)
+The picture breaks the C code in Racket&amp;rsquo;s current
+implementation into several major subsystems. In reality, the
+implementation is not organized into such tidy layers, but
+the picture is conceptually close to the truth.&lt;/p&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;
+    &lt;p&gt;The large &lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;builtins&lt;/span&gt;&lt;/span&gt; block implements primitive data
+structures and their operations, such as numbers (fixnums, bignums,
+flonums, exact rationals, complex numbers), strings, characters, byte
+strings, lists, vectors, and hash tables. Most other blocks are
+self-explanatory.&lt;/p&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;
+    &lt;p&gt;The &lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt; block implements the macro expander,
+reader, and module system. More than any other part of the current
+stack, the &lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt; part is better implemented in
+Racket.&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_2.png" alt="image" height="338.0" style="vertical-align: -0.0px; margin: -3px -3px -3px -3px;" width="144.0078125" /&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;table cellpadding="0" cellspacing="0"&gt;
+ &lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td&gt;
+    &lt;p class="SubFlow"&gt;&lt;/p&gt;
+    &lt;p&gt;That was exactly the work of 2016: building a new
+&lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt; to replace the C-implemented
+&lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt;. You can use that &lt;span class="stt"&gt;racket7&lt;/span&gt; variant of
+Racket now by building from the &lt;a href="http://github/racket/racket7"&gt;&lt;span class="url"&gt;http://github/racket/racket7&lt;/span&gt;&lt;/a&gt;
+repo.&lt;/p&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;
+    &lt;p&gt;This new &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt; hasn&amp;rsquo;t made it into the
+release, because a few interactions haven&amp;rsquo;t been sorted out: the macro
+stepper, the demodularizer, and to some degree the decompiler. The
+expander also runs at about half the speed of the C-implemented
+expander, and that performance difference was part of the motivation
+to investigate a new runtime system.&lt;/p&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;
+    &lt;p&gt;Although the &lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;compiler+JIT&lt;/span&gt;&lt;/span&gt; block is drawn the same as
+before in this picture, it&amp;rsquo;s a slightly different compiler, because it
+doesn&amp;rsquo;t know about modules or syntax objects. Instead, the compiler
+works in terms of &lt;span style="font-style: italic"&gt;linklets&lt;/span&gt;, which are &lt;span class="stt"&gt;lambda&lt;/span&gt;-like
+blocks of code that import and export variables. That separation of
+expansion/modules from compilation helps enable the transition to a
+different compiler and runtime system.&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_3.png" alt="image" height="341.0" style="vertical-align: -0.0px; margin: -3px -3px -3px -3px;" width="151.609375" /&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;table cellpadding="0" cellspacing="0"&gt;
+ &lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td&gt;
+    &lt;p class="SubFlow"&gt;&lt;/p&gt;
+    &lt;p&gt;And that brings us to Chez Scheme. The most obvious feature in the
+picture on the right is that Chez Scheme&amp;rsquo;s C-implemented
+&lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;kernel&lt;/span&gt;&lt;/span&gt; is a fraction of the implementation, while most
+of Chez Scheme is more sensibly written in
+&lt;span style="color: purple"&gt;&lt;span style="font-weight: bold"&gt;Scheme&lt;/span&gt;&lt;/span&gt;.&lt;/p&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;
+    &lt;p&gt;Chez Scheme&amp;rsquo;s &lt;span style="color: purple"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt; is considerably simpler
+than Racket&amp;rsquo;s. Although Chez Scheme&amp;rsquo;s expander is hygienic and hugely
+influential on Racket&amp;rsquo;s expander, Racket&amp;rsquo;s macro and module system
+does a lot more.&lt;/p&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;
+    &lt;p&gt;Chez Scheme&amp;rsquo;s &lt;span style="color: purple"&gt;&lt;span style="font-weight: bold"&gt;compiler&lt;/span&gt;&lt;/span&gt;, meanwhile, does a lot
+more than Racket&amp;rsquo;s &lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;compiler+JIT&lt;/span&gt;&lt;/span&gt;. The
+&lt;span style="color: purple"&gt;&lt;span style="font-weight: bold"&gt;builtins&lt;/span&gt;&lt;/span&gt; functionality in Chez Scheme is similar
+to Racket&amp;rsquo;s &lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;builtins&lt;/span&gt;&lt;/span&gt;.&lt;/p&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;
+    &lt;p&gt;Chez Scheme&amp;rsquo;s &lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;GC&lt;/span&gt;&lt;/span&gt; (at the bottom) is tiny and elegant.
+It lacks some functionality of Racket&amp;rsquo;s &lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;GC&lt;/span&gt;&lt;/span&gt;, but
+mostly it lacks Racket&amp;rsquo;s historical complexity for trying to cooperate
+directly with C.&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_4.png" alt="image" height="342.43589743589746" style="vertical-align: -0.0px; margin: -3px -3px -3px -3px;" width="144.0078125" /&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;table cellpadding="0" cellspacing="0"&gt;
+ &lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td&gt;
+    &lt;p class="SubFlow"&gt;&lt;/p&gt;
+    &lt;p&gt;That brings us, finally, to the Racket-on-Chez picture. It starts with
+the Chez Scheme stack and adds a &lt;span style="color: purple"&gt;&lt;span style="font-weight: bold"&gt;rumble&lt;/span&gt;&lt;/span&gt; block,
+which extends Chez Scheme to match the current Racket&amp;rsquo;s
+&lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;GC&lt;/span&gt;&lt;/span&gt; through &lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;control+structs&lt;/span&gt;&lt;/span&gt; blocks.&lt;/p&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;
+    &lt;p&gt;Mostly, &lt;span style="color: purple"&gt;&lt;span style="font-weight: bold"&gt;rumble&lt;/span&gt;&lt;/span&gt; is about immutable hash tables,
+delimited continuations, applicable structures, structure types
+properties, and impersonators/chaperones. We&amp;rsquo;ve given this layer of
+functionality the name &lt;span style="font-weight: bold"&gt;Rumble&lt;/span&gt;, because it&amp;rsquo;s useful to have a
+name for the language that hosts other layers that are built using
+&lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;Racket&lt;/span&gt;&lt;/span&gt;.&lt;/p&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;
+    &lt;p&gt;The &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;threads&lt;/span&gt;&lt;/span&gt;, &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;io&lt;/span&gt;&lt;/span&gt;, and
+&lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;regexp&lt;/span&gt;&lt;/span&gt; blocks are entirely new implementations
+of the corresponding blocks in the current Racket implementation. The
+&lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;rktio&lt;/span&gt;&lt;/span&gt; block is used by &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;io&lt;/span&gt;&lt;/span&gt;, and
+it&amp;rsquo;s the same as in current Racket: a portability layer over OS
+facilities that is similar to (but more extensive than) code that is
+in Chez Scheme&amp;rsquo;s &lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;kernel&lt;/span&gt;&lt;/span&gt;.&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_5.png" alt="image" height="344.15384615384613" style="vertical-align: -0.0px; margin: -3px -3px -3px -3px;" width="140.671875" /&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;p&gt;The &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt; block (the same as for
+&lt;span class="stt"&gt;racket7&lt;/span&gt;) sits on a small &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;schemify&lt;/span&gt;&lt;/span&gt; adaptor.
+The &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;schemify&lt;/span&gt;&lt;/span&gt; layer converts Racket linklets into
+plain Scheme functions, adjusting expressions as needed to support
+applicable structures, to enforce left-to-right evaluation, and to
+implement Racket&amp;rsquo;s allocation model for local functions (i.e., lift to
+avoid closure allocation whenever possible).&lt;/p&gt;
+
+&lt;p&gt;Naturally, the Racket-on-Chez implementation is bootstrapped by
+applying the &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt; and
+&lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;schemify&lt;/span&gt;&lt;/span&gt; layers to themselves and the other
+Racket-implemented parts of the stack, and then compiling the
+schemified linklets using the Chez Scheme
+&lt;span style="color: purple"&gt;&lt;span style="font-weight: bold"&gt;compiler&lt;/span&gt;&lt;/span&gt;. A thin &lt;span style="color: purple"&gt;&lt;span style="font-weight: bold"&gt;main&lt;/span&gt;&lt;/span&gt;
+driver on top handles command-line arguments to load modules and start
+the &lt;span class="RktSym"&gt;&lt;a class="RktValLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/Reading.html#%28def._%28%28quote._~23~25kernel%29._read%29%29"&gt;read&lt;/a&gt;&lt;/span&gt;&amp;ndash;&lt;span class="RktSym"&gt;&lt;a class="RktValLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/eval.html#%28def._%28%28quote._~23~25kernel%29._eval%29%29"&gt;eval&lt;/a&gt;&lt;/span&gt;&amp;ndash;&lt;span class="RktSym"&gt;&lt;a class="RktValLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/Writing.html#%28def._%28%28quote._~23~25kernel%29._print%29%29"&gt;print&lt;/a&gt;&lt;/span&gt; loop.&lt;/p&gt;
+
+&lt;h1&gt;&lt;a name="(part._functionality)"&gt;&lt;/a&gt;Current Functionality&lt;/h1&gt;
+
+&lt;p&gt;DrRacket starts up in Chez Scheme, and just starting DrRacket
+exercises many Racket language constructs and libraries. The largest
+Racket-on-Chez demonstration to date is building all of the packages
+and documentation of the main Racket distribution. Building packages
+and documentation, again, covers more Racket functionality than you
+may expect, because our macros do interesting things, such as
+typechecking and generating bitmap images. Also, the build process is
+too long and complex to tolerate leaks or major inefficiencies.&lt;/p&gt;
+
+&lt;p&gt;Still, many pieces are buggy, and closing the gap is mostly a matter
+of plowing through the Racket test suites. The main
+missing or incomplete pieces are: futures, places, and a &lt;span class="stt"&gt;racket&lt;/span&gt;
+executable that starts Racket-on-Chez.&lt;/p&gt;
+
+&lt;h1&gt;&lt;a name="(part._benchmarks)"&gt;&lt;/a&gt;Performance: Benchmark Sanity Check&lt;/h1&gt;
+
+&lt;p&gt;The overall compilation story is not yet right in Racket-on-Chez,
+partly because there&amp;rsquo;s no cross-module optimization. Functions like
+&lt;span class="RktSym"&gt;&lt;a class="RktValLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/pairs.html#%28def._%28%28lib._racket%2Fprivate%2Fmap..rkt%29._map%29%29"&gt;map&lt;/a&gt;&lt;/span&gt;, &lt;span class="RktSym"&gt;&lt;a class="RktValLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/pairs.html#%28def._%28%28lib._racket%2Fprivate%2Fbase..rkt%29._memq%29%29"&gt;memq&lt;/a&gt;&lt;/span&gt;, and &lt;span class="RktSym"&gt;&lt;a class="RktValLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/pairs.html#%28def._%28%28lib._racket%2Fprivate%2Flist..rkt%29._assv%29%29"&gt;assv&lt;/a&gt;&lt;/span&gt; need cross-module
+optimization to be compiled well in Racket-on-Chez. Benchmarks
+sometimes do not rely on cross-module optimization, however, and
+preliminary benchmark measurements can be useful as a sanity
+check on the ways that &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;schemify&lt;/span&gt;&lt;/span&gt; mangles
+individual modules.&lt;/p&gt;
+
+&lt;blockquote class="refpara"&gt;
+ &lt;blockquote class="refcolumn"&gt;
+  &lt;blockquote class="refcontent"&gt;
+   &lt;p&gt;Benchmarks are in the &lt;span class="stt"&gt;racket-benchmark&lt;/span&gt; package
+whose source is in the &lt;span class="stt"&gt;racket7&lt;/span&gt; repo.
+The benchmarks run in Chez Scheme as R6RS libraries.
+The difference between Racket and &lt;span class="stt"&gt;racket7&lt;/span&gt; is in the noise.&lt;/p&gt;&lt;/blockquote&gt;&lt;/blockquote&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;The table below shows a handful of rough benchmark results. You
+should not take the results seriously, but they line up with my
+overall impression of where we are.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;table cellpadding="0" cellspacing="0"&gt;
+ &lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: lightgray"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="center" colspan="21" style="background-color: lightgray"&gt;
+    &lt;p&gt;Rough and unscientific benchmark numbers&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: lightgray"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span class="Smaller"&gt;msecs&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" colspan="3" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span style="font-weight: bold"&gt;deriv&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" colspan="3" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span style="font-weight: bold"&gt;dynamic&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" colspan="3" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span style="font-weight: bold"&gt;sboyer&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" colspan="3" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span style="font-weight: bold"&gt;maze&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" colspan="3" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span style="font-weight: bold"&gt;nfa&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;Chez Scheme&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;770&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_6.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;360&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_7.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;1270&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_8.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;930&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_9.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;2100&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_10.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;Racket-on-Chez&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;1560&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_11.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;1030&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_12.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;1470&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_13.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;1520&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_14.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;2200&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_15.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;Racket&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;2030&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_16.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;560&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_17.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;2230&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_18.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;1330&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_19.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;4100&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_20.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;p&gt;All benchmarks were run in safe mode and &lt;span style="font-style: italic"&gt;without&lt;/span&gt; Gustavo&amp;rsquo;s
+work-in-progress addition to the Chez Scheme compiler that can
+eliminate some runtime checks and related dead code.&lt;/p&gt;
+
+&lt;h1&gt;&lt;a name="(part._startup)"&gt;&lt;/a&gt;Performance: Startup&lt;/h1&gt;
+
+&lt;p&gt;Startup time for Racket-on-Chez is determined by Chez Scheme&amp;rsquo;s base
+startup time (to load boot files) plus time to load the
+&lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt; and other parts of the Racket-on-Chez
+stack. The load times shown below for &lt;a class="RktModLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/index.html"&gt;&lt;span class="RktSym"&gt;racket/base&lt;/span&gt;&lt;/a&gt; and
+&lt;a class="RktModLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/index.html"&gt;&lt;span class="RktSym"&gt;racket&lt;/span&gt;&lt;/a&gt; include the startup time and add the additional
+time needed to load the many compiled files that are parts of those
+libraries.&lt;/p&gt;
+
+&lt;p&gt;For Racket and &lt;span class="stt"&gt;racket7&lt;/span&gt;, bytecode parsing can be delayed at the
+granularity of a procedure, so that a procedure&amp;rsquo;s bytecode isn&amp;rsquo;t
+parsed until the procedure is called. Delayed parsing is enabled by
+default, and the &lt;span class="nobreak"&gt;&lt;span class="stt"&gt;-d&lt;/span&gt;&lt;/span&gt; flag disables it.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;table cellpadding="0" cellspacing="0"&gt;
+ &lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: lightgray"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="center" colspan="13" style="background-color: lightgray"&gt;
+    &lt;p&gt;Startup/load time&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: lightgray"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span class="Smaller"&gt;msecs&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" colspan="3" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span style="font-weight: bold"&gt;startup&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" colspan="3" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span style="font-weight: bold"&gt;&lt;span class="stt"&gt;-l racket/base&lt;/span&gt;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" colspan="3" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span style="font-weight: bold"&gt;&lt;span class="stt"&gt;-l racket&lt;/span&gt;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;Racket&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;16&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_21.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;50&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_22.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;220&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_23.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;Racket &lt;span class="nobreak"&gt;&lt;span class="stt"&gt;-d&lt;/span&gt;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;16&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_24.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;80&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_25.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;500&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_26.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span class="stt"&gt;racket7&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;50&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_27.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;110&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_28.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;340&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_29.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span class="stt"&gt;racket7 -d&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;50&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_30.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;190&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_31.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;650&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_32.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;Chez Scheme&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_33.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;170&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_34.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_35.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;Racket-on-Chez&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;440&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_36.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;550&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_37.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;1200&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_38.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;Racket-on-Chez/JIT&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;440&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_39.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;550&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_40.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;1600&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_41.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;p&gt;Compared to the current Racket version, starting up and loading takes
+longer in &lt;span class="stt"&gt;racket7&lt;/span&gt;, because &lt;span class="stt"&gt;racket7&lt;/span&gt; has to load embedded
+bytecode for the expander&amp;rsquo;s implementation, and because the bytecode
+encoding of linklets has not been refined as much.&lt;/p&gt;
+
+&lt;p&gt;The Chez Scheme row in the table doesn&amp;rsquo;t actually load
+&lt;a class="RktModLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/index.html"&gt;&lt;span class="RktSym"&gt;racket/base&lt;/span&gt;&lt;/a&gt;, but that&amp;rsquo;s the closest reasonable column.
+That row corresponds to just starting Chez Scheme with its
+compiler&amp;#8212;
+ &lt;wbr /&gt;so it&amp;rsquo;s a signficantly smaller language than
+&lt;a class="RktModLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/index.html"&gt;&lt;span class="RktSym"&gt;racket/base&lt;/span&gt;&lt;/a&gt;, but it&amp;rsquo;s more than the Racket
+&lt;span style="font-weight: bold"&gt;startup&lt;/span&gt; rows. It&amp;rsquo;s also a lower bound on the Racket-on-Chez
+&lt;span style="font-weight: bold"&gt;startup&lt;/span&gt; time.&lt;/p&gt;
+
+&lt;p&gt;Loading Racket-on-Chez takes significantly longer, still, due to
+larger and slower-to-load machine code for both the Racket-on-Chez
+stack and libraries compiled with it. Although individual linklets
+within a module (roughly, individual phases) are parsed on demand,
+there is no delayed parsing at the granularity of procedures, so the
+work performed by loading is closer to the Racket &lt;span class="nobreak"&gt;&lt;span class="stt"&gt;-d&lt;/span&gt;&lt;/span&gt; and
+&lt;span class="stt"&gt;racket7 &lt;/span&gt;&lt;span class="nobreak"&gt;&lt;span class="stt"&gt;-d&lt;/span&gt;&lt;/span&gt; rows.&lt;/p&gt;
+
+&lt;p&gt;The last row above, Racket-on-Chez/JIT, refers to a variant of
+Racket-on-Chez that does not compile whole linklets. Instead, it keeps
+individual &lt;span class="stt"&gt;lambda&lt;/span&gt;s in source form until called, and it compiles
+each called &lt;span class="stt"&gt;lambda&lt;/span&gt; on demand. Load times go up, mostly because
+code is compiled as needed, but also because the source-fragment
+representation is even larger than machine code right now. The
+Racket-on-Chez/JIT approach does not look the most promising, so far,
+but it&amp;rsquo;s also not crazy. With more effort and tuning (especially in
+the representation of source fragments), it may be a viable approach
+and more in line with the way the current Racket implementation works.&lt;/p&gt;
+
+&lt;p&gt;Clearly, load time is a direction for further effort.&lt;/p&gt;
+
+&lt;h1&gt;&lt;a name="(part._expander)"&gt;&lt;/a&gt;Performance: Expander and Compiler&lt;/h1&gt;
+
+&lt;p&gt;The &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt; runs at about the same speed in
+Racket-on-Chez and &lt;span class="stt"&gt;racket7&lt;/span&gt;, but the linklet-compilation step
+takes much longer in Racket-on-Chez. As a result, compilation time for
+Racket-on-Chez dominates expansion proper for a task like &lt;span class="stt"&gt;racket&lt;/span&gt;&lt;span class="stt"&gt;
+&lt;/span&gt;&lt;span class="nobreak"&gt;&lt;span class="stt"&gt;-cl&lt;/span&gt;&lt;/span&gt;&lt;span class="stt"&gt; racket/base&lt;/span&gt;.&lt;/p&gt;
+
+&lt;blockquote class="refpara"&gt;
+ &lt;blockquote class="refcolumn"&gt;
+  &lt;blockquote class="refcontent"&gt;
+   &lt;p&gt;Reported times in this section use a Racket-on-Chez stack
+that is compiled in unsafe mode and run on a 2013 MacBook Pro 2.6GHz
+Core i5. Unsafe mode improves &lt;span style="font-weight: bold"&gt;expand&lt;/span&gt; and &lt;span style="font-weight: bold"&gt;read&lt;/span&gt; performance by about
+10%.&lt;/p&gt;&lt;/blockquote&gt;&lt;/blockquote&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;table cellpadding="0" cellspacing="0"&gt;
+ &lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: lightgray"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="center" colspan="21" style="background-color: lightgray"&gt;
+    &lt;p&gt;Steps within &lt;span class="stt"&gt;racket -cl racket/base&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: lightgray"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span class="Smaller"&gt;msecs&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" colspan="3" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span style="font-weight: bold"&gt;expand&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" colspan="3" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span style="font-weight: bold"&gt;schemify&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" colspan="3" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span style="font-weight: bold"&gt;compile&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" colspan="3" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span style="font-weight: bold"&gt;eval&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" colspan="3" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span style="font-weight: bold"&gt;read&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span class="stt"&gt;racket7&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;2511&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_42.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_43.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;662&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_44.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;235&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_45.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;275&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_46.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;Racket-on-Chez&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;2398&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_47.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;917&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_48.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;2852&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_49.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;390&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_50.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;227&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_51.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;Racket-on-Chez/JIT&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;2441&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_52.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;974&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_53.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;1044&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_54.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;515&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_55.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;229&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_56.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;p&gt;For Racket-on-Chez/JIT, compile times go down, showing that about 1/3
+of the code that is compiled during expansion is also run during
+expansion. The fraction would be lower for most programs; the
+&lt;a class="RktModLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/index.html"&gt;&lt;span class="RktSym"&gt;racket/base&lt;/span&gt;&lt;/a&gt; library is unusual in building up layers
+of macros to implement itself. The &lt;span style="font-weight: bold"&gt;schemify&lt;/span&gt; step is certainly a
+target for improvement, since its job is much simpler than the
+&lt;span style="font-weight: bold"&gt;compile&lt;/span&gt; step&amp;rsquo;s job.&lt;/p&gt;
+
+&lt;p&gt;That factor-of-2 slowdown relative to &lt;span class="stt"&gt;racket7&lt;/span&gt; is
+compounded by the Racket-implemented &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt;
+being twice as slow as the current Racket&amp;rsquo;s C-implemented
+&lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt;:&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;table cellpadding="0" cellspacing="0"&gt;
+ &lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: lightgray"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="center" colspan="9" style="background-color: lightgray"&gt;
+    &lt;p&gt;Loading from source with &lt;span class="stt"&gt;racket -cl&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: lightgray"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span class="Smaller"&gt;msecs&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" colspan="3" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span style="font-weight: bold"&gt;&lt;span class="stt"&gt;racket/base&lt;/span&gt;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" colspan="3" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span style="font-weight: bold"&gt;&lt;span class="stt"&gt;racket&lt;/span&gt;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;Racket&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;1830&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_57.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;21700&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_58.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;span class="stt"&gt;racket7&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;3490&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_59.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;38140&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_60.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;Racket-on-Chez&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;7060&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_61.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;70093&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_62.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="left" style="background-color: beige"&gt;
+    &lt;p&gt;Racket-on-Chez/JIT&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;5400&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_63.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;55050&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td align="right" style="background-color: beige"&gt;
+    &lt;p&gt;&lt;img src="/img/posts/2018-01-05-racket-on-chez-status/pict_64.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td&gt;
+    &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+   &lt;td style="background-color: beige"&gt;
+    &lt;p&gt;&amp;nbsp;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;p&gt;The gap between the Racket-implemented &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt;
+and the C-implemented &lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt; is the one that we
+most hoped to close by moving to Chez Scheme. As part of the
+Racket-on-Chez stack, the &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt; is already
+compiled in a reasonable way (i.e., no cross-module optimization
+issues), so it&amp;rsquo;s not clear how to improve. Still, I still think the
+&lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt; can be made to run faster in Chez
+Scheme, and we&amp;rsquo;ll keep trying.&lt;/p&gt;
+
+&lt;h1&gt;&lt;a name="(part._build)"&gt;&lt;/a&gt;Performance: Distribution Build&lt;/h1&gt;
+
+&lt;p&gt;The current version of Racket-on-Chez builds on a 64-bit machine with
+a peak memory use around 1.25 GB, which is on a similar scale to the
+current Racket release&amp;rsquo;s peak memory use around 1 GB.&lt;/p&gt;
+
+&lt;p&gt;The following plots show, on the same scale, memory use over time when
+building a distribution. Each plot has two black lines (easiest to
+distinguish in the last plot): the top black line describes peak
+memory use, since it&amp;rsquo;s before a major GC, while the bottom black line
+is closer to live-memory use, since it&amp;rsquo;s after a major GC. The orange
+region is for compiling libraries (each vertical line starts a
+collection), the blue region is for running documentation, the green
+region is for rendering documentation, and the final pink region is
+for re-rendering documentation as needed to reach a fix-point for
+cross references. Memory use is expected to grow modestly during the
+blue region, since the builds collecting cross-reference information
+for use in the green region. Memory use should grow minimally in the
+orange and green regions (as a side-effect of caches).&lt;/p&gt;
+
+&lt;blockquote class="refpara"&gt;
+ &lt;blockquote class="refcolumn"&gt;
+  &lt;blockquote class="refcontent"&gt;
+   &lt;p&gt;These graphs report builds on a Linux 3.4GHz Core i7-2600
+machine with the Racket parts of the Racket-on-Chez stack compiled in
+safe mode.&lt;/p&gt;&lt;/blockquote&gt;&lt;/blockquote&gt;&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+ &lt;table cellpadding="0" cellspacing="0"&gt;
+  &lt;tbody&gt;
+   &lt;tr&gt;
+    &lt;td valign="top"&gt;
+     &lt;blockquote class="SubFlow"&gt;
+      &lt;p&gt;&lt;span style="font-weight: bold"&gt;Racket&lt;/span&gt;&lt;/p&gt;
+      &lt;p&gt;C-implemented &lt;span style="color: red"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt;&lt;/p&gt;&lt;/blockquote&gt;&lt;/td&gt;
+    &lt;td&gt;
+     &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+    &lt;td align="right"&gt;
+     &lt;p&gt;
+      &lt;object alt="" data="build-log-racket.svg" height="300.0pt" type="image/svg+xml" width="400.0pt"&gt;
+       &lt;param name="src" value="build-log-racket.svg" /&gt;&lt;/object&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+   &lt;tr&gt;
+    &lt;td valign="top"&gt;
+     &lt;p&gt;&lt;span class="Smaller"&gt;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+    &lt;td&gt;
+     &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+    &lt;td align="right"&gt;
+     &lt;p&gt;&lt;span class="Smaller"&gt;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+   &lt;tr&gt;
+    &lt;td valign="top"&gt;
+     &lt;blockquote class="SubFlow"&gt;
+      &lt;p&gt;&lt;span style="font-weight: bold"&gt;&lt;span class="stt"&gt;racket7&lt;/span&gt;&lt;/span&gt;&lt;/p&gt;
+      &lt;p&gt;Racket-implemented &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt;&lt;/p&gt;&lt;/blockquote&gt;&lt;/td&gt;
+    &lt;td&gt;
+     &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+    &lt;td align="right"&gt;
+     &lt;p&gt;
+      &lt;object alt="" data="build-log-racket7.svg" height="300.0pt" type="image/svg+xml" width="400.0pt"&gt;
+       &lt;param name="src" value="build-log-racket7.svg" /&gt;&lt;/object&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+   &lt;tr&gt;
+    &lt;td valign="top"&gt;
+     &lt;p&gt;&lt;span class="Smaller"&gt;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+    &lt;td&gt;
+     &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+    &lt;td align="right"&gt;
+     &lt;p&gt;&lt;span class="Smaller"&gt;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;
+   &lt;tr&gt;
+    &lt;td valign="top"&gt;
+     &lt;blockquote class="SubFlow"&gt;
+      &lt;p&gt;&lt;span style="font-weight: bold"&gt;Racket-on-Chez&lt;/span&gt;&lt;/p&gt;
+      &lt;p&gt;Same &lt;span style="color: blue"&gt;&lt;span style="font-weight: bold"&gt;expander&lt;/span&gt;&lt;/span&gt; as &lt;span class="stt"&gt;racket7&lt;/span&gt;&lt;/p&gt;&lt;/blockquote&gt;&lt;/td&gt;
+    &lt;td&gt;
+     &lt;p&gt;&lt;span class="hspace"&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;/td&gt;
+    &lt;td align="right"&gt;
+     &lt;p&gt;
+      &lt;object alt="" data="build-log-cs.svg" height="300.0pt" type="image/svg+xml" width="400.0pt"&gt;
+       &lt;param name="src" value="build-log-cs.svg" /&gt;&lt;/object&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;The plots illustrate that, while memory use is similar, build times
+are much longer. &lt;a data-pltdoc="x" href="#%28part._expander%29"&gt;Expander and compiler
+performance&lt;/a&gt; largely explains the difference.&lt;/p&gt;
+
+&lt;p&gt;The build time certainly can be improved some. Maybe build times can
+be improved significantly, or maybe slower build times will seem
+worthwhile for a more maintainable implementation of Racket and/or
+for faster generated code.&lt;/p&gt;
+
+&lt;h1&gt;&lt;a name="(part._plan)"&gt;&lt;/a&gt;Outlook&lt;/h1&gt;
+
+&lt;p&gt;It would be nice if porting to Chez Scheme made every aspect of Racket
+magically faster. It hasn&amp;rsquo;t done that, but we have plenty of room for
+improvement; the performance results to date are a lower bound on
+performance, not an upper bound.&lt;/p&gt;
+
+&lt;p&gt;Keep in mind that the original goal is not to have a faster Racket,
+but a better-implemented Racket with acceptable performance. The
+Racket-on-Chez implementation is far more maintainable and flexible
+than the current Racket implementation, so maybe we&amp;rsquo;re half-way there
+after one year of work.&lt;/p&gt;
+
+&lt;p&gt;You can try Racket-on-Chez from
+&lt;a href="https://github.com/racket/racket7/"&gt;&lt;span class="url"&gt;https://github.com/racket/racket7/&lt;/span&gt;&lt;/a&gt;. See
+&lt;a href="https://github.com/racket/racket7/blob/master/racket/src/cs/README.txt"&gt;racket/src/cs/README.txt&lt;/a&gt;
+in that repo for more information.&lt;/p&gt;
+
+&lt;blockquote class="refpara"&gt;
+ &lt;blockquote class="refcolumn"&gt;
+  &lt;blockquote class="refcontent"&gt;
+   &lt;p&gt;If you&amp;rsquo;re interested in even more implementation details and plans, see
+the &lt;a href="http://www.cs.utah.edu/~mflatt/racket-on-chez-jan-2018/"&gt;extended version of this report&lt;/a&gt;.&lt;/p&gt;&lt;/blockquote&gt;&lt;/blockquote&gt;&lt;/blockquote&gt;</description></item></channel></rss>

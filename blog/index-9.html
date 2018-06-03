@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <title>Racket Blog (page 9)</title>
+    <meta name="description" content="Racket Blog (page 9)">
+    <meta name="author"      content="The Unknown Author">
+    <meta name="keywords"    content="Chez Scheme, all">
+    <meta name="viewport"    content="width=device-width, initial-scale=1.0">
+    <link rel="icon"      href="/favicon.ico">
+    <link rel="canonical" href="http://blog.racket-lang.org/index-9.html">
+
+
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog-fonts.css">
+    <!-- Feeds -->
+    <link rel="alternate" type="application/atom+xml" href="/feeds/all.atom.xml" title="Atom Feed">
+    <link rel="alternate" type="application/rss+xml" href="/feeds/all.rss.xml" title="RSS Feed">
+    <!-- JS -->
+    </head>
+  <body>
+<row class="one-column" id="logo"><col-1><a href="http://racket-lang.org"><div id="logo-container"><img id="logo" src="/img/racket-logo.svg"/> Racket</div></a></col-1><col-2><p><a href="/index.html">blog</a></p></col-2></row>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>15 Sep 2010</p></col-1>
+
+<col-2>
+  <h1><a href='/2010/09/extending-typed-racket-part-1.html'>Extending Typed Racket, Part 1</a></h1>
+  <div class="truncate">
+<p><em>posted by Sam Tobin-Hochstadt</em></p>
+
+<p>The Typed Racket team is pleased to announce a number of new additions to our system. We&rsquo;ll be writing a few blog posts about them, all of which you can read here.</p>
+
+<p>This post begins with the core of the Typed Racket type system. The fundamental idea at the heart of Typed Racket is called occurrence typing. This is the technique that allows us to typecheck existing Racket programs without requiring rewrites. Here&rsquo;s a simple example:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((quote._~23~25kernel)._if))" style="color: inherit">if</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/number-types.html#(def._((quote._~23~25kernel)._number~3f))" style="color: inherit">number?</a></span> <span class="n">x</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._add1))" style="color: inherit">add1</a></span> <span class="n">x</span><span class="p">)</span> <span class="mi">0</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>The typechecker can figure out from the use of <code>number?</code> that the second occurrence of <code>x</code> is always going to be a number. This simple form of occurrence typing is enough to take Typed Racket a long way. But because we want to be able to handle all the sophisticated reasoning that programmers are already using to write their Racket programs, we have been working on extending the system further.</p>
+
+<p>The new design of our system is described in a paper, <a href="http://www.ccs.neu.edu/scheme/pubs/#icfp10-thf">Logical Types for Untyped Languages</a>, in the upcoming International Conference on Functional Programming. The introduction provides an overview that&rsquo;s acessible to any Racket programmer, but here&rsquo;s the key example:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._cond))" style="color: inherit">cond</a></span>
+  <span class="p">[(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._and))" style="color: inherit">and</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/number-types.html#(def._((quote._~23~25kernel)._number~3f))" style="color: inherit">number?</a></span> <span class="n">x</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/strings.html#(def._((quote._~23~25kernel)._string~3f))" style="color: inherit">string?</a></span> <span class="n">y</span><span class="p">))</span> <span class="n">—</span> <span class="mi">1</span> <span class="n">—</span><span class="p">]</span>
+  <span class="p">[(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/number-types.html#(def._((quote._~23~25kernel)._number~3f))" style="color: inherit">number?</a></span> <span class="n">x</span><span class="p">)</span>                   <span class="n">—</span> <span class="mi">2</span> <span class="n">—</span><span class="p">]</span>
+  <span class="p">[</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._else))" style="color: inherit">else</a></span>                          <span class="n">—</span> <span class="mi">3</span> <span class="n">—</span><span class="p">])</span>
+</pre></div>
+
+</div>
+
+<p>In expression 1, we know that <code>x</code> is a number and <code>y</code> is a string. In 2, we know that <code>x</code> is a number and <code>y</code> is not a string, by the logical properties of <code>and</code> and <code>cond</code>. This form of logical reasoning is enabled by the new foundation of the system, and makes the entire system significantly more expressive.</p>
+
+<p>All of these improvements are available in the current version of Racket.</p></div>
+  <a class="more" href='/2010/09/extending-typed-racket-part-1.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>03 Aug 2010</p></col-1>
+
+<col-2>
+  <h1><a href='/2010/08/racket-v501.html'>Racket v5.0.1</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>Racket version 5.0.1 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<ul>
+ <li>
+  <p>Datalog is a lightweight deductive database system with Racket integration. It is now available in the <code>datalog</code> collection and with <code>#lang datalog</code>.</p></li>
+ <li>
+  <p>Racklog provides Prolog-style logic programming in Racket, adapted from Dorai Sitaram&rsquo;s Schelog package. It is available in the <code>racklog</code> collection and now as <code>#lang racklog</code>.</p></li>
+ <li>
+  <p>By default <code>make install</code> and <code>raco setup</code> compile collections in parallel on all available processors. (Use <code>raco setup -j 1</code> to disable, if necessary.)</p></li>
+ <li>
+  <p>Changes (as part of 5.0) in the <code>racket</code> language compared to the <code>scheme</code> language: constructor-style printing, a <code>struct</code> alternative to <code>define-struct</code> that fits more naturally with <code>match</code> and constructor-style printing, bytecode-dependency management via SHA&ndash;1 hashes instead of just timestamps (where the <code>openssl/sha1</code> library provides the SHA&ndash;1 hash function), a reorganization of <code>scheme/foreign</code> into <code>ffi/unsafe</code> and associated libraries, and new printing functions <code>eprintf</code> and <code>displayln</code>. Also, a generator from <code>racket/generator</code> is required to have the form <code>(generator () body ...)</code>, which supports a planned extension to let a generator accept arguments.</p></li>
+ <li>
+  <p>Changes to the <code>racket</code> language (since 5.0): internal-definition positions allow mixing expressions with definitions, full continuations can escape past a continuation barrier, custodians can attempt to terminate subprocesses and subprocess groups (see <code>current-subprocess-custodian-mode</code>, <code>subprocess-group-enabled</code>), the JIT supports additional unboxing flonum operations and unsafe variants, <code>ffi/unsafe</code> provides an asychronous-call mechanism to deal with foreign threads, a new "." modifier for format string directives (e.g., "~.s" and "~.a") limits the respective output to <code>(error-print-width)</code> characters.</p></li>
+ <li>
+  <p>The core type system of Typed Racket has been substantially revised. In particular, Typed Racket can now follow significantly more sophisticated reasoning about the relationships between predicates. Additionally, Typed Racket now allows variable arity types in more places, allowing programmers to specify variable-arity lists.</p></li>
+ <li>
+  <p>We are working on an optimizing version of Typed Racket that takes advantage of type information for certain classes of programs. This project is a work in progress. For those interested, see the documentation for <code>#:optimized</code>.</p></li>
+ <li>
+  <p>The <code>web-server/formlets</code> library adds a <code>formlet*</code> form that allows dynamic formlet construction, as opposed to <code>formlet</code> which requires syntactic Xexprs and static formlets. Several new library formlets are added.</p></li>
+ <li>
+  <p>The <code>syntax/parse</code> library has new support for matching literals at different phases using the <code>#:phase</code> argument for literals and literal sets.</p></li>
+ <li>
+  <p>RackUnit now includes a GUI test runner as <code>rackunit/gui</code>.</p></li>
+ <li>
+  <p>The <code>2htdp/image</code> library now includes <code>flip-vertical</code> and <code>flip-horizontal</code> operations that mirror images (vertically and horizontally).</p></li></ul></div>
+  <a class="more" href='/2010/08/racket-v501.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>07 Jun 2010</p></col-1>
+
+<col-2>
+  <h1><a href='/2010/06/racket.html'>Racket</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>PLT is happy to announce the release of Racket, available from  <a href="http://racket-lang.org/"><code>http://racket-lang.org/</code></a></p>
+
+<p>With Racket, you can script command shells and web servers; you can quickly prototype animations and complex GUIs; regexps and threads are here to serve you. To organize your systems, you can mix and match classes, modules or components. Best of all, you start without writing down types. If you later wish to turn your script into a program, equip your Racket modules with explicit type declarations as you wish. And Racket doesn&rsquo;t just come as a typed variant; you can also write your modules in a purely functional and lazy dialect.</p>
+
+<p>Racket comes in so many flavors because Racket is much more than a standard scripting language or a plain programming language. Racket supports language extensibility to an unequaled degree. A Racket programmer knows that making up a new language is as easy as writing a new library.</p>
+
+<p>To help you start quickly, Racket includes batteries in all shapes and sizes, most importantly, extensive documentation and all kinds of libraries.</p>
+
+<p>Racket occupies a unique position between research and practice. It inherits many major ideas from language research, among them type safety (when the type system says that x is a number, then at runtime it always is a number) and memory safety (when some memory is reclaimed by the garbage collector it is impossible to still have a reference to it). At the same time, user demand governs rigid adherence to purely theoretical principles.</p>
+
+<p>Racket, formerly PLT Scheme, is a product of over 15 years of development. Although Racket starts with a mature software base and an established user community, its new name reflects our view that this is just the beginning of Racket&rsquo;s evolution.</p></div>
+  <a class="more" href='/2010/06/racket.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>02 Apr 2010</p></col-1>
+
+<col-2>
+  <h1><a href='/2010/04/plt-scheme-v425.html'>PLT Scheme v4.2.5</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>PLT Scheme version 4.2.5 is now available from <a href="http://plt-scheme.org/"><code>http://plt-scheme.org/</code></a></p>
+
+<ul>
+ <li>PLT now supports multi-core parallelism via futures. Futures create tasks that run in parallel, as long as the tasks stay in the &ldquo;fast path&rdquo; of the runtime system. For more information, see <a href="http://docs.plt-scheme.org/guide/performance.html?q=future#%28part._effective-futures%29">the guide</a>.</li>
+ <li>Our unit testing framework, schemeunit, is now included in the distribution. A graphical test runner is available via <code>schemeunit/gui</code>.</li>
+ <li>The support languages for the &ldquo;Programming Languages: Application and Interpretation&rdquo; textbook by Shriram Krishnamurthi are now part of PLT Scheme. In addition the PLAI GC language comes with a random mutator generator (to help test collectors) and an improved heap visualizer.</li>
+ <li>New Russian and Ukranian translations, thanks to Sergey Semerikov.</li>
+ <li>A number of improvements to Redex&rsquo;s typesetting facilities.</li>
+ <li>Typed Scheme users can now automatically generate predicates from types with <code>define-predicate</code>. Typed code can be inserted in untyped modules by requiring <code>with-type</code> from <code>typed/scheme</code>.</li>
+ <li>The <code>scheme/class</code> library now provides contract combinators for classes (<code>class/c</code>) and objects (<code>object/c</code>). See the Reference and Guide for details. Also, a backwards-compatible <code>object-contract</code> version of <code>object/c</code> has replaced the old <code>object-contract</code> combinator.</li>
+ <li>Writing new kinds of contracts is now easier with keyword-based constructors (<code>make-contract</code> and <code>make-flat-contract</code>), a simpler set of structure properties (<code>prop:contract</code> and <code>prop:flat-contract</code>), and the introduction of blame objects for tracking contract metadata.</li>
+ <li>The Scheme-implemented bytecode reader fails less often. This is used by &ldquo;mzc &mdash;decompile&rdquo;. The Scheme-implemented bytecode writer uses the compact bytecode format and fails less often. This may be used in the future for Scheme-implement bytecode processors.</li>
+ <li>The language dialog now suggests using "#lang" more strongly as the default language. DrScheme no longer uses the term `Module language&rsquo;.</li></ul></div>
+  <a class="more" href='/2010/04/plt-scheme-v425.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>08 Mar 2010</p></col-1>
+
+<col-2>
+  <h1><a href='/2010/03/talk-at-flourish.html'>Talk at Flourish</a></h1>
+  <div class="truncate">
+<p><em>posted by Robby Findler</em></p>
+
+<p>The image in this post shows a tree where the interior nodes represent directories and the leaf nodes represent files in the PLT source code. The leaves are colored based on the programming language used. (To avoid clutter, if there is more than one file in a given directory written in a particular language, that language only gets a single dot.)</p>
+
+<p>Some highlights: the blues are Scheme-like languages, the reds are langauges we use to write documentation (see <a href="http://docs.plt-scheme.org/scribble/">Scribble</a> for more about them), the greens are teaching languages, orange is the language we use to bootstrap new languages, and yellow is a language for metadata about nearby files.</p>
+
+<p>Curious about how we managed to write and use so many different languages? I&rsquo;ll be giving a talk at <a href="http://www.flourishconf.com/flourish2010/">Flourish 2010</a> next week (3/19 @11am, UIC in Chicago) explaining how. Come to learn more!</p></div>
+  <a class="more" href='/2010/03/talk-at-flourish.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>28 Feb 2010</p></col-1>
+
+<col-2>
+  <h1><a href='/2010/02/dags-vs-trees.html'>DAGs vs Trees</a></h1>
+  <div class="truncate">
+<p><em>posted by Robby Findler</em></p>
+
+<p>As I wondering whether or not there is a better layout algorithm for the module browser window, I looked into <a href="http://www.cs.umd.edu/hcil/treemap-history/">tree maps</a>. Of course, the modules in a program form a DAG, not a tree, so I wondered just how big the tree would get if all of the shared structure in the DAG were replicated. Hey, I figured, if a tree map can handle showing me my entire filesystem, maybe that could work.</p>
+
+<p>&hellip; yeah, no. Turns out to be hopeless. In the spirit of a geeky take off on a jelly bean counting contest, lets see if you can guess just how big these things get. Consider the module graph from the program <code>#lang scheme</code> (ie, the graph that just contains an empty program). This program loads 170 modules with 917 connections between modules (counting the main file that just contains the <code>#lang scheme</code>).</p>
+
+<p>So, the question: how many nodes are there in the unsharified tree? First one to come within 1 billion of the right answer gets all of the fame and glory that this blog brings to bear (har har). I&rsquo;ll post the answer in the comments in a few days (and no fair cheating, those of you that know enough to be able to get your hands on the DAG).</p></div>
+  <a class="more" href='/2010/02/dags-vs-trees.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>29 Jan 2010</p></col-1>
+
+<col-2>
+  <h1><a href='/2010/01/benchmarks.html'>Benchmarks</a></h1>
+  <div class="truncate">
+<p><em>posted by Matthew Flatt</em></p>
+
+<p>First, the usual disclaimer:</p>
+
+<p>That said, I&rsquo;ve run the latest version of PLT Scheme on two sets of benchmarks:</p>
+
+<ul>
+ <li>
+  <p><a href="http://www.cs.utah.edu/%7Emflatt/benchmarks-20100126/log3/Benchmarks.html">Benchmarks in the PLT sources</a> – vs. Bigloo, Chicken, Gambit, Guile, Ikarus, Larceny, MIT Scheme, and Scheme48; safe operations and generic arithmetic only</p></li>
+ <li>
+  <p><a href="http://www.cs.utah.edu/%7Emflatt/benchmarks-20100126/log1/Gambit_20benchmarks.html">Benchmarks in the Gambit sources</a> – vs. Bigloo and Gambit; generic vs. fixnum-/flonum-specific arithmetic, safe vs. unsafe operationsThe second set is why I started running benchmarks. Fixnum-/flonum-specific arithmetic and unsafe operations are new in PLT Scheme 4.2.4. The benchmark results suggest that the new operations in PLT Scheme offer roughly the same performance benefits as in Bigloo and Gambit. There&rsquo;s room for improvement, but it&rsquo;s a good first cut.</p></li></ul>
+
+<p>For the other results: PLT Scheme is rarely the fastest implementation on a given benchmark. For most purposes, though, it&rsquo;s in the same ballpark – except for programs that spend all their time capturing and invoking continuations.</p>
+
+<p>It&rsquo;s fun to run benchmarks occasionally. Now, back to working on language design, libraries, documentation, usability&hellip;</p></div>
+  <a class="more" href='/2010/01/benchmarks.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>28 Jan 2010</p></col-1>
+
+<col-2>
+  <h1><a href='/2010/01/plt-scheme-v424.html'>PLT Scheme v4.2.4</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>PLT Scheme version 4.2.4 is now available from <a href="http://plt-scheme.org/"><code>http://plt-scheme.org/</code></a></p>
+
+<ul>
+ <li>The <code>scheme/flonum</code> and <code>scheme/fixnum</code> libraries provide flonum- and fixnum-specific operations. In the case of flonum-specific operations, the JIT compiler can recognize combinations of operations (including local bindings) and improve performance by &ldquo;unboxing&rdquo; intermediate results.</li>
+ <li>The <code>scheme/unsafe/ops</code> library provides arithmetic and other operations that are implemented without dynamic checks. Avoiding checks can sometimes improve performance, but at the expense of safety.</li>
+ <li><code>2htdp/universe</code>: We have severed the connection between universe and an image library and made a few other, minor changes. Most programs will now have to change to require the <code>htdp/image</code> library explicitly. For the full details, see the new <a href="http://docs.plt-scheme.org/teachpack/2htdphtdp-port.html">Porting World Programs</a> section of the documentation.</li>
+ <li>The <code>2htdp/image</code> library continues to grow. In this release, it is supported by <code>2htdp/universe</code>, equality changed to be based on how the images are drawn, cropping and curves were added, and support for more kinds of pens were added.</li>
+ <li><code>htdp/world</code>: The old world teachpack remains deprecated. HtDP/2e exclusively uses the new 2htdp/universe library. For backwards compatibility, the world teachpack will remain in the distribution until the coming summer.</li>
+ <li>The <code>scheme/class</code> library now provides <code>this%</code>, which refers to the class of the current object (i.e. <code>this</code>).</li>
+ <li><code>scheme/generator</code> has convenient functions for infinite generators, and for converting a generator to a sequence for iteration.</li>
+ <li>PLT Scheme&rsquo;s add-on directory can be customized by the <code>$PLTADDONDIR</code> environment variable or <code>--addon</code>/<code>-A</code> command-line flags. This controls where downloaded Planet packages and their compiled Scribble documentation are installed.</li>
+ <li>Additional extensions include: saving <code>errno</code> in foreign calls, much improved <code>sort</code> speed, normalized results from <code>procedure-arity</code>, and more.</li></ul></div>
+  <a class="more" href='/2010/01/plt-scheme-v424.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>02 Jan 2010</p></col-1>
+
+<col-2>
+  <h1><a href='/2010/01/scheme-videos-lectures-and-talks.html'>Scheme Videos (Lectures and Talks)</a></h1>
+  <div class="truncate">
+<p><em>posted by John Clements</em></p>
+
+<p>Scheme Videos (Lectures and Talks)(thanks to Geoffrey Knauth and Hari)Following a mailing-list request, it turns out that there are quite a lot of Scheme-related lectures and talks floating around out there in video format. The following list was compiled by Geoffrey Knauth, with contributions from Hari and Michael Sperber, and at least one insertion from me, right at the front.</p>
+
+<ul>
+ <li>
+  <p>My sequence of <a href="http://www.youtube.com/playlist?list=PLD0EB7BC8D7CF739A">introductory videos on YouTube</a>, recorded long after this post was made.</p></li>
+ <li>
+  <p>There&rsquo;s the SICP course Abelson &amp; Sussman gave to [HP, I think] in the mid&ndash;1980s: http://groups.csail.mit.edu/mac/classes/6.001/abelson-sussman-lectures/</p></li>
+ <li>
+  <p>MIT OCW / 6.001 using SICP, Spring 2005: http://ocw.mit.edu/OcwWeb/Electrical-Engineering-and-Computer-Science/6&ndash;001Spring&ndash;2005/VideoLectures/index.htm</p></li>
+ <li>
+  <p>All the ICFP 2009 videos (man this made my day!!): http://vidiowiki.com/feature/list/fnu/ICFP_2009</p></li>
+ <li>
+  <p>Daniel P Friedman - A Celebration (this too!): http://www.cs.indiana.edu/dfried_celebration.html</p></li>
+ <li>
+  <p>DrScheme v4.0 Tour: http://www.youtube.com/watch?v=vgQO_kHl39g&amp;fmt=18</p></li>
+ <li>
+  <p>Similar, if you understand Russian:</p></li>
+ <li>
+  <p>http://www.youtube.com/watch?v=wECY7s9k-V0</p></li>
+ <li>
+  <p>http://www.youtube.com/watch?v=2CVJjqOT6WM</p></li>
+ <li>
+  <p>Matthias Felleisen - Programming at Northeastern: http://www.savevid.com/video/matthias-felleisen-programming-at-northeastern-university.html</p></li>
+ <li>
+  <p>Matthew Flatt - Processes without Partitions: http://www.researchchannel.org/prog/displayevent.aspx?rID=3892</p></li>
+ <li>
+  <p>Shriram Krishnamurthi on WeScheme: http://vidiowiki.com/watch/cydr9yk/</p></li>
+ <li>
+  <p>Robby Findler - Macros Matter: http://www.mefeedia.com/video/26348171</p></li>
+ <li>
+  <p>Using PLT Scheme in the Game Industry: http://www.youtube.com/watch?v=2CVJjqOT6WM</p></li>
+ <li>
+  <p>Stanford Lecture (Kawa): http://www.youtube.com/watch?v=_cV8NWQCxnE</p></li>
+ <li>
+  <p>Bluetooth communication using PLT Scheme: http://www.youtube.com/watch?v=pmR_dIXm6sY</p></li>
+ <li>SICP at UCB: http://webcast.berkeley.edu/course_details.php?seriesid=1906978454</li>
+ <li>
+  <p><a href="http://www.aduni.org/courses/sicp/">http://www.aduni.org/courses/sicp/</a> from ADUni by Holly Yanco. It comes with pretty good lecture notes and problem sets.</p></li>
+ <li>
+  <p>Michael Sperber&rsquo;s DMdA lectures (in German, natch): <a href="http://timms.uni-tuebingen.de/List/List01.aspx?rpattern=UT_200[89]_____00[12]_info1_000_">http://timms.uni-tuebingen.de/List/List01.aspx?rpattern=UT_200[89]_____00[12]<em>info1_000</em></a></p></li></ul></div>
+  <a class="more" href='/2010/01/scheme-videos-lectures-and-talks.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>07 Dec 2009</p></col-1>
+
+<col-2>
+  <h1><a href='/2009/12/futures-fine-grained-parallelism-in-plt.html'>Futures: Fine Grained Parallelism in PLT</a></h1>
+  <div class="truncate">
+<p><em>posted by Robby Findler</em></p>
+
+<p>We&rsquo;re pleased to announce the initial release of parallel futures, a construct for fine-grained parallelism in PLT. Roughly speaking, a programmer passes a thunk to &lsquo;future&rsquo; and it gets run in parallel. That &ldquo;roughly&rdquo; holds a few gotchas, partly because we&rsquo;re just getting started and partly due to the technique we&rsquo;re using. See the documentation for more details:</p>
+
+<p><a href="http://pre.plt-scheme.org/docs/html/futures/">http://pre.plt-scheme.org/docs/html/futures/</a></p>
+
+<p>If you&rsquo;ve got a multicore machine where you can&rsquo;t keep the cores busy or your office/machine room is a bit cold, try this program:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">scheme</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="n">scheme/future</span><span class="p">)</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">loop</span><span class="p">)</span> <span class="p">(</span><span class="n">loop</span><span class="p">))</span>
+<span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((lib._racket/private/map..rkt)._for-each))" style="color: inherit">for-each</a></span>
+ <span class="nb"><a href="http://docs.racket-lang.org/reference/futures.html#(def._((lib._racket/future..rkt)._touch))" style="color: inherit">touch</a></span>
+ <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/for.html#(form._((lib._racket/private/base..rkt)._for/list))" style="color: inherit">for/list</a></span> <span class="p">([</span><span class="n">i</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/sequences.html#(def._((lib._racket/private/base..rkt)._in-range))" style="color: inherit">in-range</a></span> <span class="mi">0</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/futures.html#(def._((lib._racket/future..rkt)._processor-count))" style="color: inherit">processor-count</a></span><span class="p">))])</span>
+  <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/futures.html#(def._((lib._racket/future..rkt)._future))" style="color: inherit">future</a></span> <span class="n">loop</span><span class="p">)))</span>
+</pre></div>
+
+</div>
+
+<p>Note that you have to build mzscheme with futures; it isn&rsquo;t enabled by default, but see the docs above for how to do that. Beyond the above, we&rsquo;ve also gotten a few parallel kernels going and are seeing good scalability up to 8 cores (the biggest machine we have around for the time being).</p></div>
+  <a class="more" href='/2009/12/futures-fine-grained-parallelism-in-plt.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<footer>
+ <ul class="pagination">
+  <li><a href="/index-8.html">
+    <quote>&larr;</quote></a></li>
+  <li><a href="/index.html">1</a></li>
+  <li><a href="/index-2.html">2</a></li>
+  <li><a href="/index-3.html">3</a></li>
+  <li><a href="/index-4.html">4</a></li>
+  <li><a href="/index-5.html">5</a></li>
+  <li><a href="/index-6.html">6</a></li>
+  <li><a href="/index-7.html">7</a></li>
+  <li><a href="/index-8.html">8</a></li>
+  <li class="active"><a href="/index-9.html">9</a></li>
+  <li><a href="/index-10.html">10</a></li>
+  <li><a href="/index-11.html">11</a></li>
+  <li><a href="/index-12.html">12</a></li>
+  <li><a href="/index-13.html">13</a></li>
+  <li><a href="/index-14.html">14</a></li>
+  <li><a href="/index-15.html">15</a></li>
+  <li><a href="/index-10.html">
+    <quote>&rarr;</quote></a></li></ul></footer>
+
+<row class="one-column" id="bottom"><col-1></col-1><col-2>
+<p>Made with <a href="https://github.com/greghendershott/frog">Frog</a>, a static-blog generator written in Racket.
+<br /><a href="https://github.com/racket/racket-lang-org">Source code</a> for this blog.</col-2></row>
+  </body>
+</html>

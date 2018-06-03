@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if IE 9]>    <html class="no-js ie9" lang="en"> <![endif]-->
+<!--[if gt IE 9]><!--> <html class="no-js" lang="en" itemscope itemtype="http://schema.org/Product"> <!--<![endif]-->
+<html>
+<head>
+<title>Racket: <MM-Presentable-User> membership configuration
+for <MM-List-Name></title>
+<meta name="generator" content="Racket" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<link rel="icon" href="/plticon-1-2.ico" type="image/ico" />
+<link rel="shortcut icon" href="/plticon-1-2.ico" type="image/x-icon" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<link rel="stylesheet" href="/gumby-1-2.css" />
+<script src="/modernizr-2.6.2.min.js"></script>
+<style>
+h1 {
+  text-align: center;
+  background-color: #99ccff;
+  padding: 0.5em;
+  font-size: 150%;
+  font-weight: bold;
+}
+h2 {
+  text-align: left;
+  padding: 0.1em 0.5em;
+  background-color: #ffddaa;
+  font-size: 120%;
+  font-weight: bold;
+}
+.users-subscribe { display: none; }
+.dev-subscribe { display: none; }
+.subp {
+  margin: 0.5ex 0 0.5ex 1em;
+}
+</style>
+</head>
+<body><div class="navbar gumby-content" style="position: fixed;" gumby-fixed="top" id="nav1"><div class="row"><a class="toggle" gumby-trigger="#nav1 &gt; .row &gt; ul" href="#"><i class="icon-menu"></i></a>
+<a class="four columns logo" href="https://racket-lang.org/"><img class="logo" src="/logo-and-text-1-2.png" width="198" height="60" alt="Racket" /></a>
+<span class="one colums"></span> <ul class="five columns">
+
+
+</ul></div></div><div style="height: 60px;"></div>
+<div class="bodycontent"><div class="row"><div class="ten columns centered"><!--
+Based on the Mailman file "options.html" (no revision specified)
+Modified to fit the racket pages
+-->
+<h1><MM-List-Name> mailing list membership configuration for
+<MM-Presentable-User></h1>
+<div class="subp"><div style="float: right;"><MM-Form-Start><MM-logout-button><MM-Form-End></div>
+<b><MM-Presentable-User></b>'s subscription status, password, and options
+for the <MM-List-Name> mailing list.</div>
+<div class="subp"><MM-Case-Preserved-User>
+<MM-Disabled-Notice>
+<div style="background-color: #ffaaaa;"><MM-Results></div></div>
+<MM-Form-Start><table cellspacing="5" cellpadding="3" width="100%" align="center"><tr><td colspan="2"><h2 style="margin-bottom: 0; font-size: 100%;">Changing your <MM-List-Name> membership information</h2>
+<div class="subp">You can change the address that you are subscribed to the
+mailing list with by entering the new address in the fields
+below.  Note that a confirmation email will be sent to the new
+address, and the change must be confirmed before it is
+processed.
+<small>(Confirmations time out after about
+<MM-pending-days>.)</small></div>
+<div class="subp">You can also optionally set or change your real name
+(i.e. <em>John Smith</em>).</div>
+<div class="subp">If you want to make the membership changes for all the
+lists that you are subscribed to at <MM-host>, turn on the
+<em>Change globally</em> check box.</div></td></tr>
+<tr><td align="center"><table cellspacing="2" cellpadding="2" width="80%"><tr><td bgcolor="#dddddd" align="right">New address:</td>
+<td><MM-new-address-box></td></tr>
+<tr><td bgcolor="#dddddd" align="right">Again to confirm:</td>
+<td><MM-confirm-address-box></td></tr></table></td>
+<td align="center"><table cellspacing="2" cellpadding="2" width="80%"><tr><td bgcolor="#dddddd" align="right">Your name (optional):</td>
+<td><MM-fullname-box></td></tr></table></td></tr>
+<tr><td colspan="2" align="center"><MM-change-address-button></td></tr>
+<tr><td colspan="2" align="center"><MM-global-change-of-address>Change globally</td></tr></table>
+<table cellspacing="5" cellpadding="3" width="100%" align="center"><tr><td width="50%"><h2 style="margin-bottom: 0; font-size: 100%;">Unsubscribing from <MM-List-Name></h2></td>
+<td width="50%"><h2 style="margin-bottom: 0; font-size: 100%;">Your other <MM-Host> subscriptions</h2></td></tr>
+<tr><td>Turn on the confirmation checkbox and hit this button to
+unsubscribe from this mailing list.
+<br />
+<strong>Warning:</strong> This action will be taken immediately!
+<div style="text-align: center; margin-top: 1ex;"><MM-Unsubscribe-Button></div></td>
+<td>You can view a list of all the other mailing lists at
+<MM-host> for which you are a member.  Use this if you want to
+make the same membership option changes to this other
+subscriptions.
+<div style="text-align: center; margin-top: 1ex;"><MM-Other-Subscriptions-Submit></div></td></tr></table>
+<table cellspacing="5" cellpadding="3" width="100%" align="center"><tr><td colspan="2"><h2 style="margin-bottom: 0; font-size: 100%;">Your <MM-List-Name> Password</h2></td></tr>
+<tr valign="top"><td width="50%"><h3><a name="reminder">Forgotten Your Password?</a></h3>
+Click this button to have your password emailed to your membership
+address.
+<br />
+<MM-Umbrella-Notice>
+<div style="text-align: center; margin-top: 1ex;"><MM-Email-My-Pw></div></td>
+<td width="50%"><h3><a name="changepw">Change Your Password</a></h3>
+<table cellspacing="2" cellpadding="2" width="70%" align="center"><tr><td bgcolor="#dddddd" align="right">New password:</td>
+<td><MM-New-Pass-Box></td></tr>
+<tr><td bgcolor="#dddddd" align="right">Again to confirm:</td>
+<td><MM-Confirm-Pass-Box></td></tr></table>
+<div style="text-align: center; margin-top: 1ex;"><MM-Change-Pass-Button></div>
+<div style="text-align: center; margin-top: 1ex;"><MM-global-pw-changes-button>Change globally</div></td></tr></table>
+<table cellspacing="5" cellpadding="3" width="100%" align="center"><tr><td colspan="2"><h2 style="margin-bottom: 0; font-size: 100%;">Your <MM-List-Name> Subscription Options</h2></td></tr>
+<tr><td colspan="2"><div class="subp"><em>Current values are checked.</em></div>
+<div class="subp">Note that some of the options have a <em>Set globally</em>
+checkbox.  Checking this field will cause the changes to be
+made to every mailing list that you are a member of on
+<MM-host>.  Click on <em>List my other subscriptions</em> above to
+see which other mailing lists you are subscribed to.</div></td></tr>
+<tr><td bgcolor="#dddddd" width="80%"><a name="disable"><strong>Mail delivery</strong></a> <br />
+Set this option to <em>Enabled</em> to receive messages posted to
+this mailing list.  Set it to <em>Disabled</em> if you want to stay
+subscribed, but don't want mail delivered to you for a while
+(e.g. you're reading the list elsewhere).</td>
+<td bgcolor="#dddddd" width="20%"><MM-delivery-enable-button>Enabled <br />
+<MM-delivery-disable-button>Disabled <br />
+<div align="right"><MM-global-deliver-button><i>Set globally</i></div></td></tr>
+<tr><td bgcolor="#dddddd"><strong>Set Digest Mode</strong> <br />
+If you turn digest mode on, you'll get posts bundled together
+(usually one per day but possibly more on busy lists), instead of
+singly when they're sent.  If digest mode is changed from on to
+off, you may receive one last digest.</td>
+<td bgcolor="#dddddd"><MM-Undigest-Radio-Button>Off <br />
+<MM-Digest-Radio-Button>On</td></tr>
+<tr><td bgcolor="#dddddd"><strong>Get MIME or Plain Text Digests?</strong> <br />
+Your mail reader may or may not support MIME digests.  In general
+MIME digests are preferred, but if you have a problem reading
+them, select plain text digests.</td>
+<td bgcolor="#dddddd"><MM-Mime-Digests-Button>MIME <br />
+<MM-Plain-Digests-Button>Plain Text <br />
+<div align="right"><MM-global-mime-button><i>Set globally</i></div></td></tr>
+<tr><td bgcolor="#dddddd"><strong>Receive your own posts to the list?</strong> <br />
+Ordinarily, you will get a copy of every message you post to the
+list.  If you don't want to receive this copy, set this option to
+<em>No</em>.</td>
+<td bgcolor="#dddddd"><MM-dont-receive-own-mail-button>No <br />
+<MM-receive-own-mail-button>Yes</td></tr>
+<tr><td bgcolor="#dddddd"><strong>Receive acknowledgement mail when you send mail to
+the list?</strong></td>
+<td bgcolor="#dddddd"><MM-dont-ack-posts-button>No <br />
+<MM-ack-posts-button>Yes</td></tr>
+<tr><td bgcolor="#dddddd"><strong>Get password reminder email for this list?</strong> <br />
+Once a month, you will get an email containing a password
+reminder for every list at this host to which you are subscribed.
+You can turn this off on a per-list basis by selecting <em>No</em>
+for this option.  If you turn off password reminders for all the
+lists you are subscribed to, no reminder email will be sent to
+you.</td>
+<td bgcolor="#dddddd"><MM-dont-get-password-reminder-button>No <br />
+<MM-get-password-reminder-button>Yes <p></p>
+<div align="right"><MM-global-remind-button><i>Set globally</i></div></td></tr>
+<tr><td bgcolor="#dddddd"><strong>Conceal yourself from subscriber list?</strong> <br />
+When someone views the list membership, your email address is
+normally shown (in an obscured fashion to thwart spam
+harvesters).  If you do not want your email address to show up on
+this membership roster at all, select <em>Yes</em> for this option.</td>
+<td bgcolor="#dddddd"><MM-Public-Subscription-Button>No <br />
+<MM-Hide-Subscription-Button>Yes</td></tr>
+<tr><td bgcolor="#dddddd"><strong>What language do you prefer?</strong></td>
+<td bgcolor="#dddddd"><MM-list-langs></td></tr>
+<tr><td bgcolor="#dddddd"><strong>Which topic categories would you like to subscribe
+to?</strong> <br />
+By selecting one or more topics, you can filter the traffic on
+the mailing list, so as to receive only a subset of the messages.
+If a message matches one of your selected topics, then you will
+get the message,otherwise you will not.
+<br />
+If a message does not match any topic, the delivery rule depends
+on the setting of the option below.  If you do not select any
+topics of interest, you will get all the messages sent to the
+mailing list.</td>
+<td bgcolor="#dddddd"><MM-topics></td></tr>
+<tr><td bgcolor="#dddddd"><strong>Do you want to receive messages that do not match
+any topic filter?</strong> <br />
+This option only takes effect if you've subscribed to at least
+one topic above.  It describes what the default delivery rule is
+for messages that don't match any topic filter.  Selecting
+<em>No</em> says that if the message does not match any topic
+filters, then you won't get the message, while selecting <em>Yes</em>
+says to deliver such non-matching messages to you.
+<br />
+If no topics of interest are selected above, then you will
+receive every message sent to the mailing list.</td>
+<td bgcolor="#dddddd"><MM-suppress-nonmatching-topics>No <br />
+<MM-receive-nonmatching-topics>Yes</td></tr>
+<tr><td bgcolor="#dddddd"><strong>Avoid duplicate copies of messages?</strong> <br />
+When you are listed explicitly in the <tt>To:</tt> or <tt>Cc:</tt>
+headers of a list message, you can opt to not receive another
+copy from the mailing list.  Select <em>Yes</em> to avoid receiving
+copies from the mailing list; select <em>No</em> to receive copies.
+<br />
+If the list has member personalized messages enabled, and you
+elect to receive copies, every copy will have a
+<tt>X-Mailman-Copy: yes</tt> header added to it.</td>
+<td bgcolor="#dddddd"><MM-receive-duplicates-button>No <br />
+<MM-dont-receive-duplicates-button>Yes <br />
+<div align="right"><MM-global-nodupes-button><i>Set globally</i></div></td></tr>
+<tr><td colspan="2" align="center"><MM-options-Submit-button></td></tr></table><MM-Form-End>
+<MM-Mailman-Footer></div></div></div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+//<![CDATA[
+window.jQuery || document.write('<script src=/jquery-1.9.1.min.js><\/script>')
+//]]>
+</script>
+<script src="/gumby.min.js"></script>
+<script src="/plugins.js"></script>
+<script src="/main.js"></script>
+</body></html>

@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <title>Racket Blog (page 7)</title>
+    <meta name="description" content="Racket Blog (page 7)">
+    <meta name="author"      content="The Unknown Author">
+    <meta name="keywords"    content="Chez Scheme, all">
+    <meta name="viewport"    content="width=device-width, initial-scale=1.0">
+    <link rel="icon"      href="/favicon.ico">
+    <link rel="canonical" href="http://blog.racket-lang.org/index-7.html">
+
+
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog-fonts.css">
+    <!-- Feeds -->
+    <link rel="alternate" type="application/atom+xml" href="/feeds/all.atom.xml" title="Atom Feed">
+    <link rel="alternate" type="application/rss+xml" href="/feeds/all.rss.xml" title="RSS Feed">
+    <!-- JS -->
+    </head>
+  <body>
+<row class="one-column" id="logo"><col-1><a href="http://racket-lang.org"><div id="logo-container"><img id="logo" src="/img/racket-logo.svg"/> Racket</div></a></col-1><col-2><p><a href="/index.html">blog</a></p></col-2></row>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>03 Jun 2012</p></col-1>
+
+<col-2>
+  <h1><a href='/2012/06/submodules.html'>Submodules</a></h1>
+  <div class="truncate">
+<p><em>posted by Matthew Flatt</em></p>
+
+<p>A Racket submodule is a module that is syntactically nested within another module. Submodules will be supported in the next release of Racket, and they are available in the current <a href="http://pre.racket-lang.org/installers/">pre-release version</a>.</p>
+
+<p>Submodules provide nested namespaces, but that kind of nesting is already available through forms like <code>define-package</code>. The power of submodules is that they can be separately loaded and separately run relative to their enclosing modules, in the same way that top-level modules can be separately load and run. This separation of dependencies means that submodules can be used to add code and information to modules—such as tests, documentation, and parsing information—that is loaded only when specifically requested.</p>
+
+<h2 id="the-main-submodule">The <code>main</code> Submodule</h2>
+
+<p>One use of a submodule is to declare a <code>main</code> submodule. A <code>main</code> submodule is instantiated when the enclosing module is run as the main program, but not when the enclosing module is used as a library.</p>
+
+<p><code>"fish.rkt"</code></p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">racket/base</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._provide))" style="color: inherit">provide</a></span> <span class="n">fish</span><span class="p">)</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">fish</span> <span class="o">'</span><span class="p">(</span><span class="mi">1</span> <span class="mi">2</span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/module.html#(form._((lib._racket/private/base..rkt)._module+))" style="color: inherit">module+</a></span> <span class="n">main</span>
+  <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((lib._racket/private/map..rkt)._map))" style="color: inherit">map</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/Writing.html#(def._((lib._racket/private/misc..rkt)._displayln))" style="color: inherit">displayln</a></span> <span class="n">fish</span><span class="p">))</span>
+</pre></div>
+
+</div>
+
+<p><code>"sum-fish.rkt"</code></p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">racket/base</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="s2">"fish.rkt"</span><span class="p">)</span>
+<span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/procedures.html#(def._((lib._racket/private/base..rkt)._apply))" style="color: inherit">apply</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="n">fish</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>The <code>"fish.rkt"</code> module exports fish as a list of numbers. Running <code>"sum-fish.rkt"</code>, which imports <code>"fish.rkt"</code>, prints the sum of the numbers. Running <code>"fish.rkt"</code> directly, however, triggers the instantiation of the main submodule within <code>"fish.rkt"</code>, which displays each number in fish on its own line.</p>
+
+<p>A <code>(module+ main ....)</code> declaration is similar to the Python <code>if __name__ == "__main__":</code> idiom, but with a significant difference. Importing <code>"fish.rkt"</code> into another module ignores the main submodule completely, so that the main submodule’s code and its dependencies aren’t loaded.</p>
+
+<h2 id="unit-tests">Unit Tests</h2>
+
+<p>Another use for submodules—and one where independent loading matters more than for <code>"fish.rkt"</code>’s <code>main</code>—is for test suites. A <code>main</code> submodule could be used for tests, so that running the module runs its tests, but our preferred convention is to declare a <code>test</code> submodule:</p>
+
+<p><code>"fish2.rkt"</code></p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">racket/base</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._provide))" style="color: inherit">provide</a></span> <span class="n">fish</span><span class="p">)</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">fish</span> <span class="o">'</span><span class="p">(</span><span class="mi">1</span> <span class="mi">2</span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/module.html#(form._((lib._racket/private/base..rkt)._module+))" style="color: inherit">module+</a></span> <span class="n">test</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="n">rackunit</span><span class="p">)</span>
+  <span class="p">(</span><span class="n">check</span> <span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((lib._racket/private/map..rkt)._andmap))" style="color: inherit">andmap</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/number-types.html#(def._((quote._~23~25kernel)._number~3f))" style="color: inherit">number?</a></span> <span class="n">fish</span><span class="p">))</span>
+</pre></div>
+
+</div>
+
+<p>The new <code>raco test</code> shell command runs the <code>test</code> submodule of a given module, so that <code>raco test fish2.rkt</code> checks that all the values of the <code>fish</code> list are numbers. The <code>test</code> submodule imports <code>rackunit</code> for its check form, but that import does not create a dependency on <code>rackunit</code> (which is a substantial library) for modules that import <code>"fish2.rkt"</code>; the dependency is only for the test submodule.</p>
+
+<p>The <code>module+</code> form creates a dependency of the submodule on the enclosing module, since it implicitly imports all bindings of its enclosing module. The implicit import explains why the test submodule in <code>"fish2.rkt"</code> can use fish directly (i.e., it’s not simply because the submodule is syntactically nested). The implicit import includes all bindings from the enclosing module, including bindings that are not exported via provide, which supports unit tests for unexported functions.</p>
+
+<p>Finally, the <code>module+</code> form splices together multiple declarations of a particular submodule, which is useful for interleaving definitions and tests:</p>
+
+<p><code>"fish3.rkt"</code></p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">racket/base</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._provide))" style="color: inherit">provide</a></span> <span class="n">fish</span> <span class="n">feed</span><span class="p">)</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/module.html#(form._((lib._racket/private/base..rkt)._module+))" style="color: inherit">module+</a></span> <span class="n">test</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="n">rackunit</span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">fish</span> <span class="o">'</span><span class="p">(</span><span class="mi">1</span> <span class="mi">2</span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/module.html#(form._((lib._racket/private/base..rkt)._module+))" style="color: inherit">module+</a></span> <span class="n">test</span> <span class="p">(</span><span class="n">check</span> <span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((lib._racket/private/map..rkt)._andmap))" style="color: inherit">andmap</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/number-types.html#(def._((quote._~23~25kernel)._number~3f))" style="color: inherit">number?</a></span> <span class="n">fish</span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">feed</span> <span class="n">n</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="n">n</span> <span class="mi">1</span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/module.html#(form._((lib._racket/private/base..rkt)._module+))" style="color: inherit">module+</a></span> <span class="n">test</span> <span class="p">(</span><span class="n">check-equal?</span> <span class="mi">3</span> <span class="p">(</span><span class="n">feed</span> <span class="mi">2</span><span class="p">)))</span>
+</pre></div>
+
+</div>
+
+<p>Since tests are isolated to a submodule, it might make sense to “strip” tests from a set of modules to prepare them for distribution to end-users. Although we haven’t created the <code>raco strip</code> command, yet, it’s a likely future addition. In that way, submodules act like sections in an object-linking file format such as ELF.</p>
+
+<h2 id="core-submodule-forms">Core Submodule Forms</h2>
+
+<p>The <code>module+</code> form is actually just a macro that expands to a more primitive form for declaring submodules. The primitive submodule forms are <code>module</code> and <code>module*</code>, which reflect the two different directions that module dependencies can run: the <code>module*</code> form allows the submodule to import its enclosing module, while the <code>module</code> form allows the enclosing module to import the submodule.</p>
+
+<p>As a minor feature, submodules can be declared with <code>module</code> and used by a <code>require</code>—essentially the same within a module as interactively:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">racket/base</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/module.html#(form._((quote._~23~25kernel)._module))" style="color: inherit">module</a></span> <span class="n">zoo</span> <span class="n">racket/base</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._provide))" style="color: inherit">provide</a></span> <span class="n">tiger</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">tiger</span> <span class="s2">"Tony"</span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="o">'</span><span class="ss">zoo</span><span class="p">)</span>
+<span class="n">tiger</span>
+</pre></div>
+
+</div>
+
+<p>More significantly, <code>module</code> allows a submodule to be free of any dependency on its enclosing module, while the enclosing module similarly has no obligation to import the submodule.</p>
+
+<p>The <code>module*</code> form similarly implies no a priori dependency of the submodule on its enclosing module, except that a <code>#f</code> for the submodule’s initial import means an import of all of the enclosing module’s bindings. The <code>module+</code> form expands (after collecting all pieces of a submodule’s body) to a <code>module*</code> form with a <code>#f</code> initial import.</p>
+
+<h2 id="in-source-documentation">In-Source Documentation</h2>
+
+<p>A more interesting example is the <code>scribble/srcdoc</code> library, which supports documentation within a library’s source in a JavaDoc-like way:</p>
+
+<p><code>"fish4.rkt"</code></p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">racket</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="n">scribble/srcdoc</span>
+         <span class="p">(</span><span class="n">for-doc</span> <span class="n">racket/base</span> <span class="n">scribble/manual</span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._provide))" style="color: inherit">provide</a></span>
+ <span class="p">(</span><span class="n">thing-doc</span>
+  <span class="n">fish</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/data-structure-contracts.html#(def._((lib._racket/contract/base..rkt)._listof))" style="color: inherit">listof</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/number-types.html#(def._((quote._~23~25kernel)._number~3f))" style="color: inherit">number?</a></span><span class="p">)</span>
+  <span class="p">(</span><span class="s2">"Our fish, each represented as a number."</span><span class="p">)))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">fish</span> <span class="o">'</span><span class="p">(</span><span class="mi">1</span> <span class="mi">2</span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._provide))" style="color: inherit">provide</a></span>
+ <span class="p">(</span><span class="n">proc-doc/names</span>
+  <span class="n">feed</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/number-types.html#(def._((quote._~23~25kernel)._number~3f))" style="color: inherit">number?</a></span> <span class="o">.</span> <span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="o">.</span> <span class="nb"><a href="http://docs.racket-lang.org/reference/number-types.html#(def._((quote._~23~25kernel)._number~3f))" style="color: inherit">number?</a></span><span class="p">)</span> <span class="p">(</span><span class="n">n</span><span class="p">)</span>
+  <span class="p">(</span><span class="s2">"Feed 1 pound of food to the fish "</span> <span class="p">(</span><span class="n">racket</span> <span class="n">n</span><span class="p">)</span> <span class="s2">"."</span><span class="p">)))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">feed</span> <span class="n">n</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="n">n</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+
+</div>
+
+<p>The <code>scribble/srcdoc</code> library provides <code>thing-doc</code> and <code>proc-doc</code>, which can be used instead of a plain <code>provide</code> form to attach both a contract and documentation to the exported binding. The contract is used at run time to guard uses of the value. The contract is also included in the documentation with hyperlinks to bindings that are used in the contract, such as <code>number?</code>.</p>
+
+<p>In addition to provide forms, the <code>scribble/srcdoc</code> library provides <code>for-doc</code> for use within <code>require</code>. A <code>for-doc</code> imports forms that are used in the implementation of the documentation, as opposed to the implementation of the library. In <code>"fish4.rkt"</code>, <code>scribble/manual</code> is imported for the racket form that is used in the documentation of feed.</p>
+
+<p>These forms from <code>scribble/srcdoc</code> work together to construct a <code>srcdoc</code> submodule that contains documentation for the enclosing module without creating any documentation-related run-time overhead for the enclosing module. The module’s documentation is loaded from bytecode only when specifically requested from the <code>srcdoc</code> submodule for inclusion in a documentation build via <code>include-extracted</code>:</p>
+
+<p><code>"fish4.scrbl"</code></p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">scribble/manual</span>
+<span class="n">@</span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="n">scribble/extract</span><span class="p">)</span>
+<span class="n">@title</span><span class="p">{</span><span class="n">Fish</span><span class="p">}</span>
+<span class="n">@defmodule</span><span class="p">[</span><span class="s2">"fish.rkt"</span><span class="p">]</span>
+<span class="n">@include-extracted</span><span class="p">[</span><span class="s2">"fish4.rkt"</span><span class="p">]</span>
+</pre></div>
+
+</div>
+
+<h2 id="implementing-languages">Implementing Languages</h2>
+
+<p>Top-level modules in Racket intentionally inherit no bindings from the top-level environment, so that (1) a module’s meaning is fixed independent of its load order or other effects, and (2) the initial import of a module can act as a “language” with complete control over the module’s meaning. That is, <code>#lang</code> is in principle the only top-level form in Racket. With only modules at the top level, however, macros cannot abstract over sets of top-level modules.</p>
+
+<p>Submodules provide more flexibility, in that a macro defined within a module can abstract over a set of submodules. As it happens, abstracting over a set of submodules is useful for defining a new language for use with <code>#lang</code>.</p>
+
+<p>A language for use with <code>#lang</code> is implemented by several pieces that live at different times, including the language’s parser, the language’s run-time support library, and the language’s syntax-coloring plug-in for DrRacket. Formerly, a programmer who implements a language with those three pieces was forced to write three different modules (or else tangle the different pieces in a single module, which invariably pulls too many dependencies into any one of them). Those pieces now can be in submodules, which opens the possibility for new abstractions that conveniently generate the various pieces of a language.</p>
+
+<p>For example, if you want to define an <code>ocean</code> language that is <code>racket/base</code> plus <code>fish</code>, it’s enough to install the following module as <code>"main.rkt"</code> in an <code>"ocean"</code> collection (e.g., in an <code>"ocean"</code> directory is that is registered as a collection with the command <code>raco link ocean</code>):</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">racket/base</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._provide))" style="color: inherit">provide</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._all-from-out))" style="color: inherit">all-from-out</a></span> <span class="n">racket/base</span><span class="p">)</span>
+         <span class="n">fish</span><span class="p">)</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">fish</span> <span class="o">'</span><span class="p">(</span><span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">))</span>
+<span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/Writing.html#(def._((lib._racket/private/misc..rkt)._displayln))" style="color: inherit">displayln</a></span> <span class="s2">"Fish are swimming"</span><span class="p">)</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/module.html#(form._((quote._~23~25kernel)._module))" style="color: inherit">module</a></span> <span class="n">reader</span> <span class="n">syntax/module-reader</span>
+  <span class="kd">#:language</span> <span class="o">'</span><span class="ss">ocean</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>When Racket sees a module that starts <code>#lang ocean</code>, it does not simply load the <code>"main.rkt"</code> module of the <code>"ocean"</code> collection. Instead, <code>#lang</code> looks for a reader submodule of the <code>"main.rkt"</code> module. The reader module above does not depend on its enclosing module, so that parsing a module in the ocean language does not trigger the “Fish are swimming” printout. Instead, the <code>#:language 'ocean</code> part of the reader submodule indicates that a module parsed from <code>#lang ocean</code> starts by importing the <code>ocean</code> module, so the bindings of <code>ocean</code> are available in the program, and “Fish are swimming” will print when the program is run.</p>
+
+<h2 id="submodules-are-like">Submodules are Like&hellip;</h2>
+
+<p>At some level, syntactic nesting of modules is an obvious feature to include in a module system. Nevertheless, Racket’s submodules are not like nested modules in most languages—including Python, Chez, or ML—where nesting is for namespace management and nested modules are always instantiated along with the enclosing module. Racket submodules can be used in a similar way, but the fact that submodules are separately loadable makes them available to solve a larger class of problems.</p>
+
+<p>If I had to pick just one analogy, I’d say that submodules are most like a generalization of annotations in the Java sense. Java annotations allow the decoration of code with metadata, and the annotations are preserved through run time, so that annotations can be inspected in source, in compiled code, or reflectively at run time. Java annotations are limited to data, so that any abstraction or programatic interpretation of the data depends on yet another external tool and language, or else the code part (such as test to run for a <code>@Test</code> annotation) is difficult to separate from the main program. C# attributes are slightly more general, in that the data can have associated methods, but attribute code is still mingled with run-time code. Submodules generalize annotations to make them “live,” so that the language of annotations can include expressions, functions, and even syntactic extensions, while allowing the annotation/submodule code to stay separate from the base code.</p>
+
+<p>For more information on submodules, see the pre-release Guide section.</p></div>
+  <a class="more" href='/2012/06/submodules.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>02 Apr 2012</p></col-1>
+
+<col-2>
+  <h1><a href='/2012/04/scribble-your-blogs.html'>Scribble Your Blogs</a></h1>
+  <div class="truncate">
+<p><em>posted by Ryan Culpepper</em></p>
+
+<p>Scribble is a great language for writing documentation. Now it&rsquo;s a great language for writing blog posts, too. I&rsquo;ve just released a tool called Scriblogify that compiles Scribble documents and posts them as blog entries. Scriblogify is a more polished and automated version of the scripts I&rsquo;ve been using for several months to prepare posts for <a href="http://macrologist.blogspot.com">my own blog</a>.</p>
+
+<p>To get Scriblogify, just download it from <a href="http://planet.racket-lang.org/">PLaneT</a>:</p>
+
+<p><code>(require(planetryanc/scriblogify:1))</code></p>
+
+<p>or</p>
+
+<p><code>raco planet install ryanc scriblogify.plt 1 0</code></p>
+
+<p>The package automatically installs a raco subcommand (<code>raco scriblogify</code>) that can be used to configure Scriblogify and process and upload blog posts.</p>
+
+<p>Configure Scriblogify by running</p>
+
+<p><code>raco scriblogify --setup</code></p>
+
+<p>That will open a browser window with the Scriblogify configuration servlet. The servlet will prompt you to authorize Scriblogify to access your Blogger and Picasa Web Albums accounts (only the Blogger/Picasa combination is currently supported) and then create one or more profiles—named combinations of blogs and web albums to upload to.</p>
+
+<p>Scriblogify automatically handles images computed in your Scribble documents by uploading them to a web album. For example, here are some images computed with the slideshow/pict library:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="n">slideshow/pict</span><span class="p">)</span>
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">rainbow-colors</span>
+    <span class="o">'</span><span class="p">(</span><span class="s2">"red"</span> <span class="s2">"orange"</span> <span class="s2">"yellow"</span> <span class="s2">"green"</span> <span class="s2">"blue"</span> <span class="s2">"purple"</span><span class="p">))</span>
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/for.html#(form._((lib._racket/private/base..rkt)._for/list))" style="color: inherit">for/list</a></span> <span class="p">([</span><span class="n">c</span> <span class="n">rainbow-colors</span><span class="p">])</span>
+    <span class="p">(</span><span class="n">colorize</span> <span class="p">(</span><span class="n">filled-rounded-rectangle</span> <span class="mi">20</span> <span class="mi">20</span><span class="p">)</span> <span class="n">c</span><span class="p">))</span>
+<span class="o">'</span><span class="p">(</span><span class="ss">image</span> <span class="ss">image</span> <span class="ss">image</span> <span class="ss">image</span> <span class="ss">image</span> <span class="ss">image</span><span class="p">)</span>
+
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/for.html#(form._((lib._racket/private/base..rkt)._for/list))" style="color: inherit">for/list</a></span> <span class="p">([</span><span class="n">c</span> <span class="n">rainbow-colors</span><span class="p">]</span>
+             <span class="p">[</span><span class="n">dir</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/sequences.html#(def._((lib._racket/private/base..rkt)._in-cycle))" style="color: inherit">in-cycle</a></span> <span class="o">'</span><span class="p">(</span><span class="ss">right</span> <span class="ss">left</span><span class="p">))])</span>
+    <span class="p">(</span><span class="n">standard-fish</span> <span class="mi">25</span> <span class="mi">25</span> <span class="kd">#:color</span> <span class="n">c</span> <span class="kd">#:direction</span> <span class="n">dir</span><span class="p">))</span>
+<span class="o">'</span><span class="p">(</span><span class="ss">image</span> <span class="ss">image</span> <span class="ss">image</span> <span class="ss">image</span> <span class="ss">image</span> <span class="ss">image</span><span class="p">)</span>
+
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="n">cc-superimpose</span>
+   <span class="p">(</span><span class="n">cc-superimpose</span> <span class="p">(</span><span class="n">cloud</span> <span class="mi">100</span> <span class="mi">80</span> <span class="s2">"lightblue"</span><span class="p">)</span>
+                   <span class="p">(</span><span class="n">cloud</span> <span class="mi">90</span> <span class="mi">70</span> <span class="s2">"white"</span><span class="p">))</span>
+   <span class="p">(</span><span class="n">hc-append</span> <span class="mi">10</span>
+    <span class="p">(</span><span class="n">standard-fish</span> <span class="mi">30</span> <span class="mi">30</span> <span class="kd">#:color</span> <span class="s2">"red"</span> <span class="kd">#:direction</span> <span class="o">'</span><span class="ss">right</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">standard-fish</span> <span class="mi">25</span> <span class="mi">20</span> <span class="kd">#:color</span> <span class="s2">"blue"</span> <span class="kd">#:direction</span> <span class="o">'</span><span class="ss">left</span><span class="p">)))</span>
+<span class="n">image</span>
+</pre></div>
+
+</div>
+
+<p>By Scribbling your blog entries, you get Scribble&rsquo;s nice code formatting, colorizing, and documentation links for free—well, once you&rsquo;ve updated your blog&rsquo;s CSS (see below). If you&rsquo;re blogging about bleeding-edge work, there&rsquo;s an option to make Scriblogify link to the <a href="http://pre.racket-lang.org/docs/html/">nightly build docs</a> (updated daily) instead of the <a href="http://docs.racket-lang.org/">release docs</a> (updated every 3 months).</p>
+
+<p>Scriblogify&rsquo;s documentation has more details, including how to update your blog&rsquo;s CSS for Scribbled content and what bloggable Scribble documents look like.You can see the source for this blog post <a href="https://github.com/rmculpepper/scriblogify/blob/v1.0/samples/scribble-your-blogs.scrbl">here</a>. This blog entry was created with the following command:raco  <code>scriblogify -p the-racket-blog scribble-your-blogs.scrbl</code></p>
+
+<p>Now go forth and Scribble your blogs.</p></div>
+  <a class="more" href='/2012/04/scribble-your-blogs.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>26 Mar 2012</p></col-1>
+
+<col-2>
+  <h1><a href='/2012/03/fixed-racket-v521-installers.html'>Fixed Racket v5.2.1 Installers</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>Dear Racketeers,</p>
+
+<p>We have just released a <a href="http://racket-lang.org/download/">DrRacket version 5.2.1</a> that starts fine today. The fixed version has replaced the 5.2.1 installers. This version andthe original 5.2.1 differ only in this one fix.</p></div>
+  <a class="more" href='/2012/03/fixed-racket-v521-installers.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>02 Feb 2012</p></col-1>
+
+<col-2>
+  <h1><a href='/2012/02/racket-v521.html'>Racket v5.2.1</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>Racket version 5.2.1 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a> Release Highlights::</p>
+
+<ul>
+ <li>
+  <p>Performance improvements include the use of <code>epoll()</code>/<code>kqueue()</code> instead of <code>select()</code> for the Racket thread scheduler, cross-module inlining of small functions, and the use of SSE instead of x87 for JIT-compiled floating-point operations on platforms where SSE is always available (including x86_64 platforms). A related change is the interning of literal numbers, strings, byte strings, characters, and regexps that appear in code and syntax objects.</p></li>
+ <li>
+  <p>DrRacket uses a set of composable ray-traced icons available from the new <code>images</code> library collection.</p></li>
+ <li>
+  <p>Typed Racket&rsquo;s <code>typecheck-fail</code> form allows macro creators to customize the error messages that Typed Racket produces. This is especially useful when creating pattern matching macros.</p></li>
+ <li>
+  <p>The performance of Redex&rsquo;s matcher has been substantially improved; depending on the model you should see improvements between 2x and 50x in the time it takes to reduce terms.</p></li>
+ <li>
+  <p>Plots look nicer and are more correct at very small and very large scales. New features include customizable dual axis ticks and transforms (e.g., log axes, date and currency ticks, axis interval collapse and stretch), stacked histograms, and 3D vector fields. The legacy <code>fit</code> function and libfit have been removed.</p></li>
+ <li>
+  <p>The <code>2htdp/universe</code> library&rsquo;s <code>big-bang</code> form supports an experimental game pad key handler.</p></li>
+ <li>
+  <p>The <code>db</code> library now supports nested transactions and PostgreSQL arrays. Bugs involving MySQL authentication and memory corruption in the SQLite bindings have been fixed.</p></li>
+ <li>
+  <p>The Macro Stepper tool in DrRacket no longer executes a program after expanding it.</p></li>
+ <li>
+  <p>In the DMdA teaching languages, infinite recursive signatures (&ldquo;streams&rdquo;, for example) with no intervening <code>mixed</code> are now supported, and the signatures of record definitions without fields now have generators for use with <code>property</code>.</p></li>
+ <li>
+  <p>MysterX&rsquo;s ActiveX support is deprecated and will be removed in the next release. MysterX&rsquo;s core COM functionality will become deprecated in the next release, but COM functionality will be supported for the foreseeable future as a compatibility layer over a forthcoming <code>ffi/com</code> library.</p></li></ul></div>
+  <a class="more" href='/2012/02/racket-v521.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>01 Feb 2012</p></col-1>
+
+<col-2>
+  <h1><a href='/2012/02/zack-gallers-experience-with-stateful-vs-stateless-web-apps.html'>Zack Galler&rsquo;s Experience with Stateful vs Stateless Web Apps</a></h1>
+  <div class="truncate">
+<p><em>posted by Jay McCarthy</em></p>
+
+<p>Communication using HTTP between client and server is a simple problem of halted computation. A client computes a request, transmits and halts, waiting for a server response. On receipt, the server computes a response, transmits and halts, waiting for the next client request. This much is well known. Racket&rsquo;s magnificent <em>stateful</em> Web server does three things on the server side:</p>
+
+<ul>
+ <li>
+  <p>it reifies a Racket continuation, capturing where the server computation has halted.</p></li>
+ <li>
+  <p>it externalizes the continuation, creating a URL-representation that uniquely maps to the Racket continuation</p></li>
+ <li>
+  <p>it disseminates the externalized continuation to interested clients, typically via HTTP response, but alternately via SMTP or any other protocol. Then, it waits. Later, when presented with an externalized continuation, a quick inverse mapping occurs, the underlying Racket continuation is invoked, and the server processes the new client request. Rinse and repeat. The problem with this approach is twofold</p></li>
+ <li>
+  <p>the reified Racket continuations live in server memory. And there&rsquo;s no safe way to garbage collect, as the continuations could be invoked at any time. There are strategies to reclaim memory, but <em>some</em> load level will noticeably decrease the performance of your application. And its not possible to figure out what that load level is prior to finishing your application. This is a problem.</p></li>
+ <li>
+  <p>Again, the reified Racket continuations live in server memory and cannot be moved. So there&rsquo;s no way to scale an application to more than one server. It&rsquo;s a necessarily one machine system. This makes problem #1 worse. Racket&rsquo;s yet more magnificent <em>stateless</em> Web server does exactly the same three things:</p></li>
+ <li>
+  <p>to reify, it rewrites the entire call stack into a format known as <a href="https://en.wikipedia.org/wiki/Administrative_normal_form">A-Normal Form</a> (ANF).</p></li>
+ <li>
+  <p>to externalize, the ANF&rsquo;d stack is encoded for transmission over HTTP.</p></li>
+ <li>
+  <p>and then it&rsquo;s sent over to the client (dissemination). Later, when presented with encoded stack, the stateless server performs an inverse transform to reconstruct the call stack, at which point the server keeps going. So we&rsquo;ve lost the invocation step and substituted a reconstruction. But in exchange, we&rsquo;ve eliminated continuations from server memory, and solved both enumerated problems above. Neat trick.</p></li></ul>
+
+<p>I provide a few lessons learned for the archives for the next person to attempt porting <code>#lang racket</code> to <code>#lang web-server</code> code. First, the predicate <code>serializable?</code> from <code>racket/serialize</code> is invaluable. The <code>#lang web-server</code> code will not transform if there are non-serializable constructs in the dynamic extent of the invocation of <code>send/suspend</code>, such as a local binding or argument. Second, invocations of native continuations reified with <code>call/cc</code> frequently throw errors related to continuation prompts, such as “attempt to cross a continuation barrier” or “no corresponding prompt tag in continuation”. In all cases, I was able to remedy the situation by enclosing the invocation in <code>call-with-continuation-prompt</code>. This may be an error in the system, but it is unclear at this time. Third, the transformation does not allow parameters or <code>dynamic-wind</code>, because the internal data-structures representing them are not serializable, but continuation-marks can be used to reimplement the piece of the functionality you need.</p>
+
+<p>Finally, thank you to the Racket team. I think the stateless Web language is important technology and must have required an enormous amount of work to implement. Anecdotally, application speed seems at or better than the stateful code. To learn more about the stateless Web application infrastructure, <a href="http://docs.racket-lang.org/web-server/stateless.html">consult the manual</a> or post to the <a href="http://lists.racket-lang.org/">mailing list</a>. (This post was written by Zack Galler with minor edits before posting by Jay McCarthy.)</p></div>
+  <a class="more" href='/2012/02/zack-gallers-experience-with-stateful-vs-stateless-web-apps.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>09 Nov 2011</p></col-1>
+
+<col-2>
+  <h1><a href='/2011/11/racket-v52.html'>Racket v5.2</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>Racket version 5.2 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a> Release Highlights::</p>
+
+<ul>
+ <li>
+  <p>DrRacket comes with an experimental, on-line check syntax tool, although this new tool is disabled default. See below for more information.</p></li>
+ <li>
+  <p>The new <code>db</code> library offers a high-level, functional interface to popular relational database systems, including PostgreSQL, MySQL, and SQLite, as well as other systems via ODBC.</p></li>
+ <li>
+  <p>A new XREPL collection provides convenient commands for a plain racket REPL. It is particularly convenient for people who prefer console-based work and alternative editors. See also the new chapter on command-line tools and other editors at the end of the Racket Guide.</p></li>
+ <li>
+  <p>The <code>plot</code> collection has been reimplemented in Racket. It now offers PDF output, log axes, histograms, and more. Some code that uses <code>plot</code> will still work, and some will need light porting. The <code>plot/compat</code> module offers expedient backward compatibility.</p></li>
+ <li>
+  <p>DrRacket uses more conventional key bindings: <code>C-t</code> creates a new tab, <code>C-w</code> closes the current one, and <code>C-r</code> runs the definitions. On Mac OS X, the Command key is used. See “Defining Custom Shortcuts” in the DrRacket manual for an example that uses the old key bindings.</p></li>
+ <li>
+  <p>The new <code>raco link</code> command registers a directory as a collection, which allows the collection directory to reside outside the “<code>collects</code>” tree and without changing the PLTCOLLECTS environment variable.</p></li>
+ <li>
+  <p>Typed Racket:</p></li>
+ <li>
+  <p>Typed Racket provides static performance debugging support to show which code gets optimized and point out code that does not. Use the “Performance Report” button in DrRacket.</p></li>
+ <li>
+  <p>More intuitive types in printouts in the REPL and in error messages. Use <code>:query-result-type</code> to explore types, or <code>:print-type</code> for a full printout.</p></li>
+ <li>
+  <p>Typed Racket now supports defining function with optional arguments using the same syntax as Racket.</p></li>
+ <li>
+  <p>Redex now supports specifying (and testing and automatically typesetting) judgment forms including type systems and SOS-style operational semantics.</p></li>
+ <li>
+  <p>Fixed several GUI problems, including problems on Ubuntu 11.10 (GTK+ 3) and 64-bit Mac OS X.</p></li>
+ <li>
+  <p>Internal-definition expansion has changed to use <code>let*</code> semantics for sequences that contain no back references. This change removes a performance penalty for using internal definitions instead of <code>let</code> in common cases, and it only changes the meaning of programs that capture continuations in internal definitions. Internal definitions are now considered preferable in style to <code>let</code>.</p></li>
+ <li>
+  <p>Support for <code>begin-for-syntax</code> has been generalized; modules may now define and export both value bindings and syntax bindings (macros) at phase 1 and higher. Due to a bug, phase 1 syntax (or higher) is not available in DrRacket&rsquo;s <code>#lang</code>-based REPL. A simple workaround is to disable debugging in DrRacket (see “no debugging” radio button in detailed language dialog).</p></li></ul>
+
+<p>Additional Items::</p>
+
+<ul>
+ <li>
+  <p>The <code>racket/gui</code> library (and Slideshow) provides more support for multiple-screen displays.</p></li>
+ <li>
+  <p>DrRacket remembers whether an opened file used LF or CRLF line endings, and will continue using the same. When creating a new file, a preference determines how it is saved.</p></li>
+ <li>
+  <p><code>net/url</code> can now follow HTTP redirections.</p></li>
+ <li>
+  <p>The LNCS and JFP class files are no longer distributed with Racket. Instead, they are downloaded on demand.</p></li>
+ <li>
+  <p>The Algol language implementation is now available as a plain language using <code>#lang algol60</code>.</p></li>
+ <li>
+  <p>The Racket-to-C compiler (as accessed via <code>raco ctool</code> or <code>mzc</code>) has been removed; Racket&rsquo;s JIT has long provided better performance, and the FFI provides better access to C libraries.</p></li>
+ <li>
+  <p>Contracts can be applied to exports with the new <code>contract-out</code> form within <code>provide</code>, instead of a separate <code>provide/contract</code> form. (The new <code>contract-out</code> form is implemented as a new kind of “provide pre-transformer”.)</p></li>
+ <li>
+  <p>The <code>date*</code> structure type is an extension of <code>date</code> with <code>nanosecond</code> and <code>time-zone-name</code> fields.</p></li>
+ <li>
+  <p>New looping constructs: <code>for/sum</code> and <code>for/product</code>.</p></li>
+ <li>
+  <p>Direct calls to keyword-accepting functions are now optimized to eliminate the overhead of keywords. In addition, the compiler detects and logs warnings for keyword-argument mismatches.</p></li>
+ <li>
+  <p>The libfit interface is available from <code>plot/deprecated/fit</code>, and will be removed in the near future.</p></li>
+ <li>
+  <p>The Unix installer has been re-done, and it is now more robust.</p></li>
+ <li>
+  <p>The built-in reader and printer support for Honu is removed. (This functionality is re-implemented in Racket.)</p></li></ul>
+
+<p>On-line Check Syntax::  DrRacket now provides an on-line version of the syntax check tool, which means that syntax checking runs automatically while you continue to edit a program. With this tool enabled, its annotations (e.g., binding arrows) and actions (e.g., the renaming refactoring and direct documentation links) are almost always available. We have noticed that on-line syntax checking renders DrRacket unstable on occasion, perhaps because it relies on relatively new support for parallelism. Occurrences of the problem are rare, but they are not rare enough, which is why we have disabled the tool by default. At the same time, current users of the tool find it so valuable that we felt it should be included in the release. We expect to track down the remaining problems and enable the tool by default in near-future release. To enable on-line syntax checking (for <code>#lang</code>-based programs only), click on the red dot in the bottom right of DrRacket&rsquo;s window. To turn it off, click there again.</p></div>
+  <a class="more" href='/2011/11/racket-v52.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>18 Oct 2011</p></col-1>
+
+<col-2>
+  <h1><a href='/2011/10/on-eval-in-dynamic-languages-generally.html'>On <code>eval</code> in dynamic languages generally and in Racket specifically</a></h1>
+  <div class="truncate">
+<p><em>posted by Matthew Flatt</em></p>
+
+<p>The <code>eval</code> function is at the heart of a dynamic language, and it strikes many newcomers as an amazingly powerful tool. At the same time, experienced programmers avoid <code>eval</code>, because unnecessary use creates trouble. It&rsquo;s not easy to explain why <code>eval</code> should be avoided or when it"s appropriate to use <code>eval</code>, but I&rsquo;ll take another stab at it here.</p>
+
+<h2 id="what-is-eval">What is <code>eval</code>?</h2>
+
+<p>Consider the following &ldquo;program&rdquo; in English prose:</p>
+
+<blockquote>
+ <p>Assume that your favorite color is red. Now imagine a balloon that is  your favorite color. Paint a canvas the same color as the balloon.</p></blockquote>
+
+<p>As English goes, that&rsquo;s a fairly clear program with a fairly well-defined result. When I follow those instructions, at least, I will always produce a red canvas (assuming that I have a canvas and some red paint, but a potential lack of art supplies is not the point here).</p>
+
+<p>I would come up with a red canvas even if I read the instructions when surrounded by people who speak only Chinese, obviously, since I&rsquo;m the one reading the instructions. Furthermore, it would be straightforward to translate the program to Chinese, and then a person who reads Chinese would produce a red canvas.</p>
+
+<p>A translator might even take the liberty of simplifying the program to just</p>
+
+<blockquote>
+ <p>Paint a canvas red.</p></blockquote>
+
+<p>The translation loses some of the poetry of the original, but the result is the same.</p>
+
+<p>In Racket terms, the paragraph corresponds to a module. It can be compiled (i.e., translated) and optimized (i.e., simplified). A program can be made up of multiple modules that are written in different languages, but since each module can be reliably translated, they can all be compiled into some common language to run the program.</p>
+
+<p>Here&rsquo;s a different program:</p>
+
+<blockquote>
+ <p>Tell the person next to you &ldquo;Assume that your favorite color is red.&rdquo; Tell the person &ldquo;Now, imagine a balloon that is your favorite color.&rdquo; Tell the person &ldquo;Paint canvas the same color as the balloon.&rdquo;</p></blockquote>
+
+<p>Getting a red canvas back may be a little trickier in this case. If the person next to me speaks only Chinese, then my program may fail with a message-not-understood error.</p>
+
+<p>If I want to translate the program to Chinese, then it&rsquo;s not clear whether the parts in quotes should be translated. Maybe I mean for a person who can read Chinese but only sound out English to run the program when surrounded by English speakers, or maybe I mean for a Chinese person to run the program when surrounded by Chinese people. Either way, I have to be a lot more specific to a translator. For more complex programs, the instructions to the translator can become complex and fragile.</p>
+
+<p>Finally, a translator probably won&rsquo;t feel comfortable simplifying the program to</p>
+
+<blockquote>
+ <p>Tell the person next to you &ldquo;Paint a canvas red.&rdquo;</p></blockquote>
+
+<p>because there could be all sorts of environmental conditions that make the result different&mdash;such as people who are willing to paint but unwilling to accept assumptions about their favorite colors.</p>
+
+<p>The paragraph with &ldquo;tell the person&hellip;&rdquo; is a program that uses <code>eval</code>. It can&rsquo;t be compiled and optimized as well as the earlier paragraph, and the language context in which it is run may change the result. The quotes around sentences correspond to the quote in front of an expression passed to <code>eval</code> in Racket; there&rsquo;s no particular reason that the language for <code>eval</code> will match the language of the program that has the quoted text. The issues become even more complex if you try to implement different parts of the program in different languages.</p>
+
+<p>If the analogy to multiple spoken languages seems strange&mdash;maybe your language is Javascript, period&mdash;the problem of translation to another language is really a proxy for program understanding. There&rsquo;s a direct connection to performance and optimization (i.e., translation to efficient machine code), but using <code>eval</code> also makes a program more difficult to understand for the same reasons that it makes the program more difficult to translate. For example, a reader of your program may not be able to tell whether &ldquo;assume your favorite color is red&rdquo; is just a rhetorical device to get to a red canvas or whether some new instructions will arrive that will ask for your favorite color.</p>
+
+<h2 id="when-is-eval-good">When is <code>eval</code> Good?</h2>
+
+<p>The program with &ldquo;tell the person next to you&rdquo; above uses <code>eval</code> in a bad way. The task could just as well be performed by the person reading the instructions, instead of getting another nearby person involved.</p>
+
+<p>Some other uses <code>eval</code> are both good and necessary. For example, consider the following program:</p>
+
+<blockquote>
+ <p>Ask the construction manager for instructions. Walk to the building  site and convey those instructions to the construction crew.</p></blockquote>
+
+<p>This program uses <code>eval</code> when it conveys instructions to the construction crew, but no quoted forms appear in the program. The absence of quoted code is one sign that <code>eval</code> may be appropriate. Note that the program could work no matter what language the manager and crew speak, although there is an implicit (and sometimes non-trivial) assumption that the manager and crew speak the same language.</p>
+
+<p>Here&rsquo;s another example:</p>
+
+<blockquote>
+ <p>Go outside, and tell each member of the construction crew &ldquo;take a  lunch break, now.&rdquo;</p></blockquote>
+
+<p>There&rsquo;s a quoted program in this case, but it&rsquo;s crucial to ask other people to run the quoted program, instead of just taking the lunch break yourself. That is, <code>eval</code> is really necessary. The implementor of this program takes on the burden of making sure that the instructions are in a suitable language, however, and may need to parameterize the quoted program by an explicit action to translate it to a language understood by the construction crew.</p>
+
+<p>Here&rsquo;s one more reasonable example:</p>
+
+<blockquote>
+ <p>Ask the construction manager for instructions. Follow them.</p></blockquote>
+
+<p>In this case, it&rsquo;s the construction manager&rsquo;s problem to give you instructions in a language that you understand.</p>
+
+<p>Here&rsquo;s a questionable example:</p>
+
+<blockquote>
+ <p>Decide how long to work before lunch, say N hours, and write a note  to yourself to work N hours. Add to the note by telling yourself to  take a lunch break afterward.</p></blockquote>
+
+<p>If you could really write that program without quotes, then it&rsquo;s probably ok. The example is misleading, though, because languages don&rsquo;t usually support</p>
+
+<blockquote>
+ <p>write a note to yourself to work N hours</p></blockquote>
+
+<p>You&rsquo;d have to write instead</p>
+
+<blockquote>
+ <p>write a note to yourself that says &ldquo;work&rdquo; followed by the number N  and then &ldquo;hours&rdquo;</p></blockquote>
+
+<p>and the quote marks are where the problem comes in. If you translate the program to Chinese, then you have to be careful to somehow translate &ldquo;work&rdquo; and &ldquo;hours&rdquo; to Chinese, too.</p>
+
+<p>The point here is not that programs without quoted text are clearly good or that programs with quoted text are clearly bad. The real point is that a programmer has to be especially careful about passing around instructions and using quoted instructions. Using <code>eval</code> means accepting the burden of using instructions will make sense by the time they are delivered. That burdened is best avoided, which is why experienced programmers avoid <code>eval</code>, but some of the examples illustrate cases where the burden is not avoidable or where the actions enabled by <code>eval</code> make the burden worthwhile.</p>
+
+<h2 id="using-eval-in-racket">Using <code>eval</code> in Racket</h2>
+
+<p>In the context of Racket, the multiple-language analogy is relatively accurate, because Racket is about having many programming languages work together and allowing programmers to define ever better languages and language constructs. In Racket, it&rsquo;s especially likely that a library written in one language is used in a context where another language is the default.</p>
+
+<p>Newcomers to Racket sometimes stumble over the fact that</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span> <span class="kn">#lang </span><span class="nn">racket</span>
+ <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">my-x</span> <span class="mi">1</span><span class="p">)</span>
+ <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/eval.html#(def._((quote._~23~25kernel)._eval))" style="color: inherit">eval</a></span> <span class="o">'</span><span class="p">(</span><span class="ss"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="ss">my-x</span> <span class="mi">2</span><span class="p">))</span>
+</pre></div>
+
+</div>
+
+<p>or even</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span> <span class="kn">#lang </span><span class="nn">racket</span>
+ <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/eval.html#(def._((quote._~23~25kernel)._eval))" style="color: inherit">eval</a></span> <span class="o">'</span><span class="p">(</span><span class="ss"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="mi">1</span> <span class="mi">2</span><span class="p">))</span>
+</pre></div>
+
+</div>
+
+<p>does not work at all, and yet if the program</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span> <span class="kn">#lang </span><span class="nn">racket</span>
+ <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">my-x</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>is loaded into a read-eval-print loop&mdash;for example, by clicking the &ldquo;Run&rdquo; button in DrRacket and then typing into the lower interactions panel&mdash;then</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/eval.html#(def._((quote._~23~25kernel)._eval))" style="color: inherit">eval</a></span> <span class="o">'</span><span class="p">(</span><span class="ss"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="ss">my-x</span> <span class="mi">2</span><span class="p">))</span>
+</pre></div>
+
+</div>
+
+<p>works as expected.</p>
+
+<p>DrRacket&rsquo;s interactions window has to use <code>eval</code> in the sense that it reads an expression to evaluate and then passes it on to the interpreter for an answer. More generally, to make various pieces of the environment fit together, DrRacket sets <code>eval</code> globally to use the module&rsquo;s language while evaluating expressions in the interactions window. In Racket terminology, DrRacket sets the <code>current-namespace</code> parameter to the module&rsquo;s namespace when it initializes the interactions window. In contrast, while the module body is being evaluated, <code>eval</code> treats expressions as being in the language that is empty by default, which is why <code>eval</code> during the module evaluation produces a different result from <code>eval</code> during the interactions windows.</p>
+
+<p>You may wonder why DrRacket doesn&rsquo;t initialize the namespace of <code>eval</code> to be the module&rsquo;s namespace from the start, so that in-module uses of <code>eval</code> and the interactions window behave the same. In a program that is implemented by multiple modules, which module&rsquo;s language should be used? In particular, if the language it&rsquo;s always the main module&rsquo;s language, then a module may behave differently on its own than as part of a larger program. In the process of developing Racket and DrRacket, we&rsquo;ve seen many such problems, and so Racket now arranges for the default language to be empty (which is different from any useful language) to help programmers remember that there&rsquo;s a language issue to consider whenever <code>eval</code> is used.</p>
+
+<p>The Racket Guide&rsquo;s chapter 15 covers in more depth the issues and namespace tools of Racket for harnessing the power of <code>eval</code>:</p>
+
+<p> <a href="http://docs.racket-lang.org/guide/reflection.html">http://docs.racket-lang.org/guide/reflection.html</a></p>
+
+<p>Think of <code>eval</code> as a power tool. For some tasks, there&rsquo;s no real substitute, and so we want <code>eval</code> around. At the same time, <code>eval</code> should be used with care. In dynamic languages generally, that means a reluctant and targeted use <code>eval</code>. In Racket specifically, it means knowing the namespace toolbox and being as explicit as possible about the intended context for dynamic evaluation.</p></div>
+  <a class="more" href='/2011/10/on-eval-in-dynamic-languages-generally.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>16 Aug 2011</p></col-1>
+
+<col-2>
+  <h1><a href='/2011/08/racket-v513.html'>Racket v5.1.3</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>Racket version 5.1.3 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a>This is a bugfix release, resolving the DrRacket issue with the contour view. In addition, two tex files with problematic licensing were removed.</p></div>
+  <a class="more" href='/2011/08/racket-v513.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>03 Aug 2011</p></col-1>
+
+<col-2>
+  <h1><a href='/2011/08/racket-v512.html'>Racket v5.1.2</a></h1>
+  <div class="truncate">
+<p><em>posted by Eli Barzilay</em></p>
+
+<p>Racket version 5.1.2 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<ul>
+ <li>
+  <p>The download page includes 64-bit installers for Mac OS X, Windows, and two Debian flavors. Racket now supports OS X Lion.</p></li>
+ <li>
+  <p>Racket now includes a new <code>racket/place</code> library to support parallelism, complementing <code>racket/future</code>. Racket&rsquo;s parallel build process is now based on places instead of multiple OS processes.Places support share-nothing parallelism and message-passing communication. Compared to futures, places are heavyweight, but they have a simpler performance model.</p></li>
+ <li>
+  <p>The syntax-certificate system has been replaced by a syntax-taint system. Both certificates and taints were designed to protect otherwise inaccessible bindings from abuse when they appear in macro expansions. Taints are simpler and lighter, and the switch closes known holes in the certificate system. Macros that are not implemented with <code>syntax-rules</code> or <code>define-syntax-rule</code>, however, must explicitly use <code>syntax-protect</code> to protect their expansions from abuse.</p></li>
+ <li>
+  <p>The <code>net/url</code> library supports HTTPS connections, but beware that by default all sites are accepted (equivalent to ignoring a browser&rsquo;s warnings about untrusted certificates).</p></li>
+ <li>
+  <p>Error messages in the student languages use a simplified vocabulary and consistent phrasings. If you maintain curriculum material or teachpacks then please consider updating. See the “Error Message Composition Guidelines” section in the documentation for details.</p></li>
+ <li>
+  <p>Typed Racket: almost all core Racket data structures and operations are now accessible in Typed Racket (most of this work is due to prolific contributor Eric Dobson). The performance of the typechecker has been significantly improved.</p></li>
+ <li>
+  <p>The <code>scriblib/bibtex</code> library supports BibTeX-formatted citation databases in Scribble documents. BibTeX can be tricky to parse, so please report failed entries as bug reports.</p></li>
+ <li>
+  <p>The <code>for</code> forms now support an <code>#:unless</code> clause, and a nonnegative integer can be used as a sequence. The new <code>compose1</code> function creates single-valued composition functions. The <code>racket/function</code> library now provides <code>identity</code>, <code>thunk</code>, and <code>thunk*</code>.</p></li>
+ <li>
+  <p>The license has been clarified: we now use LGPLv2.1 uniformly. (The license file used to specify LGPLv2, contrary to the download pages.)</p></li></ul></div>
+  <a class="more" href='/2011/08/racket-v512.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>29 Jul 2011</p></col-1>
+
+<col-2>
+  <h1><a href='/2011/07/racketcon-recap.html'>RacketCon Recap</a></h1>
+  <div class="truncate">
+<p><em>posted by Sam Tobin-Hochstadt</em></p>
+
+<p>We held <a href="http://con.racket-lang.org/">RacketCon</a> here at <a href="http://www.ccis.neu.edu/2011/">Northeastern</a> over the past weekend, and it was a great time! Matthew Flatt consulted his magic 8-ball about the future of Racket (it involves Hawaiian shirts); Matthias Felleisen announced the upcoming Realm of Racket book; Robby Findler demoed DrRacket with online syntax checking; Ryan Culpepper taught us how to make Rackety libraries; Prabhakar Ragde explained how the University of Waterloo teaches Racket and Program by Design to 1500 students a year (and how to embed math into Scribble documents).</p>
+
+<p>Danny Yoo has already <a href="http://blog.hashcollision.org/?p=162">blogged</a> about his talk about his <a href="http://hashcollision.org/whalesong/">Whalesong</a> Racket-&gt;JavaScript compiler. Hopefully other people will write more about some of the individual talks; I&rsquo;ll update this post to link to any that I see.</p>
+
+<p>As promised, the talks were videotaped by Jeff Dlouhy of the <a href="http://acm.ccs.neu.edu/">NUACM</a>; the videos are in post-production and should be up within a few weeks. We&rsquo;ll announce their availability on this blog. Slides from the individual talks will be up on the <a href="http://con.racket-lang.org/2011/">RacketCon webpage</a> soon.</p></div>
+  <a class="more" href='/2011/07/racketcon-recap.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+<footer>
+ <ul class="pagination">
+  <li><a href="/index-6.html">
+    <quote>&larr;</quote></a></li>
+  <li><a href="/index.html">1</a></li>
+  <li><a href="/index-2.html">2</a></li>
+  <li><a href="/index-3.html">3</a></li>
+  <li><a href="/index-4.html">4</a></li>
+  <li><a href="/index-5.html">5</a></li>
+  <li><a href="/index-6.html">6</a></li>
+  <li class="active"><a href="/index-7.html">7</a></li>
+  <li><a href="/index-8.html">8</a></li>
+  <li><a href="/index-9.html">9</a></li>
+  <li><a href="/index-10.html">10</a></li>
+  <li><a href="/index-11.html">11</a></li>
+  <li><a href="/index-12.html">12</a></li>
+  <li><a href="/index-13.html">13</a></li>
+  <li><a href="/index-14.html">14</a></li>
+  <li><a href="/index-15.html">15</a></li>
+  <li><a href="/index-8.html">
+    <quote>&rarr;</quote></a></li></ul></footer>
+
+<row class="one-column" id="bottom"><col-1></col-1><col-2>
+<p>Made with <a href="https://github.com/greghendershott/frog">Frog</a>, a static-blog generator written in Racket.
+<br /><a href="https://github.com/racket/racket-lang-org">Source code</a> for this blog.</col-2></row>
+  </body>
+</html>

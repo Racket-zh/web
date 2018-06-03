@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <title>Tutorial: Creating a Package</title>
+    <meta name="description" content="_posted by Stephen Chang_  This post is a summary of a tutorial presented at RacketCon 2017.  It describes how to create a package starting from a single Racket file.  Specifically, this post explains how to:   use `raco pkg install` to install a package,...">
+    <meta name="author"      content="The Unknown Author">
+    <meta name="keywords"    content="">
+    <meta name="viewport"    content="width=device-width, initial-scale=1.0">
+    <link rel="icon"      href="/favicon.ico">
+    <link rel="canonical" href="http://blog.racket-lang.org/2017/10/tutorial-creating-a-package.html">
+    <link rel="next" href="/2017/09/tutorial-contributing-to-racket.html">
+    <link rel="prev" href="/2017/10/racket-v6-11.html">
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog-fonts.css">
+    <!-- Feeds -->
+    <link rel="alternate" type="application/atom+xml" href="/feeds/all.atom.xml" title="Atom Feed">
+    <link rel="alternate" type="application/rss+xml" href="/feeds/all.rss.xml" title="RSS Feed">
+    <!-- JS -->
+    </head>
+  <body>
+<row class="one-column" id="logo"><col-1><a href="http://racket-lang.org"><div id="logo-container"><img id="logo" src="/img/racket-logo.svg"/> Racket</div></a></col-1><col-2><p><a href="/index.html">blog</a></p></col-2></row>
+<article>
+<row>
+
+<col-1>
+  <p class='date-and-tags'>11 Oct 2017</p>
+
+</col-1>
+
+<col-2>
+  <header>
+  <h1>Tutorial: Creating a Package</h1>
+  </header>
+
+<p><em>posted by Stephen Chang</em></p>
+
+<p>This post is a summary of a tutorial presented at <a href="http://con.racket-lang.org/2017/">RacketCon 2017</a>.</p>
+
+<p>It describes how to create a package starting from a single Racket file.</p>
+
+<p>Specifically, this post explains how to:</p>
+
+<ul>
+ <li>use <code>raco pkg install</code> to install a package,</li>
+ <li>create an <code>info.rkt</code> file containing package metadata, and</li>
+ <li>add a package to  <a href="https://pkgs.racket-lang.org">Racket&rsquo;s official package catalog</a>.</li></ul>
+<!-- more-->
+
+<h2 id="packages-vs-collections">Packages vs Collections</h2>
+
+<p>Before getting started, we first clarify some terminology. (<a href="http://blog.racket-lang.org/2015/08/modules-packages-and-collections.html">This blog post</a> explains packages and collections in more depth.)</p>
+
+<p>In Racket, a library is just a <a href="http://docs.racket-lang.org/guide/module-basics.html">module</a> (typically in its own file) that exports some bindings. A programmer may import such a module using a (relative or absolute) filepath:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="s2">"path/to/filename.rkt"</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>A Racket <a href="http://docs.racket-lang.org/guide/module-basics.html#%28tech._collection%29"><strong>collection</strong></a> is a &ldquo;hierarchical group of modules&rdquo; that are <em>installed</em>, i.e., their source files are copied to a standard location that Racket manages. This allows programmers to use them without worrying about their location on disk:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="n">scribble</span><span class="p">)</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="n">data/queue</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>Finally, a <a href="http://docs.racket-lang.org/pkg/Package_Concepts.html?#%28tech._package%29"><strong>package</strong></a> is Racket&rsquo;s mechanism for organizing and distributing collections (or parts of collections). A package may contain multiple modules spanning multiple collections. The <a href="https://pkgs.racket-lang.org">official Racket package catalog</a> is a popular source of packages, but github repos or even local directories may act as packages as well.</p>
+
+<h2 id="local-package-installation">Local Package Installation</h2>
+
+<p>It&rsquo;s best to follow this tutorial with a running example. We&rsquo;ll use <a href="https://github.com/stchang/plot-bestfit/tree/racketcon2017-tutorial">this one</a>. To start, <code>clone</code> the repo with <code>git</code> and <code>cd</code> to the repo root directory.</p>
+
+<p>The rest of the tutorial assumes all files are in a <code>plot-bestfit/</code> directory.</p>
+
+<p>The <a href="https://github.com/stchang/plot-bestfit/blob/racketcon2017-tutorial/bestfit.rkt"><code>bestfit.rkt</code> file</a> in our library computes best-fit lines for Racket&rsquo;s <a href="http://docs.racket-lang.org/plot/index.html"><code>plot</code></a> library.</p>
+
+<p>A <a href="https://github.com/stchang/plot-bestfit/blob/racketcon2017-tutorial/test-plot.rkt"><code>test-plot.rkt</code> file</a> (in the same directory) uses the <code>plot</code>, <code>math</code>, and <code>bestfit.rkt</code> libraries, importing them like this:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="c1">;; test-plot.rkt</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="n">plot</span>
+	 <span class="n">math</span>
+	 <span class="s2">"bestfit.rkt"</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>Having to specify a file path in order to use <code>bestfit.rkt</code> is somewhat brittle, however, since it depends on the exact location of the file on disk. Instead, we can install our library as a collection:</p>
+
+<div class="brush: bash">
+ <div class="pygments">
+  <pre><span></span><span class="c1"># run from `plot-bestfit/` directory</span>
+$ raco pkg install
+</pre></div>
+
+</div>
+
+<p>Running <code>raco pkg install</code> as described above installs the contents of the current directory as a single-collection package, using the directory name as the name of both the package and the collection.</p>
+
+<p>Alternatively, we can give <code>raco pkg install</code> an explicit path. The following command, executed from the parent directory, is identical to the above command:</p>
+
+<div class="brush: bash">
+ <div class="pygments">
+  <pre><span></span><span class="c1"># run from parent of `plot-bestfit/` directory</span>
+<span class="c1"># you may need to run `raco pkg remove plot-bestfit` before trying this command</span>
+<span class="c1"># (don&#39;t forget the `/`! omitting it will install from the pkg server instead)</span>
+$ raco pkg install plot-bestfit/
+</pre></div>
+
+</div>
+
+<p>After installing the package/collection, <code>test-plot.rkt</code> may use a collection path instead of a file path to import <code>bestfit.rkt</code>:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="c1">;; test-plot.rkt</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="n">plot</span>
+	 <span class="n">math</span>
+	 <span class="n">plot-bestfit/bestfit</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>The require path is still somewhat cumbersome, however, considering that our entire package consists of a single file. To shorten the path that programmers must write, we may take advantage of the fact that <a href="http://docs.racket-lang.org/guide/module-basics.html#%28part._.Library_.Collections%29"><code>require</code> implicitly looks for a <code>main</code> module</a>. Specifically, we add (in the <code>plot-bestfit/</code> directory) a <code>main.rkt</code> file with contents:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="c1">;; main.rkt</span>
+<span class="kn">#lang </span><span class="nn">racket</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="s2">"bestfit.rkt"</span><span class="p">)</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._provide))" style="color: inherit">provide</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._all-from-out))" style="color: inherit">all-from-out</a></span> <span class="s2">"bestfit.rkt"</span><span class="p">))</span>
+</pre></div>
+
+</div>
+
+<p>Now we may shorten the requires to:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="c1">;; test-plot.rkt</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="n">plot</span>
+	 <span class="n">math</span>
+	 <span class="n">plot-bestfit</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>The name of the collection, however, was chosen automatically to match the name of the directory we happened to put our files in. In the next section, we&rsquo;ll show how programmers can more directly specify package metadata such as the collection name.</p>
+
+<h2 id="specifying-package-metadata">Specifying Package Metadata</h2>
+
+<p>The Racket package system looks for metadata in an <a href="http://docs.racket-lang.org/pkg/metadata.html"><code>info.rkt</code> file</a>, if one exists. Let&rsquo;s create one for our package. Specifically, we add (in the <code>plot-bestfit/</code> directory) an <code>info.rkt</code> file with contents:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="c1">;; info.rkt</span>
+<span class="kn">#lang </span><span class="nn">info</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">collection</span> <span class="s2">"bestfit"</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>This directs Racket to name our collection <code>bestfit</code>, instead of using the directory name (the package name will still be the directory name). Thus if we re-install our package:</p>
+
+<div class="brush: bash">
+ <div class="pygments">
+  <pre><span></span><span class="c1"># remove old installation</span>
+$ raco pkg remove plot-bestfit
+<span class="c1"># re-install, from the `plot-bestfit/` directory</span>
+$ raco pkg install
+</pre></div>
+
+</div>
+
+<p>we may import the collection with the new name (note that <code>test-plot.rkt</code> may emit an eror during the <code>raco pkg install</code> above if it still uses the old collection name):</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="c1">;; test-plot.rkt</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="n">plot</span>
+	 <span class="n">math</span>
+	 <span class="n">bestfit</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<h3 id="specifying-dependencies">Specifying Dependencies</h3>
+
+<p>Another useful <code>info.rkt</code> field is <code>deps</code>, which specifies other packages on which our package depends. During package installation, Racket will automatically ask to additionally install any such dependencies.</p>
+
+<p>We could add the dependencies ourselves, but an easier way is to use <code>raco
+setup</code>:</p>
+
+<div class="brush: bash">
+ <div class="pygments">
+  <pre><span></span>$ raco setup --fix-pkg-deps bestfit
+</pre></div>
+
+</div>
+
+<p>After having <code>raco setup</code> repair the <code>deps</code>, our <code>info.rkt</code> looks like:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">info</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">collection</span> <span class="s2">"bestfit"</span><span class="p">)</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">deps</span> <span class="o">'</span><span class="p">(</span><span class="s2">"base"</span>
+               <span class="s2">"math-lib"</span>
+               <span class="s2">"plot-gui-lib"</span>
+               <span class="s2">"plot-lib"</span>
+               <span class="s2">"typed-racket-lib"</span><span class="p">))</span>
+</pre></div>
+
+</div>
+
+<h3 id="specifying-docs">Specifying Docs</h3>
+
+<p>Package installation additionally looks to compile and register documentation for the package. A <code>scribblings</code> field in <code>info.rkt</code> points to the documentation source file.</p>
+
+<p>For example, we might add to our <code>info.rkt</code>:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="c1">;; info.rkt</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">scribblings</span> <span class="o">'</span><span class="p">((</span><span class="s2">"scribblings/bestfit.scrbl"</span><span class="p">)))</span>
+</pre></div>
+
+</div>
+
+<p>Formally, the <a href="http://docs.racket-lang.org/raco/setup-info.html?#%28idx._%28gentag._11._%28lib._scribblings%2Fraco%2Fraco..scrbl%29%29%29"><code>scribblings</code> entry</a> is a list of lists, where each sublist begins with a documentation source filename and is followed by various options. In our <code>info.rkt</code> file, we have one sublist that contains only the documentation source file and does not specify any other options.</p>
+
+<p>See the <a href="https://gist.github.com/florence/b3fcc1df922008604e64362484dc1c28">notes from the &ldquo;Scribbling documentation&rdquo; tutorial</a> to learn how to write documentation.</p>
+
+<p>When we are done writing our docs, we can use the <code>raco</code> tools to compile and view them in rendered form.</p>
+
+<div class="brush: bash">
+ <div class="pygments">
+  <pre><span></span><span class="c1"># re-compiles `bestfit` collection and its docs</span>
+$ raco setup bestfit
+<span class="c1"># launch browser to view local docs</span>
+$ raco docs
+</pre></div>
+
+</div>
+
+<h2 id="raco-pkg-new"><code>raco pkg new</code></h2>
+
+<p>When creating a new package, a convenient way to generate stubs for all the files described in this tutorial (and more) is to run:</p>
+
+<div class="brush: bash">
+ <div class="pygments">
+  <pre><span></span><span class="c1"># produces directory `my-pkg/` which contains the file stubs</span>
+$ raco pkg new my-pkg
+</pre></div>
+
+</div>
+
+<h2 id="the-racket-package-server">The Racket Package Server</h2>
+
+<p>At this point, assume that we&rsquo;ve created all the files described in this tutorial and we have pushed them to a github repo. We will use this repo as an example: <a href="https://github.com/stchang/plot-bestfit">https://github.com/stchang/plot-bestfit</a>.</p>
+
+<p>To distribute our package where others may discover and download it, we can add the package to the Racket package catalog at <a href="https://pkgs.racket-lang.org/">https://pkgs.racket-lang.org/</a>.</p>
+
+<p>To add a package to the catalog:</p>
+
+<ol>
+ <li>&ldquo;register&rdquo; for an account,</li>
+ <li>&ldquo;sign in&rdquo; to the account,</li>
+ <li>click the &ldquo;add your own&rdquo; button on the front page,</li>
+ <li>and supply the requested information.</li></ol>
+
+<p>If we named our package &ldquo;my-bestfit-pkg&rdquo;, then any Racket user may install our package by running:</p>
+
+<div class="brush: bash">
+ <div class="pygments">
+  <pre><span></span>$ raco pkg install my-bestfit-pkg
+</pre></div>
+
+</div>
+
+<p>Running the above command will look up the package repo from the package catalog, and then download and install the package source files from that repo.</p>
+
+<h2 id="single--vs-multi-collection-packages">Single- vs Multi-Collection Packages</h2>
+
+<p>The package we created in this tutorial consists of a single collection. Alternatively, packages may contain several modules spanning multiple collections.</p>
+
+<p>Such packages must be declared as multi-collection packages by changing the <code>collection</code> entry in <code>info.rkt</code> to have value <code>'multi</code>. This directs Racket package installation to treat each subdirectory in the package as its own collection (or partial collection).</p>
+
+<p>For example, the <a href="https://github.com/racket/drracket/tree/master/drracket"><code>drracket</code> package</a> leverages this organization style to implement its toolbar. Specifically, it adds a <code>tool.rkt</code> module to many different collections, such as the <code>macro-debugger</code> and <code>scribble</code>, in order to access their callback hooks. Observe that in addition to the package&rsquo;s root <code>info.rkt</code>, <em>each</em> collection in this kind of package uses its own <code>info.rkt</code> to specify collection-specific information such as documentation.</p>
+
+<p>Indeed, any package that wishes to add to an existing collection, even if it&rsquo;s just one collection, should be declared as <code>'multi</code>. See the <a href="https://github.com/samth/persistent-array"><code>persistent-array</code> package</a> for an example.</p>
+
+<h2 id="a-final-note-on-multi-package-libraries">A Final Note on Multi-Package Libraries</h2>
+
+<p><strong>NOTE:</strong> Most programmers will not need to worry about this section.</p>
+
+<p>If you&rsquo;ve browsed the Racket source files at all, you may have noticed that many core libraries further subdivide their contents into <em>several packages</em>. The organization is typically arranged as:</p>
+
+<ul>
+ <li>a base package <code>X</code> with just an <code>info.rkt</code> file,</li>
+ <li>an <code>X-lib</code> package that contains most of the source files,</li>
+ <li>an <code>X-doc</code> package with the documentation files,</li>
+ <li>and an <code>X-test</code> package with the test files.</li></ul>
+
+<p>In this setup, the <code>info.rkt</code> in the base <code>X</code> package typically specifies <code>X-lib</code> and <code>X-doc</code> as dependencies. This division enables users to more finely manage dependencies, i.e., a programmer may want to use the main package but may not want to install the tests (and its dependencies).</p>
+
+<p>See the <a href="https://github.com/racket/pict">pict package</a> for a concrete example of a library organized in this manner.</p>
+<col-2>
+
+</row>
+
+<footer>
+<row>
+<col-1>
+</col-1>
+<col-2>
+<h2><span class="label">next</span> <a class="next" href="/2017/10/racket-v6-11.html">Racket v6.11</a></h2>
+
+<h2><span class="label">prev</span> <a class="previous" href="/2017/09/tutorial-contributing-to-racket.html">Tutorial: Contributing to Racket</a></h2>
+
+</col-2>
+</row>
+</footer>
+
+</article>
+
+<row class="one-column" id="bottom"><col-1></col-1><col-2>
+<p>Made with <a href="https://github.com/greghendershott/frog">Frog</a>, a static-blog generator written in Racket.
+<br /><a href="https://github.com/racket/racket-lang-org">Source code</a> for this blog.</col-2></row>
+  </body>
+</html>

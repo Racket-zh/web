@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <title>Racket v6.12</title>
+    <meta name="description" content="_posted by Vincent St-Amour_  Racket version 6.12 is now available from http://racket-lang.org/      Changed the way some unsafe operations are exposed via `ffi/unsafe`  libraries to help smooth a future transition to a new runtime system.     The `syntax...">
+    <meta name="author"      content="The Unknown Author">
+    <meta name="keywords"    content="">
+    <meta name="viewport"    content="width=device-width, initial-scale=1.0">
+    <link rel="icon"      href="/favicon.ico">
+    <link rel="canonical" href="http://blog.racket-lang.org/2018/01/racket-v6-12.html">
+    <link rel="next" href="/2018/01/racket-on-chez-status.html">
+
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog-fonts.css">
+    <!-- Feeds -->
+    <link rel="alternate" type="application/atom+xml" href="/feeds/all.atom.xml" title="Atom Feed">
+    <link rel="alternate" type="application/rss+xml" href="/feeds/all.rss.xml" title="RSS Feed">
+    <!-- JS -->
+    </head>
+  <body>
+<row class="one-column" id="logo"><col-1><a href="http://racket-lang.org"><div id="logo-container"><img id="logo" src="/img/racket-logo.svg"/> Racket</div></a></col-1><col-2><p><a href="/index.html">blog</a></p></col-2></row>
+<article>
+<row>
+
+<col-1>
+  <p class='date-and-tags'>26 Jan 2018</p>
+
+</col-1>
+
+<col-2>
+  <header>
+  <h1>Racket v6.12</h1>
+  </header>
+
+<p><em>posted by Vincent St-Amour</em></p>
+
+<p>Racket version 6.12 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<ul>
+ <li>
+  <p>Changed the way some unsafe operations are exposed via <code>ffi/unsafe</code>  libraries to help smooth a future transition to a new runtime system.</p></li>
+ <li>
+  <p>The <code>syntax-parse</code> form supports unwinding side-effects when it  backtracks, both explicitly with <code>~undo</code> patterns and implicitly  with the built-in managed state (using <code>syntax-parse-state-ref</code>,  etc).</p></li>
+ <li>
+  <p>The <code>db</code> library supports SCRAM-SHA&ndash;256 authentication for backends  running PostgreSQL 10 or later. Client support for SCRAM and other  SASL mechanisms is provided by the new <code>sasl</code> library.</p></li>
+ <li>
+  <p>The <code>lazy-require-syntax</code> form supports lazy loading of macro  transformers. Note that the macros must obey certain implementation  constraints (see the <code>lazy-require-syntax</code> documentation).</p></li>
+ <li>
+  <p>Typed Racket no longer enforces types like (U String (Boxof String))  with the any/c contract. This fixes a type soundness issue, but may  affect performance. Please submit a bug report if you find a program  that runs significantly slower on v6.12 than earlier versions.</p></li>
+ <li>
+  <p>Typed Racket&rsquo;s type instantiation (<code>inst</code>) uses Any for omitted type  arguments, allowing APIs to add additional type variables to functions  without breaking existing programs.</p></li>
+ <li>
+  <p><code>for/fold</code> users can customize the final result of a loop&rsquo;s computation  using the <code>#:result</code> keyword.</p></li>
+ <li>
+  <p>The <code>--deps</code> option to <code>raco test</code> tests the packages the argument  packages depends on, in addition to testing the packages themselves.  For example, <code>raco test -p --deps pkg1 pkg2</code> tests all files from  <code>pkg1</code>, <code>pkg2</code>, and all of their dependencies.</p></li></ul>
+
+<p>The following people contributed to this release: Alexander Shopov, Alexis King, Andrew Gwozdziewycz, Andrew Kent, Ben Greenman, Chung-chieh Shan, Conor Finegan, Daniel Feltey, Daniel Mendler, Eric Dobson, Gabriel Ebner, Greg Cooper, Greg Hendershott, Gustavo Massaccesi, Huma Zafar, Jack Firth, James Bornholt, Jay McCarthy, John Clements, Kimball Germane, Leif Andersen, Matias Eyzaguirre, Matthew Butterick, Matthew Flatt, Matthias Felleisen, Michael Ballantyne, Mike Sperber, Milo Turner, Robby Findler, Rommel Martinez, Ryan Culpepper, Sam Tobin-Hochstadt, Shu-Hung You, Soulaïmane Sahmi, Spencer Florence, Stephen De Gabrielle, Vincent St-Amour, Wesley Kerfoot, and William G Hatch.</p>
+
+<p>Feedback Welcome</p>
+<!-- more-->
+<col-2>
+
+</row>
+
+<footer>
+<row>
+<col-1>
+</col-1>
+<col-2>
+
+
+<h2><span class="label">prev</span> <a class="previous" href="/2018/01/racket-on-chez-status.html">Racket-on-Chez Status: January 2018</a></h2>
+
+</col-2>
+</row>
+</footer>
+
+</article>
+
+<row class="one-column" id="bottom"><col-1></col-1><col-2>
+<p>Made with <a href="https://github.com/greghendershott/frog">Frog</a>, a static-blog generator written in Racket.
+<br /><a href="https://github.com/racket/racket-lang-org">Source code</a> for this blog.</col-2></row>
+  </body>
+</html>

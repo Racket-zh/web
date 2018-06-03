@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <title>On Application</title>
+    <meta name="description" content="_posted by Jack Firth_  Today I wanted to write about function application. Specifically, how to redefine and customize application with Racket. We'll also look at some Racket packages that define interesting and useful forms of function application.  The...">
+    <meta name="author"      content="The Unknown Author">
+    <meta name="keywords"    content="">
+    <meta name="viewport"    content="width=device-width, initial-scale=1.0">
+    <link rel="icon"      href="/favicon.ico">
+    <link rel="canonical" href="http://blog.racket-lang.org/2017/02/on-application.html">
+    <link rel="next" href="/2017/01/racket-v6-8.html">
+    <link rel="prev" href="/2017/03/languages-as-dotfiles.html">
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog-fonts.css">
+    <!-- Feeds -->
+    <link rel="alternate" type="application/atom+xml" href="/feeds/all.atom.xml" title="Atom Feed">
+    <link rel="alternate" type="application/rss+xml" href="/feeds/all.rss.xml" title="RSS Feed">
+    <!-- JS -->
+    </head>
+  <body>
+<row class="one-column" id="logo"><col-1><a href="http://racket-lang.org"><div id="logo-container"><img id="logo" src="/img/racket-logo.svg"/> Racket</div></a></col-1><col-2><p><a href="/index.html">blog</a></p></col-2></row>
+<article>
+<row>
+
+<col-1>
+  <p class='date-and-tags'>05 Feb 2017</p>
+
+</col-1>
+
+<col-2>
+  <header>
+  <h1>On Application</h1>
+  </header>
+
+<p><em>posted by Jack Firth</em></p>
+
+<p>Today I wanted to write about function application. Specifically, how to redefine and customize application with Racket. We&rsquo;ll also look at some Racket packages that define interesting and useful forms of function application.</p>
+
+<h2 id="the-theory">The theory</h2>
+
+<p>Application is the process of combining a function and arguments to evaluate a result. Application defines one half of <em>lambda calculus</em>, the formal model underlying much of modern functional programming. The other half is <em>abstraction</em>, which is creating new functions. Creating and applying functions is the heart of Racket and many other functional languages.</p>
+
+<p>So how are functions applied in Racket? What makes <code>(if (&lt; 5 10) 'foo 'bar)</code> a macro use and <code>(&lt; 5 10)</code> a function use?</p>
+
+<p>That&rsquo;s actually a trick question, because function application <em>is</em> a macro in Racket. During <a href="http://docs.racket-lang.org/reference/syntax-model.html#%28part._expand-steps%29">macro expansion</a>, the Racket expander inspects the first element of an expression to determine if it has a binding to a macro. If it doesn&rsquo;t, rather than assume the expression is a function application, the expander inserts an <em>artificial</em> identifier named <code><a href="http://docs.racket-lang.org/reference/application.html#(form._((lib._racket/private/base..rkt)._~23~25app))" style="color: inherit">#%app</a></code> into the expression. So in the above example, the expression <code>(&lt; 5 10)</code> is converted to <code>(#%app &lt; 5 10)</code>. This <code><a href="http://docs.racket-lang.org/reference/application.html#(form._((lib._racket/private/base..rkt)._~23~25app))" style="color: inherit">#%app</a></code> identifier doesn&rsquo;t refer to a single specific <code><a href="http://docs.racket-lang.org/reference/application.html#(form._((lib._racket/private/base..rkt)._~23~25app))" style="color: inherit">#%app</a></code> like the <code><a href="http://docs.racket-lang.org/reference/if.html#(form._((quote._~23~25kernel)._if))" style="color: inherit">if</a></code> refers to <code><a href="http://docs.racket-lang.org/reference/if.html#(form._((quote._~23~25kernel)._if))" style="color: inherit">if</a></code> from <code>racket/base</code>, rather it refers to whatever the enclosing environment defines <code><a href="http://docs.racket-lang.org/reference/application.html#(form._((lib._racket/private/base..rkt)._~23~25app))" style="color: inherit">#%app</a></code> to be (which by default means ordinary function application from <code>racket/base</code>).</p>
+
+<p>However, imported modules can provide their own definitions of function application by providing an <code><a href="http://docs.racket-lang.org/reference/application.html#(form._((lib._racket/private/base..rkt)._~23~25app))" style="color: inherit">#%app</a></code> macro. Let&rsquo;s define our own <code><a href="http://docs.racket-lang.org/reference/application.html#(form._((lib._racket/private/base..rkt)._~23~25app))" style="color: inherit">#%app</a></code> that, in addition to applying a function, prints out a trace message. First let&rsquo;s define a helper function to implement the tracing:</p>
+<!-- more-->
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">racket</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">trace</span> <span class="n">f</span> <span class="o">.</span> <span class="n">args</span><span class="p">)</span>
+  <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/Writing.html#(def._((quote._~23~25kernel)._printf))" style="color: inherit">printf</a></span> <span class="s2">"Applying <a href="http://docs.racket-lang.org/reference/strings.html#(def._((lib._racket/format..rkt)._~7ev))" style="color: inherit">~v</a> to arguments <a href="http://docs.racket-lang.org/reference/strings.html#(def._((lib._racket/format..rkt)._~7ev))" style="color: inherit">~v</a></span><span class="se">\n</span><span class="s2">"</span> <span class="n">f</span> <span class="n">args</span><span class="p">)</span>
+  <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/procedures.html#(def._((lib._racket/private/base..rkt)._apply))" style="color: inherit">apply</a></span> <span class="n">f</span> <span class="n">args</span><span class="p">))</span>
+</pre></div>
+
+</div>
+
+<p>We use <code><a href="http://docs.racket-lang.org/reference/strings.html#(def._((lib._racket/format..rkt)._~7ev))" style="color: inherit">~v</a></code> to more clearly see the difference between strings, symbols, and numbers. Now, we can write a macro to insert a call to our function wherever we use the macro:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">racket</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/misc..rkt)._define-syntax-rule))" style="color: inherit">define-syntax-rule</a></span> <span class="p">(</span><span class="n">trace-app</span> <span class="n">f</span> <span class="n">arg</span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt)._......))" style="color: inherit">...</a></span><span class="p">)</span>
+  <span class="p">(</span><span class="n">trace</span> <span class="n">f</span> <span class="n">arg</span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt)._......))" style="color: inherit">...</a></span><span class="p">))</span>
+</pre></div>
+
+</div>
+
+<p>This macro is very simple, and on it&rsquo;s own isn&rsquo;t really useful at all (we could just call <code>trace</code> directly). However, we can provide this macro with the name <code><a href="http://docs.racket-lang.org/reference/application.html#(form._((lib._racket/private/base..rkt)._~23~25app))" style="color: inherit">#%app</a></code> to trigger the automatic use of <code>trace-app</code> whenever a function call is written. We&rsquo;ll move our <code>trace</code> and <code>trace-app</code> definitions into a submodule to see this in action without multiple files:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">racket</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/module.html#(form._((quote._~23~25kernel)._module))" style="color: inherit">module</a></span> <span class="n">trace</span> <span class="n">racket</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">trace</span> <span class="n">f</span> <span class="o">.</span> <span class="n">args</span><span class="p">)</span>
+    <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/Writing.html#(def._((quote._~23~25kernel)._printf))" style="color: inherit">printf</a></span> <span class="s2">"Applying <a href="http://docs.racket-lang.org/reference/strings.html#(def._((lib._racket/format..rkt)._~7ev))" style="color: inherit">~v</a> to arguments <a href="http://docs.racket-lang.org/reference/strings.html#(def._((lib._racket/format..rkt)._~7ev))" style="color: inherit">~v</a></span><span class="se">\n</span><span class="s2">"</span> <span class="n">f</span> <span class="n">args</span><span class="p">)</span>
+    <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/procedures.html#(def._((lib._racket/private/base..rkt)._apply))" style="color: inherit">apply</a></span> <span class="n">f</span> <span class="n">args</span><span class="p">))</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/misc..rkt)._define-syntax-rule))" style="color: inherit">define-syntax-rule</a></span> <span class="p">(</span><span class="n">trace-app</span> <span class="n">f</span> <span class="n">arg</span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt)._......))" style="color: inherit">...</a></span><span class="p">)</span>
+    <span class="p">(</span><span class="n">trace</span> <span class="n">f</span> <span class="n">arg</span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt)._......))" style="color: inherit">...</a></span><span class="p">))</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._provide))" style="color: inherit">provide</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._rename-out))" style="color: inherit">rename-out</a></span> <span class="p">[</span><span class="n">trace-app</span> <span class="k"><a href="http://docs.racket-lang.org/reference/application.html#(form._((lib._racket/private/base..rkt)._~23~25app))" style="color: inherit">#%app</a></span><span class="p">])))</span>
+</pre></div>
+
+</div>
+
+<p>Now, with a simple <code><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></code> statement and these seven lines of code, we can trace the order of evaluation of all expressions in a Racket module.</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="o">'</span><span class="ss">trace</span><span class="p">)</span>
+
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/strings.html#(def._((quote._~23~25kernel)._string-length))" style="color: inherit">string-length</a></span> <span class="s2">"racket"</span><span class="p">)</span>
+     <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/strings.html#(def._((quote._~23~25kernel)._string-length))" style="color: inherit">string-length</a></span> <span class="s2">"application"</span><span class="p">))</span>
+<span class="n">Applying</span> <span class="n">#&lt;procedure:string-length&gt;</span> <span class="n">to</span> <span class="n">arguments</span> <span class="o">'</span><span class="p">(</span><span class="s2">"racket"</span><span class="p">)</span>
+<span class="n">Applying</span> <span class="n">#&lt;procedure:string-length&gt;</span> <span class="n">to</span> <span class="n">arguments</span> <span class="o">'</span><span class="p">(</span><span class="s2">"application"</span><span class="p">)</span>
+<span class="n">Applying</span> <span class="n">#&lt;procedure:+&gt;</span> <span class="n">to</span> <span class="n">arguments</span> <span class="o">'</span><span class="p">(</span><span class="mi">6</span> <span class="mi">11</span><span class="p">)</span>
+<span class="mi">17</span>
+</pre></div>
+
+</div>
+
+<h2 id="the-practice">The practice</h2>
+
+<p>Redefinition of <code><a href="http://docs.racket-lang.org/reference/application.html#(form._((lib._racket/private/base..rkt)._~23~25app))" style="color: inherit">#%app</a></code> is occasionally used when defining new languages, but a much more pedestrian use is to add some notational shorthand to make certain constructs more convenient. For example, consider the <a href="https://github.com/samth/fancy-app"><code>fancy-app</code></a> package. This package provides an <code><a href="http://docs.racket-lang.org/reference/application.html#(form._((lib._racket/private/base..rkt)._~23~25app))" style="color: inherit">#%app</a></code> macro that behaves just like normal function application <em>unless</em> one or more underscores are used. In that case, the function application is converted to a lambda that takes as input one argument for each underscore. For example, <code>(format "Hello ~a" _)</code> is equivalent to <code>(lambda (v) (format "Hello ~a" v))</code>. This is especially useful for whipping up quick lambdas as arguments to functions like <code>map</code> and <code>filter</code>:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="n">fancy-app</span><span class="p">)</span>
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((lib._racket/private/map..rkt)._map))" style="color: inherit">map</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/Writing.html#(def._((quote._~23~25kernel)._format))" style="color: inherit">format</a></span> <span class="s2">"Hello ~a, how are you today?"</span> <span class="k"><a href="http://docs.racket-lang.org/reference/stx-patterns.html#(form._((lib._racket/private/stxcase-scheme..rkt).__))" style="color: inherit">_</a></span><span class="p">)</span>
+       <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((quote._~23~25kernel)._list))" style="color: inherit">list</a></span> <span class="s2">"Alice"</span> <span class="s2">"Bob"</span> <span class="s2">"Eve"</span><span class="p">))</span>
+<span class="o">'</span><span class="p">(</span><span class="s2">"Hello Alice, how are you today?"</span>
+  <span class="s2">"Hello Bob, how are you today?"</span>
+  <span class="s2">"Hello Eve, how are you today?"</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>The <code>rackjure</code> package redefines <code>#%app</code> to make working with nested dictionaries easier. Dictionaries can be used to get and set values for keys when used as procedures, and when dictionaries are the <em>second</em> value of a function application the first value is interpreted as a key and the dictionary&rsquo;s associated value is looked up. See <a href="http://docs.racket-lang.org/rackjure/index.html#%28part._dict-app%29">the <code>rackjure</code> documentation</a> for details.</p>
+<col-2>
+
+</row>
+
+<footer>
+<row>
+<col-1>
+</col-1>
+<col-2>
+<h2><span class="label">next</span> <a class="next" href="/2017/03/languages-as-dotfiles.html">Languages as Dotfiles</a></h2>
+
+<h2><span class="label">prev</span> <a class="previous" href="/2017/01/racket-v6-8.html">Racket v6.8</a></h2>
+
+</col-2>
+</row>
+</footer>
+
+</article>
+
+<row class="one-column" id="bottom"><col-1></col-1><col-2>
+<p>Made with <a href="https://github.com/greghendershott/frog">Frog</a>, a static-blog generator written in Racket.
+<br /><a href="https://github.com/racket/racket-lang-org">Source code</a> for this blog.</col-2></row>
+  </body>
+</html>

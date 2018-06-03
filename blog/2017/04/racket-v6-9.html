@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <title>Racket v6.9</title>
+    <meta name="description" content="_posted by Vincent St-Amour_  Racket version 6.9 is now available from http://racket-lang.org/  Security Announcement:  A security vulnerability in the `racket/sandbox` library and Typed Racket allowed malicious Typed Racket code to escape the sandbox. Th...">
+    <meta name="author"      content="The Unknown Author">
+    <meta name="keywords"    content="">
+    <meta name="viewport"    content="width=device-width, initial-scale=1.0">
+    <link rel="icon"      href="/favicon.ico">
+    <link rel="canonical" href="http://blog.racket-lang.org/2017/04/racket-v6-9.html">
+    <link rel="next" href="/2017/04/type-tailoring.html">
+    <link rel="prev" href="/2017/07/racket-v6-10.html">
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog-fonts.css">
+    <!-- Feeds -->
+    <link rel="alternate" type="application/atom+xml" href="/feeds/all.atom.xml" title="Atom Feed">
+    <link rel="alternate" type="application/rss+xml" href="/feeds/all.rss.xml" title="RSS Feed">
+    <!-- JS -->
+    </head>
+  <body>
+<row class="one-column" id="logo"><col-1><a href="http://racket-lang.org"><div id="logo-container"><img id="logo" src="/img/racket-logo.svg"/> Racket</div></a></col-1><col-2><p><a href="/index.html">blog</a></p></col-2></row>
+<article>
+<row>
+
+<col-1>
+  <p class='date-and-tags'>27 Apr 2017</p>
+
+</col-1>
+
+<col-2>
+  <header>
+  <h1>Racket v6.9</h1>
+  </header>
+
+<p><em>posted by Vincent St-Amour</em></p>
+
+<p>Racket version 6.9 is now available from <a href="http://racket-lang.org/">http://racket-lang.org/</a></p>
+
+<hr />
+
+<h2 id="security-announcement">Security Announcement</h2>
+
+<p>A security vulnerability in the <code>racket/sandbox</code> library and Typed Racket allowed malicious Typed Racket code to escape the sandbox. This vulnerability has been fixed in Racket version 6.9. Anyone using <code>racket/sandbox</code> to execute untrustworthy code with access to Typed Racket should upgrade to version 6.9 immediately.</p>
+
+<p>While this known vulnerability has been eliminated, it is possible that similar errors in other installed collections could also be exploited, although we are not currently aware of any existing vulnerabilities. We recommend that if you use the Racket sandbox to execute untrustworthy Racket code, you should also employ additional operating system or virtual machine level protections. The documentation for <code>racket/sandbox</code> has been updated to list recommended security practices for using the library.</p>
+
+<p>Thanks to Scott Moore for identifying this vulnerability.</p>
+
+<hr />
+
+<ul>
+ <li>
+  <p>The official package catalog Web site is revised to have a new user experience.</p></li>
+ <li>
+  <p>The Northwestern snapshot site keeps weekly snapshots going up to 12 weeks into the past. Those provide a middle ground for users who want access to new features earlier than stable releases, but want less churn than nightly builds.</p></li>
+ <li>
+  <p>DrRacket provides a refactoring tool to remove unused requires in modules.</p></li>
+ <li>
+  <p>DrRacket&rsquo;s #lang-line customization support works better with buggy (i.e., in development) languages.</p></li>
+ <li>
+  <p>The web server&rsquo;s cookie libraries, including &ldquo;id cookie&rdquo; authentication, support RFC 6265.</p></li>
+ <li>
+  <p>The <code>db</code> library supports PostgreSQL&rsquo;s UUID type.</p></li>
+ <li>
+  <p>The <code>raco</code> command lists matching commands when passed an ambiguous command prefix.</p></li>
+ <li>
+  <p>The bytecode compiler detects more optimization opportunities for structure operations.</p></li>
+ <li>
+  <p>Scribble can produce output via XeLaTeX as an alternative to LaTeX.</p></li>
+ <li>
+  <p>Scribble supports the <code>acmart</code> LaTeX style, for use with ACM publications.</p></li>
+ <li>
+  <p>Scribble supports the use of CJK characters in tags.</p></li></ul>
+
+<hr />
+
+<p>The following people contributed to this release: Alex Knauth, Alexander Shopov, Alexis King, Andrew Kent, Asumu Takikawa, Ben Greenman, Daniel Feltey, David Van Horn, Georges Dupéron, Greg Hendershott, Gustavo Massaccesi, Ingo Blechschmidt, James Bornholt, James Whang, Jay McCarthy, Jeff Shelley, John Clements, Jordan Johnson, Leandro Facchinetti, Leif Andersen, Marc Burns, Matthew Butterick, Matthew Eric Bassett, Matthew Flatt, Matthias Felleisen, Michael Myers, Mike Sperber, Philip McGrath, Philippe Meunier, Robby Findler, Royall Spence, Ryan Culpepper, Sam Caldwell, Sam Tobin-Hochstadt, Shu-Hung You, Spencer Florence, Stephen Chang, Tony Garnock-Jones, Vincent St-Amour, WarGrey Gyoudmon Ju, Wei Tang, and William G Hatch.</p>
+
+<p>Feedback Welcome</p>
+<!-- more-->
+<col-2>
+
+</row>
+
+<footer>
+<row>
+<col-1>
+</col-1>
+<col-2>
+<h2><span class="label">next</span> <a class="next" href="/2017/07/racket-v6-10.html">Racket v6.10</a></h2>
+
+<h2><span class="label">prev</span> <a class="previous" href="/2017/04/type-tailoring.html">Type Tailoring</a></h2>
+
+</col-2>
+</row>
+</footer>
+
+</article>
+
+<row class="one-column" id="bottom"><col-1></col-1><col-2>
+<p>Made with <a href="https://github.com/greghendershott/frog">Frog</a>, a static-blog generator written in Racket.
+<br /><a href="https://github.com/racket/racket-lang-org">Source code</a> for this blog.</col-2></row>
+  </body>
+</html>

@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /plt/
+Disallow: /libs/
+Disallow: /testing/
+Disallow: /play/

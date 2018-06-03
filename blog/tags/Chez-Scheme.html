@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <title>Posts tagged 'Chez Scheme'</title>
+    <meta name="description" content="Posts tagged 'Chez Scheme'">
+    <meta name="author"      content="The Unknown Author">
+    <meta name="keywords"    content="Chez Scheme">
+    <meta name="viewport"    content="width=device-width, initial-scale=1.0">
+    <link rel="icon"      href="/favicon.ico">
+    <link rel="canonical" href="http://blog.racket-lang.org/tags/Chez-Scheme.html">
+
+
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog-fonts.css">
+    <!-- Feeds -->
+    <link rel="alternate" type="application/atom+xml" href="/feeds/Chez-Scheme.atom.xml" title="Atom Feed">
+    <link rel="alternate" type="application/rss+xml" href="/feeds/Chez-Scheme.rss.xml" title="RSS Feed">
+    <!-- JS -->
+    </head>
+  <body>
+<row class="one-column" id="logo"><col-1><a href="http://racket-lang.org"><div id="logo-container"><img id="logo" src="/img/racket-logo.svg"/> Racket</div></a></col-1><col-2><p><a href="/index.html">blog</a></p></col-2></row>
+<article class="index" id="home">
+<row>
+
+<col-1>
+  <p class='date-and-tags'>05 Jan 2018</p></col-1>
+
+<col-2>
+  <h1><a href='/2018/01/racket-on-chez-status.html'>Racket-on-Chez Status: January 2018</a></h1>
+  <div class="truncate">
+<p><span style="font-style: italic">posted by Matthew Flatt with thanks to collaborators
+Kent Dybvig, Andy Keep, Gustavo Massaccesi, Sarah Spall, Sam Tobin-Hochstadt, and Jon Zeppieri</span></p>
+
+<p>It&rsquo;s been almost a year since we
+<a href="https://groups.google.com/d/msg/racket-dev/2BV3ElyfF8Y/4RSd3XbECAAJ">decided
+to try</a> running <a href="https://racket-lang.org/">Racket</a> on
+<a href="https://www.scheme.com/">Chez Scheme</a>, and it has been
+almost six months since my last
+<a href="https://groups.google.com/d/msg/racket-dev/rkXuHNAmQaA/hjgPZHErAwAJ">status
+report</a>. As of <a href="https://con.racket-lang.org/">RacketCon
+2017</a>, DrRacket could start up on Chez Scheme (but just barely, and
+just in time for the demo).</p>
+
+<p>The <a href="https://github.com/racket/racket7/">current
+implementation</a> is now <a data-pltdoc="x" href="#%28part._functionality%29">considerably more
+complete</a>. DrRacket still doesn&rsquo;t run well, but Racket-on-Chez can
+build a full Racket distribution in <a data-pltdoc="x" href="#%28part._build%29">reasonable time
+and space</a>.</p>
+
+<p>With the current Racket-on-Chez compilation strategy, runtime
+performance is <a data-pltdoc="x" href="#%28part._benchmarks%29">plausible on traditional
+benchmarks</a>, but cross-module optimization is needed to bring the
+results fully in line with our expectations.
+<a data-pltdoc="x" href="#%28part._startup%29">Startup and load times</a> are much slower than we
+would like. <a data-pltdoc="x" href="#%28part._build%29">Compile/build times</a> are a factor of 4
+slower than the current version of Racket.</p>
+
+<blockquote class="refpara">
+ <blockquote class="refcolumn">
+  <blockquote class="refcontent">
+   <p></p>
+   <div class="SIntrapara">Glossary of implementations:
+</div>
+   <div class="SIntrapara">
+    <ul>
+     <li>
+      <p><span style="font-weight: bold">Racket</span> &#8212;
+       <wbr /> the current Racket release, version 6.x</p></li>
+     <li>
+      <p><span style="font-weight: bold"><span class="stt">racket7</span></span> &#8212;
+       <wbr /> mostly the same as Racket, but using a new,
+                        Racket-implemented macro expander;
+                        the source is in the
+                        <a href="https://github.com/racket/racket7"><span class="url">https://github.com/racket/racket7</span></a> repo</p></li>
+     <li>
+      <p><span style="font-weight: bold">Chez Scheme</span> &#8212;
+       <wbr /> a completely different implementation of
+                       Scheme that we&rsquo;re trying to use as a replacement
+                       for part of Racket</p></li>
+     <li>
+      <p><span style="font-weight: bold">Racket-on-Chez</span> &#8212;
+       <wbr /> Chez Scheme plus additional layers to make
+                          it implement the same language as Racket;
+                          the source is also in the
+                          <a href="https://github.com/racket/racket7"><span class="url">https://github.com/racket/racket7</span></a> repo</p></li></ul></div></blockquote></blockquote></blockquote>
+
+<h1><a name="(part._.Approach)"></a>Approach</h1>
+
+<p>Our overall goal is to improve Racket&rsquo;s implementation and
+make it more portable to different runtime systems. To a first
+approximation, improving Racket and making it more portable means
+&ldquo;less C code.&rdquo; Building on a Chez Scheme is a promising means toward
+that end.</p>
+
+<p></p>
+
+<table cellpadding="0" cellspacing="0">
+ <tbody>
+  <tr>
+   <td>
+    <p class="SubFlow"></p>
+    <p>The picture on the right illustrates the current Racket distribution.
+The parts in blue are implemented in <span style="color: blue"><span style="font-weight: bold">Racket</span></span>,
+while the part in red is implemented in <span style="color: red"><span style="font-weight: bold">C</span></span>. The green
+block is <span style="color: forestgreen"><span style="font-weight: bold">Scribble</span></span> documentation source.</p>
+    <p><span class="hspace">&nbsp;</span></p>
+    <p>The numbers next to each block are a rough lines-of-code counts, and
+the blocks are scaled to those counts. The
+<span style="color: blue"><span style="font-weight: bold">collects</span></span> block represents the content of the
+main <span class="stt">"collects"</span> directory; along with the
+<span style="color: red"><span style="font-weight: bold">core</span></span> block, it&rsquo;s roughly the code in a Minimal Racket
+distribution. The <span style="color: blue"><span style="font-weight: bold">pkgs</span></span> block is the part of the
+main distribution that is available in separate packages but bundled
+with the main distribution. The <span style="color: forestgreen"><span style="font-weight: bold">docs</span></span> block is
+spread across the same packages as the <span style="color: blue"><span style="font-weight: bold">pkgs</span></span>
+code.</p>
+    <p><span class="hspace">&nbsp;</span></p>
+    <p>Porting Racket to Chez Scheme is all about the <span style="color: red"><span style="font-weight: bold">core</span></span>
+part. The goal is to make no changes to existing
+<span style="color: blue"><span style="font-weight: bold">Racket</span></span> and <span style="color: forestgreen"><span style="font-weight: bold">Scribble</span></span> code,
+although we&rsquo;ll inevitably have to make small changes to support
+multiple Racket implementations.</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td>
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict.png" alt="image" height="338.0" style="vertical-align: -0.0px; margin: -3px -3px -3px -3px;" width="90.46142578125" /></p></td></tr></tbody></table>
+
+<p></p>
+
+<table cellpadding="0" cellspacing="0">
+ <tbody>
+  <tr>
+   <td>
+    <p class="SubFlow"></p>
+    <p>Let&rsquo;s zoom into the <span style="color: red"><span style="font-weight: bold">core</span></span> part. (From now on, all the
+pictures on the right are at this scale.)
+The picture breaks the C code in Racket&rsquo;s current
+implementation into several major subsystems. In reality, the
+implementation is not organized into such tidy layers, but
+the picture is conceptually close to the truth.</p>
+    <p><span class="hspace">&nbsp;</span></p>
+    <p>The large <span style="color: red"><span style="font-weight: bold">builtins</span></span> block implements primitive data
+structures and their operations, such as numbers (fixnums, bignums,
+flonums, exact rationals, complex numbers), strings, characters, byte
+strings, lists, vectors, and hash tables. Most other blocks are
+self-explanatory.</p>
+    <p><span class="hspace">&nbsp;</span></p>
+    <p>The <span style="color: red"><span style="font-weight: bold">expander</span></span> block implements the macro expander,
+reader, and module system. More than any other part of the current
+stack, the <span style="color: red"><span style="font-weight: bold">expander</span></span> part is better implemented in
+Racket.</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td>
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_2.png" alt="image" height="338.0" style="vertical-align: -0.0px; margin: -3px -3px -3px -3px;" width="144.0078125" /></p></td></tr></tbody></table>
+
+<p></p>
+
+<table cellpadding="0" cellspacing="0">
+ <tbody>
+  <tr>
+   <td>
+    <p class="SubFlow"></p>
+    <p>That was exactly the work of 2016: building a new
+<span style="color: blue"><span style="font-weight: bold">expander</span></span> to replace the C-implemented
+<span style="color: red"><span style="font-weight: bold">expander</span></span>. You can use that <span class="stt">racket7</span> variant of
+Racket now by building from the <a href="http://github/racket/racket7"><span class="url">http://github/racket/racket7</span></a>
+repo.</p>
+    <p><span class="hspace">&nbsp;</span></p>
+    <p>This new <span style="color: blue"><span style="font-weight: bold">expander</span></span> hasn&rsquo;t made it into the
+release, because a few interactions haven&rsquo;t been sorted out: the macro
+stepper, the demodularizer, and to some degree the decompiler. The
+expander also runs at about half the speed of the C-implemented
+expander, and that performance difference was part of the motivation
+to investigate a new runtime system.</p>
+    <p><span class="hspace">&nbsp;</span></p>
+    <p>Although the <span style="color: red"><span style="font-weight: bold">compiler+JIT</span></span> block is drawn the same as
+before in this picture, it&rsquo;s a slightly different compiler, because it
+doesn&rsquo;t know about modules or syntax objects. Instead, the compiler
+works in terms of <span style="font-style: italic">linklets</span>, which are <span class="stt">lambda</span>-like
+blocks of code that import and export variables. That separation of
+expansion/modules from compilation helps enable the transition to a
+different compiler and runtime system.</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td>
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_3.png" alt="image" height="341.0" style="vertical-align: -0.0px; margin: -3px -3px -3px -3px;" width="151.609375" /></p></td></tr></tbody></table>
+
+<p></p>
+
+<table cellpadding="0" cellspacing="0">
+ <tbody>
+  <tr>
+   <td>
+    <p class="SubFlow"></p>
+    <p>And that brings us to Chez Scheme. The most obvious feature in the
+picture on the right is that Chez Scheme&rsquo;s C-implemented
+<span style="color: red"><span style="font-weight: bold">kernel</span></span> is a fraction of the implementation, while most
+of Chez Scheme is more sensibly written in
+<span style="color: purple"><span style="font-weight: bold">Scheme</span></span>.</p>
+    <p><span class="hspace">&nbsp;</span></p>
+    <p>Chez Scheme&rsquo;s <span style="color: purple"><span style="font-weight: bold">expander</span></span> is considerably simpler
+than Racket&rsquo;s. Although Chez Scheme&rsquo;s expander is hygienic and hugely
+influential on Racket&rsquo;s expander, Racket&rsquo;s macro and module system
+does a lot more.</p>
+    <p><span class="hspace">&nbsp;</span></p>
+    <p>Chez Scheme&rsquo;s <span style="color: purple"><span style="font-weight: bold">compiler</span></span>, meanwhile, does a lot
+more than Racket&rsquo;s <span style="color: red"><span style="font-weight: bold">compiler+JIT</span></span>. The
+<span style="color: purple"><span style="font-weight: bold">builtins</span></span> functionality in Chez Scheme is similar
+to Racket&rsquo;s <span style="color: red"><span style="font-weight: bold">builtins</span></span>.</p>
+    <p><span class="hspace">&nbsp;</span></p>
+    <p>Chez Scheme&rsquo;s <span style="color: red"><span style="font-weight: bold">GC</span></span> (at the bottom) is tiny and elegant.
+It lacks some functionality of Racket&rsquo;s <span style="color: red"><span style="font-weight: bold">GC</span></span>, but
+mostly it lacks Racket&rsquo;s historical complexity for trying to cooperate
+directly with C.</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td>
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_4.png" alt="image" height="342.43589743589746" style="vertical-align: -0.0px; margin: -3px -3px -3px -3px;" width="144.0078125" /></p></td></tr></tbody></table>
+
+<p></p>
+
+<table cellpadding="0" cellspacing="0">
+ <tbody>
+  <tr>
+   <td>
+    <p class="SubFlow"></p>
+    <p>That brings us, finally, to the Racket-on-Chez picture. It starts with
+the Chez Scheme stack and adds a <span style="color: purple"><span style="font-weight: bold">rumble</span></span> block,
+which extends Chez Scheme to match the current Racket&rsquo;s
+<span style="color: red"><span style="font-weight: bold">GC</span></span> through <span style="color: red"><span style="font-weight: bold">control+structs</span></span> blocks.</p>
+    <p><span class="hspace">&nbsp;</span></p>
+    <p>Mostly, <span style="color: purple"><span style="font-weight: bold">rumble</span></span> is about immutable hash tables,
+delimited continuations, applicable structures, structure types
+properties, and impersonators/chaperones. We&rsquo;ve given this layer of
+functionality the name <span style="font-weight: bold">Rumble</span>, because it&rsquo;s useful to have a
+name for the language that hosts other layers that are built using
+<span style="color: blue"><span style="font-weight: bold">Racket</span></span>.</p>
+    <p><span class="hspace">&nbsp;</span></p>
+    <p>The <span style="color: blue"><span style="font-weight: bold">threads</span></span>, <span style="color: blue"><span style="font-weight: bold">io</span></span>, and
+<span style="color: blue"><span style="font-weight: bold">regexp</span></span> blocks are entirely new implementations
+of the corresponding blocks in the current Racket implementation. The
+<span style="color: red"><span style="font-weight: bold">rktio</span></span> block is used by <span style="color: blue"><span style="font-weight: bold">io</span></span>, and
+it&rsquo;s the same as in current Racket: a portability layer over OS
+facilities that is similar to (but more extensive than) code that is
+in Chez Scheme&rsquo;s <span style="color: red"><span style="font-weight: bold">kernel</span></span>.</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td>
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_5.png" alt="image" height="344.15384615384613" style="vertical-align: -0.0px; margin: -3px -3px -3px -3px;" width="140.671875" /></p></td></tr></tbody></table>
+
+<p>The <span style="color: blue"><span style="font-weight: bold">expander</span></span> block (the same as for
+<span class="stt">racket7</span>) sits on a small <span style="color: blue"><span style="font-weight: bold">schemify</span></span> adaptor.
+The <span style="color: blue"><span style="font-weight: bold">schemify</span></span> layer converts Racket linklets into
+plain Scheme functions, adjusting expressions as needed to support
+applicable structures, to enforce left-to-right evaluation, and to
+implement Racket&rsquo;s allocation model for local functions (i.e., lift to
+avoid closure allocation whenever possible).</p>
+
+<p>Naturally, the Racket-on-Chez implementation is bootstrapped by
+applying the <span style="color: blue"><span style="font-weight: bold">expander</span></span> and
+<span style="color: blue"><span style="font-weight: bold">schemify</span></span> layers to themselves and the other
+Racket-implemented parts of the stack, and then compiling the
+schemified linklets using the Chez Scheme
+<span style="color: purple"><span style="font-weight: bold">compiler</span></span>. A thin <span style="color: purple"><span style="font-weight: bold">main</span></span>
+driver on top handles command-line arguments to load modules and start
+the <span class="RktSym"><a class="RktValLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/Reading.html#%28def._%28%28quote._~23~25kernel%29._read%29%29">read</a></span>&ndash;<span class="RktSym"><a class="RktValLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/eval.html#%28def._%28%28quote._~23~25kernel%29._eval%29%29">eval</a></span>&ndash;<span class="RktSym"><a class="RktValLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/Writing.html#%28def._%28%28quote._~23~25kernel%29._print%29%29">print</a></span> loop.</p>
+
+<h1><a name="(part._functionality)"></a>Current Functionality</h1>
+
+<p>DrRacket starts up in Chez Scheme, and just starting DrRacket
+exercises many Racket language constructs and libraries. The largest
+Racket-on-Chez demonstration to date is building all of the packages
+and documentation of the main Racket distribution. Building packages
+and documentation, again, covers more Racket functionality than you
+may expect, because our macros do interesting things, such as
+typechecking and generating bitmap images. Also, the build process is
+too long and complex to tolerate leaks or major inefficiencies.</p>
+
+<p>Still, many pieces are buggy, and closing the gap is mostly a matter
+of plowing through the Racket test suites. The main
+missing or incomplete pieces are: futures, places, and a <span class="stt">racket</span>
+executable that starts Racket-on-Chez.</p>
+
+<h1><a name="(part._benchmarks)"></a>Performance: Benchmark Sanity Check</h1>
+
+<p>The overall compilation story is not yet right in Racket-on-Chez,
+partly because there&rsquo;s no cross-module optimization. Functions like
+<span class="RktSym"><a class="RktValLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/pairs.html#%28def._%28%28lib._racket%2Fprivate%2Fmap..rkt%29._map%29%29">map</a></span>, <span class="RktSym"><a class="RktValLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/pairs.html#%28def._%28%28lib._racket%2Fprivate%2Fbase..rkt%29._memq%29%29">memq</a></span>, and <span class="RktSym"><a class="RktValLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/pairs.html#%28def._%28%28lib._racket%2Fprivate%2Flist..rkt%29._assv%29%29">assv</a></span> need cross-module
+optimization to be compiled well in Racket-on-Chez. Benchmarks
+sometimes do not rely on cross-module optimization, however, and
+preliminary benchmark measurements can be useful as a sanity
+check on the ways that <span style="color: blue"><span style="font-weight: bold">schemify</span></span> mangles
+individual modules.</p>
+
+<blockquote class="refpara">
+ <blockquote class="refcolumn">
+  <blockquote class="refcontent">
+   <p>Benchmarks are in the <span class="stt">racket-benchmark</span> package
+whose source is in the <span class="stt">racket7</span> repo.
+The benchmarks run in Chez Scheme as R6RS libraries.
+The difference between Racket and <span class="stt">racket7</span> is in the noise.</p></blockquote></blockquote></blockquote>
+
+<p>The table below shows a handful of rough benchmark results. You
+should not take the results seriously, but they line up with my
+overall impression of where we are.</p>
+
+<p></p>
+
+<table cellpadding="0" cellspacing="0">
+ <tbody>
+  <tr>
+   <td style="background-color: lightgray">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="center" colspan="21" style="background-color: lightgray">
+    <p>Rough and unscientific benchmark numbers</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: lightgray">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p><span class="Smaller">msecs</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" colspan="3" style="background-color: beige">
+    <p><span style="font-weight: bold">deriv</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" colspan="3" style="background-color: beige">
+    <p><span style="font-weight: bold">dynamic</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" colspan="3" style="background-color: beige">
+    <p><span style="font-weight: bold">sboyer</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" colspan="3" style="background-color: beige">
+    <p><span style="font-weight: bold">maze</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" colspan="3" style="background-color: beige">
+    <p><span style="font-weight: bold">nfa</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p>Chez Scheme</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>770</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_6.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>360</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_7.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>1270</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_8.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>930</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_9.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>2100</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_10.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p>Racket-on-Chez</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>1560</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_11.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>1030</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_12.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>1470</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_13.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>1520</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_14.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>2200</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_15.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p>Racket</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>2030</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_16.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>560</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_17.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>2230</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_18.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>1330</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_19.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>4100</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_20.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="26" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr></tbody></table>
+
+<p>All benchmarks were run in safe mode and <span style="font-style: italic">without</span> Gustavo&rsquo;s
+work-in-progress addition to the Chez Scheme compiler that can
+eliminate some runtime checks and related dead code.</p>
+
+<h1><a name="(part._startup)"></a>Performance: Startup</h1>
+
+<p>Startup time for Racket-on-Chez is determined by Chez Scheme&rsquo;s base
+startup time (to load boot files) plus time to load the
+<span style="color: blue"><span style="font-weight: bold">expander</span></span> and other parts of the Racket-on-Chez
+stack. The load times shown below for <a class="RktModLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/index.html"><span class="RktSym">racket/base</span></a> and
+<a class="RktModLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/index.html"><span class="RktSym">racket</span></a> include the startup time and add the additional
+time needed to load the many compiled files that are parts of those
+libraries.</p>
+
+<p>For Racket and <span class="stt">racket7</span>, bytecode parsing can be delayed at the
+granularity of a procedure, so that a procedure&rsquo;s bytecode isn&rsquo;t
+parsed until the procedure is called. Delayed parsing is enabled by
+default, and the <span class="nobreak"><span class="stt">-d</span></span> flag disables it.</p>
+
+<p></p>
+
+<table cellpadding="0" cellspacing="0">
+ <tbody>
+  <tr>
+   <td style="background-color: lightgray">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="center" colspan="13" style="background-color: lightgray">
+    <p>Startup/load time</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: lightgray">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p><span class="Smaller">msecs</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" colspan="3" style="background-color: beige">
+    <p><span style="font-weight: bold">startup</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" colspan="3" style="background-color: beige">
+    <p><span style="font-weight: bold"><span class="stt">-l racket/base</span></span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" colspan="3" style="background-color: beige">
+    <p><span style="font-weight: bold"><span class="stt">-l racket</span></span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p>Racket</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>16</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_21.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>50</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_22.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>220</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_23.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p>Racket <span class="nobreak"><span class="stt">-d</span></span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>16</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_24.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>80</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_25.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>500</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_26.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p><span class="stt">racket7</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>50</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_27.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>110</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_28.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>340</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_29.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p><span class="stt">racket7 -d</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>50</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_30.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>190</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_31.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>650</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_32.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p>Chez Scheme</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_33.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>170</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_34.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_35.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p>Racket-on-Chez</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>440</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_36.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>550</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_37.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>1200</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_38.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p>Racket-on-Chez/JIT</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>440</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_39.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>550</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_40.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>1600</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_41.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr></tbody></table>
+
+<p>Compared to the current Racket version, starting up and loading takes
+longer in <span class="stt">racket7</span>, because <span class="stt">racket7</span> has to load embedded
+bytecode for the expander&rsquo;s implementation, and because the bytecode
+encoding of linklets has not been refined as much.</p>
+
+<p>The Chez Scheme row in the table doesn&rsquo;t actually load
+<a class="RktModLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/index.html"><span class="RktSym">racket/base</span></a>, but that&rsquo;s the closest reasonable column.
+That row corresponds to just starting Chez Scheme with its
+compiler&#8212;
+ <wbr />so it&rsquo;s a signficantly smaller language than
+<a class="RktModLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/index.html"><span class="RktSym">racket/base</span></a>, but it&rsquo;s more than the Racket
+<span style="font-weight: bold">startup</span> rows. It&rsquo;s also a lower bound on the Racket-on-Chez
+<span style="font-weight: bold">startup</span> time.</p>
+
+<p>Loading Racket-on-Chez takes significantly longer, still, due to
+larger and slower-to-load machine code for both the Racket-on-Chez
+stack and libraries compiled with it. Although individual linklets
+within a module (roughly, individual phases) are parsed on demand,
+there is no delayed parsing at the granularity of procedures, so the
+work performed by loading is closer to the Racket <span class="nobreak"><span class="stt">-d</span></span> and
+<span class="stt">racket7 </span><span class="nobreak"><span class="stt">-d</span></span> rows.</p>
+
+<p>The last row above, Racket-on-Chez/JIT, refers to a variant of
+Racket-on-Chez that does not compile whole linklets. Instead, it keeps
+individual <span class="stt">lambda</span>s in source form until called, and it compiles
+each called <span class="stt">lambda</span> on demand. Load times go up, mostly because
+code is compiled as needed, but also because the source-fragment
+representation is even larger than machine code right now. The
+Racket-on-Chez/JIT approach does not look the most promising, so far,
+but it&rsquo;s also not crazy. With more effort and tuning (especially in
+the representation of source fragments), it may be a viable approach
+and more in line with the way the current Racket implementation works.</p>
+
+<p>Clearly, load time is a direction for further effort.</p>
+
+<h1><a name="(part._expander)"></a>Performance: Expander and Compiler</h1>
+
+<p>The <span style="color: blue"><span style="font-weight: bold">expander</span></span> runs at about the same speed in
+Racket-on-Chez and <span class="stt">racket7</span>, but the linklet-compilation step
+takes much longer in Racket-on-Chez. As a result, compilation time for
+Racket-on-Chez dominates expansion proper for a task like <span class="stt">racket</span><span class="stt">
+</span><span class="nobreak"><span class="stt">-cl</span></span><span class="stt"> racket/base</span>.</p>
+
+<blockquote class="refpara">
+ <blockquote class="refcolumn">
+  <blockquote class="refcontent">
+   <p>Reported times in this section use a Racket-on-Chez stack
+that is compiled in unsafe mode and run on a 2013 MacBook Pro 2.6GHz
+Core i5. Unsafe mode improves <span style="font-weight: bold">expand</span> and <span style="font-weight: bold">read</span> performance by about
+10%.</p></blockquote></blockquote></blockquote>
+
+<p></p>
+
+<table cellpadding="0" cellspacing="0">
+ <tbody>
+  <tr>
+   <td style="background-color: lightgray">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="center" colspan="21" style="background-color: lightgray">
+    <p>Steps within <span class="stt">racket -cl racket/base</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td style="background-color: lightgray">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p><span class="Smaller">msecs</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="left" colspan="3" style="background-color: beige">
+    <p><span style="font-weight: bold">expand</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="left" colspan="3" style="background-color: beige">
+    <p><span style="font-weight: bold">schemify</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="left" colspan="3" style="background-color: beige">
+    <p><span style="font-weight: bold">compile</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="left" colspan="3" style="background-color: beige">
+    <p><span style="font-weight: bold">eval</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="left" colspan="3" style="background-color: beige">
+    <p><span style="font-weight: bold">read</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p><span class="stt">racket7</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>2511</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_42.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_43.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>662</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_44.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>235</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_45.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>275</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_46.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p>Racket-on-Chez</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>2398</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_47.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>917</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_48.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>2852</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_49.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>390</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_50.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>227</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_51.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p>Racket-on-Chez/JIT</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>2441</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_52.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>974</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_53.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>1044</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_54.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>515</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_55.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>229</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_56.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="31" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr></tbody></table>
+
+<p>For Racket-on-Chez/JIT, compile times go down, showing that about 1/3
+of the code that is compiled during expansion is also run during
+expansion. The fraction would be lower for most programs; the
+<a class="RktModLink" data-pltdoc="x" href="http://docs.racket-lang.org/reference/index.html"><span class="RktSym">racket/base</span></a> library is unusual in building up layers
+of macros to implement itself. The <span style="font-weight: bold">schemify</span> step is certainly a
+target for improvement, since its job is much simpler than the
+<span style="font-weight: bold">compile</span> step&rsquo;s job.</p>
+
+<p>That factor-of-2 slowdown relative to <span class="stt">racket7</span> is
+compounded by the Racket-implemented <span style="color: blue"><span style="font-weight: bold">expander</span></span>
+being twice as slow as the current Racket&rsquo;s C-implemented
+<span style="color: red"><span style="font-weight: bold">expander</span></span>:</p>
+
+<p></p>
+
+<table cellpadding="0" cellspacing="0">
+ <tbody>
+  <tr>
+   <td style="background-color: lightgray">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="center" colspan="9" style="background-color: lightgray">
+    <p>Loading from source with <span class="stt">racket -cl</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: lightgray">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p><span class="Smaller">msecs</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" colspan="3" style="background-color: beige">
+    <p><span style="font-weight: bold"><span class="stt">racket/base</span></span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" colspan="3" style="background-color: beige">
+    <p><span style="font-weight: bold"><span class="stt">racket</span></span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p>Racket</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>1830</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_57.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>21700</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_58.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p><span class="stt">racket7</span></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>3490</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_59.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>38140</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_60.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p>Racket-on-Chez</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>7060</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_61.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>70093</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_62.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr>
+  <tr>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="left" style="background-color: beige">
+    <p>Racket-on-Chez/JIT</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>5400</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_63.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p>55050</p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td align="right" style="background-color: beige">
+    <p><img src="/img/posts/2018-01-05-racket-on-chez-status/pict_64.png" alt="image" height="16" style="vertical-align: 0px; margin: -3px -3px -3px -3px;" width="56" /></p></td>
+   <td>
+    <p><span class="hspace">&nbsp;&nbsp;</span></p></td>
+   <td style="background-color: beige">
+    <p>&nbsp;</p></td></tr></tbody></table>
+
+<p>The gap between the Racket-implemented <span style="color: blue"><span style="font-weight: bold">expander</span></span>
+and the C-implemented <span style="color: red"><span style="font-weight: bold">expander</span></span> is the one that we
+most hoped to close by moving to Chez Scheme. As part of the
+Racket-on-Chez stack, the <span style="color: blue"><span style="font-weight: bold">expander</span></span> is already
+compiled in a reasonable way (i.e., no cross-module optimization
+issues), so it&rsquo;s not clear how to improve. Still, I still think the
+<span style="color: blue"><span style="font-weight: bold">expander</span></span> can be made to run faster in Chez
+Scheme, and we&rsquo;ll keep trying.</p>
+
+<h1><a name="(part._build)"></a>Performance: Distribution Build</h1>
+
+<p>The current version of Racket-on-Chez builds on a 64-bit machine with
+a peak memory use around 1.25 GB, which is on a similar scale to the
+current Racket release&rsquo;s peak memory use around 1 GB.</p>
+
+<p>The following plots show, on the same scale, memory use over time when
+building a distribution. Each plot has two black lines (easiest to
+distinguish in the last plot): the top black line describes peak
+memory use, since it&rsquo;s before a major GC, while the bottom black line
+is closer to live-memory use, since it&rsquo;s after a major GC. The orange
+region is for compiling libraries (each vertical line starts a
+collection), the blue region is for running documentation, the green
+region is for rendering documentation, and the final pink region is
+for re-rendering documentation as needed to reach a fix-point for
+cross references. Memory use is expected to grow modestly during the
+blue region, since the builds collecting cross-reference information
+for use in the green region. Memory use should grow minimally in the
+orange and green regions (as a side-effect of caches).</p>
+
+<blockquote class="refpara">
+ <blockquote class="refcolumn">
+  <blockquote class="refcontent">
+   <p>These graphs report builds on a Linux 3.4GHz Core i7-2600
+machine with the Racket parts of the Racket-on-Chez stack compiled in
+safe mode.</p></blockquote></blockquote></blockquote>
+
+<blockquote>
+ <table cellpadding="0" cellspacing="0">
+  <tbody>
+   <tr>
+    <td valign="top">
+     <blockquote class="SubFlow">
+      <p><span style="font-weight: bold">Racket</span></p>
+      <p>C-implemented <span style="color: red"><span style="font-weight: bold">expander</span></span></p></blockquote></td>
+    <td>
+     <p><span class="hspace">&nbsp;</span></p></td>
+    <td align="right">
+     <p>
+      <object alt="" data="build-log-racket.svg" height="300.0pt" type="image/svg+xml" width="400.0pt">
+       <param name="src" value="build-log-racket.svg" /></object></p></td></tr>
+   <tr>
+    <td valign="top">
+     <p><span class="Smaller"></span></p></td>
+    <td>
+     <p><span class="hspace">&nbsp;</span></p></td>
+    <td align="right">
+     <p><span class="Smaller"></span></p></td></tr>
+   <tr>
+    <td valign="top">
+     <blockquote class="SubFlow">
+      <p><span style="font-weight: bold"><span class="stt">racket7</span></span></p>
+      <p>Racket-implemented <span style="color: blue"><span style="font-weight: bold">expander</span></span></p></blockquote></td>
+    <td>
+     <p><span class="hspace">&nbsp;</span></p></td>
+    <td align="right">
+     <p>
+      <object alt="" data="build-log-racket7.svg" height="300.0pt" type="image/svg+xml" width="400.0pt">
+       <param name="src" value="build-log-racket7.svg" /></object></p></td></tr>
+   <tr>
+    <td valign="top">
+     <p><span class="Smaller"></span></p></td>
+    <td>
+     <p><span class="hspace">&nbsp;</span></p></td>
+    <td align="right">
+     <p><span class="Smaller"></span></p></td></tr>
+   <tr>
+    <td valign="top">
+     <blockquote class="SubFlow">
+      <p><span style="font-weight: bold">Racket-on-Chez</span></p>
+      <p>Same <span style="color: blue"><span style="font-weight: bold">expander</span></span> as <span class="stt">racket7</span></p></blockquote></td>
+    <td>
+     <p><span class="hspace">&nbsp;</span></p></td>
+    <td align="right">
+     <p>
+      <object alt="" data="build-log-cs.svg" height="300.0pt" type="image/svg+xml" width="400.0pt">
+       <param name="src" value="build-log-cs.svg" /></object></p></td></tr></tbody></table></blockquote>
+
+<p>The plots illustrate that, while memory use is similar, build times
+are much longer. <a data-pltdoc="x" href="#%28part._expander%29">Expander and compiler
+performance</a> largely explains the difference.</p>
+
+<p>The build time certainly can be improved some. Maybe build times can
+be improved significantly, or maybe slower build times will seem
+worthwhile for a more maintainable implementation of Racket and/or
+for faster generated code.</p>
+
+<h1><a name="(part._plan)"></a>Outlook</h1>
+
+<p>It would be nice if porting to Chez Scheme made every aspect of Racket
+magically faster. It hasn&rsquo;t done that, but we have plenty of room for
+improvement; the performance results to date are a lower bound on
+performance, not an upper bound.</p>
+
+<p>Keep in mind that the original goal is not to have a faster Racket,
+but a better-implemented Racket with acceptable performance. The
+Racket-on-Chez implementation is far more maintainable and flexible
+than the current Racket implementation, so maybe we&rsquo;re half-way there
+after one year of work.</p>
+
+<p>You can try Racket-on-Chez from
+<a href="https://github.com/racket/racket7/"><span class="url">https://github.com/racket/racket7/</span></a>. See
+<a href="https://github.com/racket/racket7/blob/master/racket/src/cs/README.txt">racket/src/cs/README.txt</a>
+in that repo for more information.</p>
+
+<blockquote class="refpara">
+ <blockquote class="refcolumn">
+  <blockquote class="refcontent">
+   <p>If you&rsquo;re interested in even more implementation details and plans, see
+the <a href="http://www.cs.utah.edu/~mflatt/racket-on-chez-jan-2018/">extended version of this report</a>.</p></blockquote></blockquote></blockquote></div>
+  <a class="more" href='/2018/01/racket-on-chez-status.html'>more →</a>
+<col-2>
+
+</row>
+
+</article>
+
+<row class="one-column" id="bottom"><col-1></col-1><col-2>
+<p>Made with <a href="https://github.com/greghendershott/frog">Frog</a>, a static-blog generator written in Racket.
+<br /><a href="https://github.com/racket/racket-lang-org">Source code</a> for this blog.</col-2></row>
+  </body>
+</html>

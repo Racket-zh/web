@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <title>Refinement Types in Typed Racket</title>
+    <meta name="description" content="_posted by Andrew Kent_  With the Racket v6.11 release, Typed Racket has begun to support basic refinement and dependent function types. This post gives an overview for working with these types while writing some simple vector operations.  Currently these...">
+    <meta name="author"      content="The Unknown Author">
+    <meta name="keywords"    content="">
+    <meta name="viewport"    content="width=device-width, initial-scale=1.0">
+    <link rel="icon"      href="/favicon.ico">
+    <link rel="canonical" href="http://blog.racket-lang.org/2017/11/adding-refinement-types.html">
+    <link rel="next" href="/2017/10/racket-v6-11.html">
+    <link rel="prev" href="/2018/01/racket-on-chez-status.html">
+    <!-- CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog-fonts.css">
+    <!-- Feeds -->
+    <link rel="alternate" type="application/atom+xml" href="/feeds/all.atom.xml" title="Atom Feed">
+    <link rel="alternate" type="application/rss+xml" href="/feeds/all.rss.xml" title="RSS Feed">
+    <!-- JS -->
+    </head>
+  <body>
+<row class="one-column" id="logo"><col-1><a href="http://racket-lang.org"><div id="logo-container"><img id="logo" src="/img/racket-logo.svg"/> Racket</div></a></col-1><col-2><p><a href="/index.html">blog</a></p></col-2></row>
+<article>
+<row>
+
+<col-1>
+  <p class='date-and-tags'>11 Nov 2017</p>
+
+</col-1>
+
+<col-2>
+  <header>
+  <h1>Refinement Types in Typed Racket</h1>
+  </header>
+
+<p><em>posted by Andrew Kent</em></p>
+
+<p>With the Racket v6.11 release, Typed Racket has begun to support basic refinement and dependent function types. This post gives an overview for working with these types while writing some simple vector operations.</p>
+
+<p>Currently these types are documented under Typed Racket&rsquo;s <a href="https://docs.racket-lang.org/ts-reference/Experimental_Features.html">experimental features</a>. They are experimental in the sense that they are relatively new. We look forward to improving their usefulness by incorporating user feedback.</p>
+
+<p><strong>Note:</strong> If you wish to experiment with refinement and/or dependent function types in the near future, you should use a <a href="https://pre.racket-lang.org/installers/">snapshot build</a>, as it will have additional features and bug fixes from user feedback. Some of the examples in this post will require a build from early November 2017 or later.</p>
+<!-- more-->
+
+<h1 id="refinement-types">Refinement Types</h1>
+
+<p>Let us examine the type of <code>vector-ref</code> in Typed Racket:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.All))" style="color: inherit">All</a></span> <span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n">a</span><span class="p">)</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Integer))" style="color: inherit">Integer</a></span> <span class="n">a</span><span class="p">))</span>
+</pre></div>
+
+</div>
+
+<p>It states that the index (the second argument) must be an <code>Integer</code>, i.e. any whole-number value in the exclusive range (-∞ , ∞). This description, however, is somewhat coarse: we obviously cannot use <em>any</em> integer. To avoid a runtime error when indexing into a vector <code>v</code>, we must use an integer in the range [0, <code>(vector-length
+v)</code>). With a refinement type we can precisely describe this subset of the integers:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Experimental_Features.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Refine))" style="color: inherit">Refine</a></span> <span class="p">[</span><span class="n">i</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Integer))" style="color: inherit">Integer</a></span><span class="p">]</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c~3d))" style="color: inherit">&lt;=</a></span> <span class="mi">0</span> <span class="n">i</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">v</span><span class="p">)</span> <span class="mi">1</span><span class="p">)))</span>
+</pre></div>
+
+</div>
+
+<p>This refinement type describes values <code>i</code> of type <code>Integer</code> such that <code>(&lt;= 0 i (- (vector-length v) 1))</code> produces <code>#true</code>. The documentation for <a href="http://docs.racket-lang.org/search/index.html?q=Refine">Refine</a> describes precisely what propositions can be used in refinements. Today it includes logical statements about the types of terms, standard logical combinators (e.g. and, or), and linear integer constraints.</p>
+
+<h1 id="dependent-function-types">Dependent function types</h1>
+
+<p>By combining refinement types with dependent function types (i.e. functions whose domain and range may depend on argument and/or program values), we can now give a more precise function type for many basic vector operations, e.g.:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">safe-vector-ref</span> 
+   <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.All))" style="color: inherit">All</a></span> <span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="p">([</span><span class="n">v</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n">A</span><span class="p">)]</span>
+                 <span class="p">[</span><span class="n">n</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Experimental_Features.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Refine))" style="color: inherit">Refine</a></span> <span class="p">[</span><span class="n">i</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Integer))" style="color: inherit">Integer</a></span><span class="p">]</span>
+                            <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c~3d))" style="color: inherit">&lt;=</a></span> <span class="mi">0</span> <span class="n">i</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">v</span><span class="p">)</span> <span class="mi">1</span><span class="p">)))])</span>
+                <span class="n">A</span><span class="p">)))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">safe-vector-ref</span> <span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-ref))" style="color: inherit">vector-ref</a></span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>Here we have stated that <code>safe-vector-ref</code>&rsquo;s second argument (<code>n</code>) depends on its first argument (<code>v</code>) and that the type of <code>n</code> is an <code>Integer</code> which is a valid index for <code>v</code>.</p>
+
+<p>If we try and use <code>safe-vector-ref</code> with a vector and index which Typed Racket cannot prove satisfy the respective types:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="n">safe-vector-ref</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector))" style="color: inherit">vector</a></span> <span class="mi">0</span> <span class="mi">1</span><span class="p">)</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>Typed Racket will report an error while type checking:</p>
+
+<pre><code>Type Checker: type mismatch
+  expected: (Refine
+             (i : Integer)
+             (and (&lt;= i (- (vector-length v) 1)) (&lt;= 0 v)))
+  given: (Refine (z : Positive-Byte) (= 2 z)) in: 2</code></pre>
+
+<h2 id="preconditions">Preconditions</h2>
+
+<p>Sometimes the refinements used in a dependent function type can also be written conveniently as a &ldquo;precondition&rdquo;, e.g.:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">safe-vector-ref</span>
+   <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.All))" style="color: inherit">All</a></span> <span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="p">([</span><span class="n">v</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n">A</span><span class="p">)]</span>
+                 <span class="p">[</span><span class="n">n</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Integer))" style="color: inherit">Integer</a></span><span class="p">])</span>
+                <span class="kd">#:pre</span> <span class="p">(</span><span class="n">v</span> <span class="n">n</span><span class="p">)</span>
+                <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c~3d))" style="color: inherit">&lt;=</a></span> <span class="mi">0</span> <span class="n">n</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">v</span><span class="p">)</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="n">A</span><span class="p">)))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">safe-vector-ref</span> <span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-ref))" style="color: inherit">vector-ref</a></span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>This function type is equivalent to the previous version, but the refining proposition that requires that <code>n</code> be a valid index for <code>v</code> now references <code>n</code> directly and has been written after the list of arguments:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kd">#:pre</span> <span class="p">(</span><span class="n">v</span> <span class="n">n</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c~3d))" style="color: inherit">&lt;=</a></span> <span class="mi">0</span> <span class="n">n</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">v</span><span class="p">)</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+
+</div>
+
+<p>We can read the precondition specification above as follows: the precondition for the function depends on arguments <code>v</code> and <code>n</code> and it requires that Typed Racket can prove <code>(&lt;= 0 n (- (vector-length v)
+1))</code> in order for a call to be well-typed.</p>
+
+<p>Typed Racket may be able to provide more detailed feedback when the arguments are of the correct type but the precondition cannot be proved:</p>
+
+<pre><code>Type Checker: could not apply function;
+ unable to prove precondition
+  precondition: (&lt;= 2 (- (vector-length v) 1)) 
+  in: (safe-vector-ref (vector 0 1) 2)</code></pre>
+
+<p>Here, Typed Racket first performed type inference and confirmed that the arguments <code>(vector 0 1)</code> and <code>2</code> had acceptable types before discovering the precondition was unprovable at the call site.</p>
+
+<p>We believe the error messages produced when using preconditions may be more informative in general. Your mileage may vary.</p>
+
+<h1 id="programming-with-refinement-types">Programming with refinement types</h1>
+
+<p><em>Note: the below examples will work on Racket v6.11 with one additional snippet of <a href="#makevectortype">code</a> or on any Racket build more recent than November 11 2017.</em></p>
+
+<p>When programming with refinement types, use the <code>#:with-refinements</code> option on the <code>#lang</code> line to tell Typed Racket to track additional logical information about program terms:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="c1">;; safe-vector-ops.rkt</span>
+<span class="kn">#lang </span><span class="nn">typed/racket/base</span> <span class="kd">#:with-refinements</span>
+</pre></div>
+
+</div>
+
+<p>In particular, this will tell Typed Racket to remember that the vector produced by <code>(make-vector n ...)</code> has length <code>n</code>, which will be essential for typing our vector operations.</p>
+
+<p>Now we can also declare more detailed types for <code>vector-set!</code> and <code>vector-ref</code> since these more specific types are subtypes of their more permissive standard types. If we&rsquo;re feeling adventurous, we may use the <code>unsafe-</code> variants from <code>racket/unsafe/ops</code> that do not check their bounds, since Typed Racket proves they are never used with invalid indices:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._only-in))" style="color: inherit">only-in</a></span> <span class="n">racket/unsafe/ops</span>
+                  <span class="n"><a href="http://docs.racket-lang.org/reference/unsafe.html#(def._((lib._racket/unsafe/ops..rkt)._unsafe-vector-ref))" style="color: inherit">unsafe-vector-ref</a></span>
+                  <span class="n"><a href="http://docs.racket-lang.org/reference/unsafe.html#(def._((lib._racket/unsafe/ops..rkt)._unsafe-vector-set!))" style="color: inherit">unsafe-vector-set!</a></span><span class="p">))</span>
+
+<span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">safe-vector-ref</span>
+   <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.All))" style="color: inherit">All</a></span> <span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="p">([</span><span class="n">v</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n">A</span><span class="p">)]</span>
+                 <span class="p">[</span><span class="n">n</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">])</span>
+                <span class="kd">#:pre</span> <span class="p">(</span><span class="n">v</span> <span class="n">n</span><span class="p">)</span>
+                <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span> <span class="n">n</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">v</span><span class="p">))</span>
+                <span class="n">A</span><span class="p">)))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">safe-vector-ref</span> <span class="n"><a href="http://docs.racket-lang.org/reference/unsafe.html#(def._((lib._racket/unsafe/ops..rkt)._unsafe-vector-ref))" style="color: inherit">unsafe-vector-ref</a></span><span class="p">)</span>
+
+<span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">safe-vector-set!</span>
+   <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.All))" style="color: inherit">All</a></span> <span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="p">([</span><span class="n">v</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n">A</span><span class="p">)]</span>
+                 <span class="p">[</span><span class="n">n</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">]</span>
+                 <span class="p">[</span><span class="n">a</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">A</span><span class="p">])</span>
+                <span class="kd">#:pre</span> <span class="p">(</span><span class="n">v</span> <span class="n">n</span><span class="p">)</span>
+                <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span> <span class="n">n</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">v</span><span class="p">))</span>
+                <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Void))" style="color: inherit">Void</a></span><span class="p">)))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">safe-vector-set!</span> <span class="n"><a href="http://docs.racket-lang.org/reference/unsafe.html#(def._((lib._racket/unsafe/ops..rkt)._unsafe-vector-set!))" style="color: inherit">unsafe-vector-set!</a></span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>Now that we have these foundational operations in place (i.e. <code>make-vector</code>, <code>safe-vector-ref</code>, and <code>safe-vector-set!</code>) , let&rsquo;s see if we can define some of the <a href="https://docs.racket-lang.org/reference/vectors.html">vector operations</a> that are provided by <code>racket/base</code> and <code>racket/vector</code>, but with more precise types!</p>
+
+<h2 id="build-vector"><code>build-vector</code></h2>
+
+<p>Let&rsquo;s look at the documentation for <code>build-vector</code>:</p>
+
+<pre><code>(build-vector n proc) → vector?
+  n : exact-nonnegative-integer?
+  proc : (exact-nonnegative-integer? . -&gt; . any/c)
+
+Creates a vector of n elements by applying proc to the
+integers from 0 to (sub1 n) in order. If vec is the 
+resulting vector, then (vector-ref vec i) is the value 
+produced by (proc i).
+
+Example:
+&gt; (build-vector 5 add1)
+'#(1 2 3 4 5)</code></pre>
+
+<p>First let&rsquo;s consider its type signature. It seems like there are two places where we could use refinement types to create a more precise type-based specification:</p>
+
+<ol>
+ <li>
+  <p>the <code>proc</code> procedure will always be given an integer in the range [0, <code>n</code>), and</p></li>
+ <li>
+  <p>the length of the returned vector is equal to <code>n</code>.</p></li></ol>
+
+<p>We can encode both of these directly in the type of <code>build-vector</code>:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((lib._racket/private/list..rkt)._build-vector))" style="color: inherit">build-vector</a></span>
+   <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.All))" style="color: inherit">All</a></span> <span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="p">([</span><span class="n">n</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">]</span>
+                 <span class="p">[</span><span class="n">proc</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                   <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Experimental_Features.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Refine))" style="color: inherit">Refine</a></span> <span class="p">[</span><span class="n">i</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">]</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span> <span class="n">i</span> <span class="n">n</span><span class="p">))</span>
+                       <span class="n">A</span><span class="p">)])</span>
+                <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Experimental_Features.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Refine))" style="color: inherit">Refine</a></span> <span class="p">[</span><span class="n">v</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n">A</span><span class="p">)]</span>
+                  <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3d))" style="color: inherit">=</a></span> <span class="n">n</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">v</span><span class="p">))))))</span>
+</pre></div>
+
+</div>
+
+<p>With the type signature in place, we can proceed to define the function:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((lib._racket/private/list..rkt)._build-vector))" style="color: inherit">build-vector</a></span> <span class="n">n</span> <span class="n">proc</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._cond))" style="color: inherit">cond</a></span>
+    <span class="p">[(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="n">n</span> <span class="mi">0</span><span class="p">)</span>
+     <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">init-val</span> <span class="p">(</span><span class="n">proc</span> <span class="mi">0</span><span class="p">))</span>
+     <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">vec</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._make-vector))" style="color: inherit">make-vector</a></span> <span class="n">n</span> <span class="n">init-val</span><span class="p">))</span>
+     <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/let.html#(form._((lib._racket/private/letstx-scheme..rkt)._let))" style="color: inherit">let</a></span> <span class="n">loop!</span> <span class="p">([</span><span class="n">i</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span> <span class="mi">1</span><span class="p">])</span>
+       <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/when_unless.html#(form._((lib._racket/private/letstx-scheme..rkt)._when))" style="color: inherit">when</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span> <span class="n">i</span> <span class="n">n</span><span class="p">)</span>
+         <span class="p">(</span><span class="n">safe-vector-set!</span> <span class="n">vec</span> <span class="n">i</span> <span class="p">(</span><span class="n">proc</span> <span class="n">i</span><span class="p">))</span>
+         <span class="p">(</span><span class="n">loop!</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._add1))" style="color: inherit">add1</a></span> <span class="n">i</span><span class="p">))))</span>
+     <span class="n">vec</span><span class="p">]</span>
+    <span class="p">[</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._else))" style="color: inherit">else</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector))" style="color: inherit">vector</a></span><span class="p">)]))</span>
+</pre></div>
+
+</div>
+
+<p>There are a few things to note about the definition:</p>
+
+<p>a. In order to make a <code>(Vectorof A)</code>, we need some value of type <code>A</code> to initialize the vector with (i.e. the second arg to <code>make-vector</code>). Because of this, we first check if <code>n</code> is greater than 0. If it is greater than 0, we can compute <code>(proc 0)</code> and use that to initialize the vector we create, otherwise we simply return <code>(vector)</code> (i.e. an empty vector) which is &ldquo;vacuously&rdquo; a vector of <code>A</code> for any <code>A</code>.</p>
+
+<p>b. The recursive loop we use to populate indices 1 through <code>(sub1 n)</code>, which we named <code>loop!</code>, requires a type annotation <code>Natural</code> on its argument <code>i</code> so that its being greater than or equal to 0 is known in the body of the recursive function. That, combined with the test <code>(&lt; i
+n)</code>, allows us to successfully use <code>safe-vector-set!</code> to update the contents at <code>i</code>. (Note: if Typed Racket had smarter type inference, this annotation may not be necessary.)</p>
+
+<h2 id="vector-map"><code>vector-map</code></h2>
+
+<p><code>vector-map</code> takes a vector <code>vec</code> and a function <code>proc</code> and produces a new vector <code>vec*</code> where <code>(vector-ref vec* i)</code> equals <code>(proc
+(vector-ref vec i))</code> for each valid index <code>i</code>:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((lib._racket/vector..rkt)._vector-map))" style="color: inherit">vector-map</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._add1))" style="color: inherit">add1</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector))" style="color: inherit">vector</a></span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">))</span>
+<span class="o">'#</span><span class="p">(</span><span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span> <span class="mi">4</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>Because we now have a version of <code>build-vector</code> that uses refinement types to more precisely describe its specification (see previous section), we can implement <code>vector-map</code> entirely in terms of <code>build-vector</code>:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((lib._racket/vector..rkt)._vector-map))" style="color: inherit">vector-map</a></span>
+   <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.All))" style="color: inherit">All</a></span> <span class="p">(</span><span class="n">A</span> <span class="n">B</span><span class="p">)</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="p">([</span><span class="n">proc</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="n">A</span> <span class="n">B</span><span class="p">)]</span>
+                   <span class="p">[</span><span class="n">vec</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n">A</span><span class="p">)])</span>
+                  <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Experimental_Features.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Refine))" style="color: inherit">Refine</a></span> <span class="p">[</span><span class="n">v</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n">B</span><span class="p">)]</span>
+                    <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3d))" style="color: inherit">=</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">vec</span><span class="p">)</span>
+                       <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">v</span><span class="p">))))))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((lib._racket/vector..rkt)._vector-map))" style="color: inherit">vector-map</a></span> <span class="n">proc</span> <span class="n">vec</span><span class="p">)</span>
+  <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((lib._racket/private/list..rkt)._build-vector))" style="color: inherit">build-vector</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">vec</span><span class="p">)</span>
+                <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/lambda.html#(form._((lib._racket/private/base..rkt)._~ce~bb))" style="color: inherit">λ</a></span> <span class="p">([</span><span class="n">i</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Experimental_Features.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Refine))" style="color: inherit">Refine</a></span> <span class="p">[</span><span class="n">i</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">]</span>
+                           <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span> <span class="n">i</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">vec</span><span class="p">)))])</span>
+                  <span class="p">(</span><span class="n">proc</span> <span class="p">(</span><span class="n">safe-vector-ref</span> <span class="n">vec</span> <span class="n">i</span><span class="p">)))))</span>
+</pre></div>
+
+</div>
+
+<p>Now <code>vector-map</code>&rsquo;s type indicates that the length of the returned vector is equal to the length of the vector it received as input.</p>
+
+<h2 id="vector-copy"><code>vector-copy</code></h2>
+
+<p><code>vector-copy</code> takes a vector <code>vec</code> and copies its elements in the range [<code>start</code>,<code>end</code>) into a fresh vector:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((lib._racket/vector..rkt)._vector-copy))" style="color: inherit">vector-copy</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector))" style="color: inherit">vector</a></span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">)</span> <span class="mi">1</span> <span class="mi">3</span><span class="p">)</span>
+<span class="o">'#</span><span class="p">(</span><span class="mi">1</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>To precisely type this function, we will use a precondition to assert the range specified by <code>start</code> and <code>end</code> is some sensible (although possibly empty) portion of the input vector <code>vec</code>. A <code>Refine</code> allows us to indicate that the length of the returned vector will always be <code>(- end start)</code>:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((lib._racket/vector..rkt)._vector-copy))" style="color: inherit">vector-copy</a></span>
+   <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.All))" style="color: inherit">All</a></span> <span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="p">([</span><span class="n">vec</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n">A</span><span class="p">)]</span>
+                 <span class="p">[</span><span class="n">start</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">]</span>
+                 <span class="p">[</span><span class="n">end</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">])</span>
+                <span class="kd">#:pre</span> <span class="p">(</span><span class="n">vec</span> <span class="n">start</span> <span class="n">end</span><span class="p">)</span>
+                <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c~3d))" style="color: inherit">&lt;=</a></span> <span class="n">start</span> <span class="n">end</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">vec</span><span class="p">))</span>
+                <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Experimental_Features.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Refine))" style="color: inherit">Refine</a></span> <span class="p">[</span><span class="n">res</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n">A</span><span class="p">)]</span>
+                  <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3d))" style="color: inherit">=</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="n">end</span> <span class="n">start</span><span class="p">)</span>
+                     <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">res</span><span class="p">))))))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((lib._racket/vector..rkt)._vector-copy))" style="color: inherit">vector-copy</a></span> <span class="n">vec</span> <span class="n">start</span> <span class="n">end</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">len</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="n">end</span> <span class="n">start</span><span class="p">))</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._cond))" style="color: inherit">cond</a></span>
+    <span class="p">[(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3d))" style="color: inherit">=</a></span> <span class="mi">0</span> <span class="n">len</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector))" style="color: inherit">vector</a></span><span class="p">)]</span>
+    <span class="p">[</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._else))" style="color: inherit">else</a></span>
+     <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">res</span>
+       <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._make-vector))" style="color: inherit">make-vector</a></span> <span class="n">len</span> <span class="p">(</span><span class="n">safe-vector-ref</span> <span class="n">vec</span> <span class="n">start</span><span class="p">)))</span>
+     <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/let.html#(form._((lib._racket/private/letstx-scheme..rkt)._let))" style="color: inherit">let</a></span> <span class="n">loop!</span> <span class="p">([</span><span class="n">i</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span> <span class="mi">0</span><span class="p">])</span>
+       <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/when_unless.html#(form._((lib._racket/private/letstx-scheme..rkt)._when))" style="color: inherit">when</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span> <span class="n">i</span> <span class="n">len</span><span class="p">)</span>
+         <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">a</span> <span class="p">(</span><span class="n">safe-vector-ref</span> <span class="n">vec</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="n">start</span> <span class="n">i</span><span class="p">)))</span>
+         <span class="p">(</span><span class="n">safe-vector-set!</span> <span class="n">res</span> <span class="n">i</span> <span class="n">a</span><span class="p">)</span>
+         <span class="p">(</span><span class="n">loop!</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="mi">1</span> <span class="n">i</span><span class="p">))))</span>
+     <span class="n">res</span><span class="p">]))</span>
+</pre></div>
+
+</div>
+
+<h2 id="vector-copy"><code>vector-copy!</code></h2>
+
+<p><code>vector-copy!</code> is similar, but instead of returning a fresh vector, the elements in the specified range are copied from a source vector <code>s</code> into a destination vector <code>d</code>:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">s</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector))" style="color: inherit">vector</a></span> <span class="s2">"p"</span> <span class="s2">"e"</span> <span class="s2">"a"</span> <span class="s2">"r"</span><span class="p">))</span>
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">d</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector))" style="color: inherit">vector</a></span> <span class="s2">""</span> <span class="s2">""</span> <span class="s2">""</span> <span class="s2">""</span> <span class="s2">""</span><span class="p">))</span>
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-copy!))" style="color: inherit">vector-copy!</a></span> <span class="n">d</span> <span class="mi">1</span> <span class="n">s</span> <span class="mi">1</span> <span class="mi">4</span><span class="p">)</span>
+<span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="n">d</span>
+<span class="o">'#</span><span class="p">(</span><span class="s2">""</span> <span class="s2">"e"</span> <span class="s2">"a"</span> <span class="s2">"r"</span> <span class="s2">""</span><span class="p">)</span>
+</pre></div>
+
+</div>
+
+<p>Here the precondition is larger because it includes constraints that must hold with respect to both vectors <code>s</code> and <code>d</code>, i.e. the range in the source <code>s</code> [<code>s-start</code>,<code>s-end</code>) must be a valid, and the destination vector <code>d</code> must have a corresponding valid range [<code>d-start</code>,<code>(+ d-start (- s-end s-start))</code>):</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-copy!))" style="color: inherit">vector-copy!</a></span>
+   <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.All))" style="color: inherit">All</a></span> <span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="p">([</span><span class="n">d</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n">A</span><span class="p">)]</span>
+                 <span class="p">[</span><span class="n">d-start</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">]</span>
+                 <span class="p">[</span><span class="n">s</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n">A</span><span class="p">)]</span>
+                 <span class="p">[</span><span class="n">s-start</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">]</span>
+                 <span class="p">[</span><span class="n">s-end</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">])</span>
+                <span class="kd">#:pre</span> <span class="p">(</span><span class="n">d</span> <span class="n">d-start</span> <span class="n">s</span> <span class="n">s-start</span> <span class="n">s-end</span><span class="p">)</span>
+                <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._and))" style="color: inherit">and</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c~3d))" style="color: inherit">&lt;=</a></span> <span class="n">s-start</span> <span class="n">s-end</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">s</span><span class="p">))</span>
+                     <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c~3d))" style="color: inherit">&lt;=</a></span> <span class="n">d-start</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">d</span><span class="p">))</span>
+                     <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c~3d))" style="color: inherit">&lt;=</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="n">s-end</span> <span class="n">s-start</span><span class="p">)</span>
+                         <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">d</span><span class="p">)</span> <span class="n">d-start</span><span class="p">)))</span>
+                <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Void))" style="color: inherit">Void</a></span><span class="p">)))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-copy!))" style="color: inherit">vector-copy!</a></span> <span class="n">d</span> <span class="n">d-start</span> <span class="n">s</span> <span class="n">s-start</span> <span class="n">s-end</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((lib._racket/list..rkt)._count))" style="color: inherit">count</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="n">s-end</span> <span class="n">s-start</span><span class="p">))</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/let.html#(form._((lib._racket/private/letstx-scheme..rkt)._let))" style="color: inherit">let</a></span> <span class="n">loop!</span> <span class="p">([</span><span class="n">i</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span> <span class="mi">0</span><span class="p">])</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/when_unless.html#(form._((lib._racket/private/letstx-scheme..rkt)._when))" style="color: inherit">when</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span> <span class="n">i</span> <span class="nb"><a href="http://docs.racket-lang.org/reference/pairs.html#(def._((lib._racket/list..rkt)._count))" style="color: inherit">count</a></span><span class="p">)</span>
+      <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">a</span> <span class="p">(</span><span class="n">safe-vector-ref</span> <span class="n">s</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="n">s-start</span> <span class="n">i</span><span class="p">)))</span>
+      <span class="p">(</span><span class="n">safe-vector-set!</span> <span class="n">d</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="n">d-start</span> <span class="n">i</span><span class="p">)</span> <span class="n">a</span><span class="p">)</span>
+      <span class="p">(</span><span class="n">loop!</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="mi">1</span> <span class="n">i</span><span class="p">)))))</span>
+</pre></div>
+
+</div>
+
+<h2 id="quicksort">quicksort</h2>
+
+<p>Finally, here is a version of quicksort that has been typed using dependent function types to sort vectors of reals:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">quicksort!</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Real))" style="color: inherit">Real</a></span><span class="p">)</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Void))" style="color: inherit">Void</a></span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">quicksort!</span> <span class="n">A</span><span class="p">)</span>
+  <span class="p">(</span><span class="n">quicksort-helper!</span> <span class="n">A</span> <span class="mi">0</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">A</span><span class="p">)</span> <span class="mi">1</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">quicksort-helper!</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="p">([</span><span class="n">A</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Real))" style="color: inherit">Real</a></span><span class="p">)]</span>
+                   <span class="p">[</span><span class="n">lo</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">]</span>
+                   <span class="p">[</span><span class="n">hi</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Integer))" style="color: inherit">Integer</a></span><span class="p">])</span>
+                  <span class="kd">#:pre</span> <span class="p">(</span><span class="n">A</span> <span class="n">lo</span> <span class="n">hi</span><span class="p">)</span>
+                  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._and))" style="color: inherit">and</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c~3d))" style="color: inherit">&lt;=</a></span> <span class="n">lo</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">A</span><span class="p">))</span>
+                       <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span> <span class="n">hi</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">A</span><span class="p">)))</span>
+                  <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Void))" style="color: inherit">Void</a></span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">quicksort-helper!</span> <span class="n">A</span> <span class="n">lo</span> <span class="n">hi</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/when_unless.html#(form._((lib._racket/private/letstx-scheme..rkt)._when))" style="color: inherit">when</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span> <span class="n">lo</span> <span class="n">hi</span><span class="p">)</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">pivot</span> <span class="p">(</span><span class="n">partition!</span> <span class="n">A</span> <span class="n">lo</span> <span class="n">hi</span><span class="p">))</span>
+    <span class="p">(</span><span class="n">quicksort-helper!</span> <span class="n">A</span> <span class="n">lo</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="n">pivot</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="p">(</span><span class="n">quicksort-helper!</span> <span class="n">A</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="n">pivot</span> <span class="mi">1</span><span class="p">)</span> <span class="n">hi</span><span class="p">)))</span>
+
+
+<span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">swap!</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="p">([</span><span class="n">A</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Real))" style="color: inherit">Real</a></span><span class="p">)]</span>
+              <span class="p">[</span><span class="n">i</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">]</span>
+              <span class="p">[</span><span class="n">j</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">])</span>
+             <span class="kd">#:pre</span> <span class="p">(</span><span class="n">A</span> <span class="n">i</span> <span class="n">j</span><span class="p">)</span>
+             <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._and))" style="color: inherit">and</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span> <span class="n">i</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">A</span><span class="p">))</span>
+                  <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span> <span class="n">j</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">A</span><span class="p">)))</span>
+             <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Void))" style="color: inherit">Void</a></span><span class="p">))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">swap!</span> <span class="n">A</span> <span class="n">i</span> <span class="n">j</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">tmp</span> <span class="p">(</span><span class="n">safe-vector-ref</span> <span class="n">A</span> <span class="n">i</span><span class="p">))</span>
+  <span class="p">(</span><span class="n">safe-vector-set!</span> <span class="n">A</span> <span class="n">i</span> <span class="p">(</span><span class="n">safe-vector-ref</span> <span class="n">A</span> <span class="n">j</span><span class="p">))</span>
+  <span class="p">(</span><span class="n">safe-vector-set!</span> <span class="n">A</span> <span class="n">j</span> <span class="n">tmp</span><span class="p">))</span>
+
+
+
+<span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">partition!</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="p">([</span><span class="n">A</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Real))" style="color: inherit">Real</a></span><span class="p">)]</span>
+                   <span class="p">[</span><span class="n">lo</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">]</span>
+                   <span class="p">[</span><span class="n">hi</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">])</span>
+                  <span class="kd">#:pre</span> <span class="p">(</span><span class="n">A</span> <span class="n">lo</span> <span class="n">hi</span><span class="p">)</span>
+                  <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span> <span class="n">lo</span> <span class="n">hi</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">A</span><span class="p">))</span>
+                  <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Experimental_Features.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Refine))" style="color: inherit">Refine</a></span> <span class="p">[</span><span class="n">pivot</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">]</span>
+                    <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c~3d))" style="color: inherit">&lt;=</a></span> <span class="n">lo</span> <span class="n">pivot</span> <span class="n">hi</span><span class="p">))))</span>
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="p">(</span><span class="n">partition!</span> <span class="n">A</span> <span class="n">lo</span> <span class="n">hi</span><span class="p">)</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/define.html#(form._((lib._racket/private/base..rkt)._define))" style="color: inherit">define</a></span> <span class="n">pivot</span> <span class="p">(</span><span class="n">safe-vector-ref</span> <span class="n">A</span> <span class="n">lo</span><span class="p">))</span>
+  <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/let.html#(form._((lib._racket/private/letstx-scheme..rkt)._let))" style="color: inherit">let</a></span> <span class="n">outer-loop!</span>
+    <span class="p">([</span><span class="n">i</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Experimental_Features.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Refine))" style="color: inherit">Refine</a></span> <span class="p">[</span><span class="n">n</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">]</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span> <span class="n">lo</span> <span class="n">n</span><span class="p">))</span>
+        <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="mi">1</span> <span class="n">lo</span><span class="p">)]</span>
+     <span class="p">[</span><span class="n">j</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Experimental_Features.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Refine))" style="color: inherit">Refine</a></span> <span class="p">[</span><span class="n">n</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">]</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._and))" style="color: inherit">and</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c~3d))" style="color: inherit">&lt;=</a></span> <span class="n">n</span> <span class="n">hi</span><span class="p">)</span>
+                                     <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c~3d))" style="color: inherit">&lt;=</a></span> <span class="n">lo</span> <span class="n">n</span><span class="p">)))</span> <span class="n">hi</span><span class="p">])</span>
+    <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/let.html#(form._((lib._racket/private/letstx-scheme..rkt)._let))" style="color: inherit">let</a></span> <span class="n">i-loop!</span>
+      <span class="p">([</span><span class="n">i</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Experimental_Features.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Refine))" style="color: inherit">Refine</a></span> <span class="p">[</span><span class="n">n</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">]</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span> <span class="n">lo</span> <span class="n">n</span><span class="p">))</span>
+          <span class="n">i</span><span class="p">])</span>
+      <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._cond))" style="color: inherit">cond</a></span>
+        <span class="p">[(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._and))" style="color: inherit">and</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c~3d))" style="color: inherit">&lt;=</a></span> <span class="n">i</span> <span class="n">j</span><span class="p">)</span>
+              <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c))" style="color: inherit">&lt;</a></span> <span class="p">(</span><span class="n">safe-vector-ref</span> <span class="n">A</span> <span class="n">i</span><span class="p">)</span> <span class="n">pivot</span><span class="p">))</span>
+         <span class="p">(</span><span class="n">i-loop!</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._+))" style="color: inherit">+</a></span> <span class="n">i</span> <span class="mi">1</span><span class="p">))]</span>
+        <span class="p">[</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._else))" style="color: inherit">else</a></span>
+         <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/let.html#(form._((lib._racket/private/letstx-scheme..rkt)._let))" style="color: inherit">let</a></span> <span class="n">j-loop!</span>
+           <span class="p">([</span><span class="n">j</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Experimental_Features.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Refine))" style="color: inherit">Refine</a></span> <span class="p">[</span><span class="n">n</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">]</span>
+                   <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._and))" style="color: inherit">and</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c~3d))" style="color: inherit">&lt;=</a></span> <span class="n">n</span> <span class="n">hi</span><span class="p">)</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3c~3d))" style="color: inherit">&lt;=</a></span> <span class="n">lo</span> <span class="n">n</span><span class="p">)))</span> <span class="n">j</span><span class="p">])</span>
+           <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._cond))" style="color: inherit">cond</a></span>
+             <span class="p">[(</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._and))" style="color: inherit">and</a></span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e~3d))" style="color: inherit">&gt;=</a></span> <span class="p">(</span><span class="n">safe-vector-ref</span> <span class="n">A</span> <span class="n">j</span><span class="p">)</span> <span class="n">pivot</span><span class="p">)</span>
+                   <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e~3d))" style="color: inherit">&gt;=</a></span> <span class="n">j</span> <span class="n">i</span><span class="p">))</span>
+              <span class="p">(</span><span class="n">j-loop!</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._-))" style="color: inherit">-</a></span> <span class="n">j</span> <span class="mi">1</span><span class="p">))]</span>
+             <span class="p">[(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3e))" style="color: inherit">&gt;</a></span> <span class="n">i</span> <span class="n">j</span><span class="p">)</span> <span class="p">(</span><span class="n">swap!</span> <span class="n">A</span> <span class="n">lo</span> <span class="n">j</span><span class="p">)</span>
+                      <span class="n">j</span><span class="p">]</span>
+             <span class="p">[</span><span class="k"><a href="http://docs.racket-lang.org/reference/if.html#(form._((lib._racket/private/letstx-scheme..rkt)._else))" style="color: inherit">else</a></span>
+              <span class="p">(</span><span class="n">swap!</span> <span class="n">A</span> <span class="n">i</span> <span class="n">j</span><span class="p">)</span>
+              <span class="p">(</span><span class="n">outer-loop!</span> <span class="n">i</span> <span class="n">j</span><span class="p">)]))]))))</span>
+</pre></div>
+
+</div>
+
+<h1 id="typeduntyped-interaction">Typed/Untyped interaction</h1>
+
+<p>Typed Racket will generate dependent function contracts (e.g. <a href="https://docs.racket-lang.org/reference/function-contracts.html?q=-%3Ei#%28form._%28%28lib._racket%2Fcontract%2Fbase..rkt%29._-~3ei%29%29">-&gt;i</a> contracts) to protect dependent functions when they are used in untyped modules:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="kn">#lang </span><span class="nn">racket/base</span>
+
+<span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="s2">"safe-vector-ops.rkt"</span><span class="p">)</span>
+
+<span class="p">(</span><span class="n">safe-vector-ref</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector))" style="color: inherit">vector</a></span> <span class="mi">0</span> <span class="mi">1</span><span class="p">)</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="c1">;; produces:</span>
+<span class="c1">;;</span>
+<span class="c1">;; safe-vector-ref: contract violation</span>
+<span class="c1">;;  #:pre condition violation; ...</span>
+</pre></div>
+
+</div>
+
+<p>As always, care should be taken when designing APIs that involve contract boundaries which may be frequently crossed by performance sensitive code since each boundary crossing will involve runtime checks for the respective types.</p>
+
+<h1 id="final-notes">Final Notes</h1>
+
+<h2 id="linear-integer-arithmetic">Linear integer arithmetic</h2>
+
+<p>Typed Racket today only reasons about linear integer constraints, i.e. arithmetic constraints expressible with <code>&lt;=</code>, <code>and</code>, and <code>or</code> over <a href="https://en.wikipedia.org/wiki/Linear_combination">linear combinations</a> of select program terms. If the specification you wish to encode in types requires non-linear arithmetic, Typed Racket will not be able to verify those constraints.</p>
+
+<h2 id="dependent-function-type-limitations">Dependent function type limitations</h2>
+
+<p>Dependent function types currently only support mandatory positional arguments. In the future we plan to add optional, rest, and keyword argument support.</p>
+
+<p>Currently functions with dependencies between arguments and/or preconditions cannot be used within a <code>case-&gt;</code> form.</p>
+
+<p>There is not yet support for dependent struct types.</p>
+
+<h2 id="type-checking-the-above-examples-in-racket-v611">Type checking the above examples in Racket v6.11</h2>
+
+<p><a name="makevectortype"></a></p>
+
+<p>To type check the examples in this post on Racket v6.11, the following snippet must be added to the module:</p>
+
+<div class="brush: racket">
+ <div class="pygments">
+  <pre><span></span><span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/require.html#(form._((lib._racket/private/base..rkt)._require))" style="color: inherit">require</a></span> <span class="n">typed/racket/unsafe</span><span class="p">)</span>
+
+<span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Unsafe_Typed_Racket_operations.html#(form._((lib._typed/racket/unsafe..rkt)._unsafe-require/typed/provide))" style="color: inherit">unsafe-require/typed/provide</a></span>
+ <span class="n">typed/racket/base</span>
+ <span class="p">[</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._make-vector))" style="color: inherit">make-vector</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.All))" style="color: inherit">All</a></span> <span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="p">(</span><span class="k"><a href="http://docs.racket-lang.org/reference/function-contracts.html#(form._((lib._racket/contract/base..rkt)._-~3e))" style="color: inherit">-&gt;</a></span> <span class="p">([</span><span class="n">n</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Natural))" style="color: inherit">Natural</a></span><span class="p">]</span>
+                            <span class="p">[</span><span class="n">val</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="n">A</span><span class="p">])</span>
+                           <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/Experimental_Features.html#(form._((lib._typed-racket/base-env/base-types-extra..rkt)._.Refine))" style="color: inherit">Refine</a></span> <span class="p">[</span><span class="n">v</span> <span class="n"><a href="http://docs.racket-lang.org/ts-reference/special-forms.html#(form._((lib._typed-racket/base-env/prims..rkt)._~3a))" style="color: inherit">:</a></span> <span class="p">(</span><span class="n"><a href="http://docs.racket-lang.org/ts-reference/type-ref.html#(form._((lib._typed-racket/base-env/base-types..rkt)._.Vectorof))" style="color: inherit">Vectorof</a></span> <span class="n">A</span><span class="p">)]</span>
+                             <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/generic-numbers.html#(def._((quote._~23~25kernel)._~3d))" style="color: inherit">=</a></span> <span class="n">n</span> <span class="p">(</span><span class="nb"><a href="http://docs.racket-lang.org/reference/vectors.html#(def._((quote._~23~25kernel)._vector-length))" style="color: inherit">vector-length</a></span> <span class="n">v</span><span class="p">)))))])</span>
+</pre></div>
+
+</div>
+
+<p>This axiomatizes a more specific type for <code>make-vector</code>. Any snapshot builds of Racket from November 10 2017 or later will not require this snippet.</p>
+
+<h2 id="bugs">Bugs</h2>
+
+<p>If you have found a bug or have an idea for how these features might be more useful, feel free to open an issue on Typed Racket&rsquo;s <a href="https://github.com/racket/typed-racket/issues">github repo</a>.</p>
+<col-2>
+
+</row>
+
+<footer>
+<row>
+<col-1>
+</col-1>
+<col-2>
+<h2><span class="label">next</span> <a class="next" href="/2018/01/racket-on-chez-status.html">Racket-on-Chez Status: January 2018</a></h2>
+
+<h2><span class="label">prev</span> <a class="previous" href="/2017/10/racket-v6-11.html">Racket v6.11</a></h2>
+
+</col-2>
+</row>
+</footer>
+
+</article>
+
+<row class="one-column" id="bottom"><col-1></col-1><col-2>
+<p>Made with <a href="https://github.com/greghendershott/frog">Frog</a>, a static-blog generator written in Racket.
+<br /><a href="https://github.com/racket/racket-lang-org">Source code</a> for this blog.</col-2></row>
+  </body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if IE 9]>    <html class="no-js ie9" lang="en"> <![endif]-->
+<!--[if gt IE 9]><!--> <html class="no-js" lang="en" itemscope itemtype="http://schema.org/Product"> <!--<![endif]-->
+<html>
+<head>
+<title>Racket: Thanks!</title>
+<meta name="generator" content="Racket" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<link rel="icon" href="/plticon-1-2.ico" type="image/ico" />
+<link rel="shortcut icon" href="/plticon-1-2.ico" type="image/x-icon" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<link rel="stylesheet" href="/gumby-1-2.css" />
+<script src="/modernizr-2.6.2.min.js"></script>
+<script>
+//<![CDATA[
+var bugform = null;
+var browser_platform = "";
+var params  = new Array();
+var cookies = new Array();
+
+function initBugData() {
+  bugform = document.getElementById("BugForm");
+  if (navigator.platform && navigator.platform != "")
+    browser_platform = navigator.platform;
+  if (navigator.cpuClass && navigator.cpuClass != "")
+    browser_platform += " / " + navigator.cpuClass;
+  if (navigator.userAgent && navigator.userAgent != "")
+    browser_platform += " / " + navigator.userAgent;
+  if (location.search.length > 0) {
+    var paramstrs = location.search.substring(1).split(/[;&]/);
+    for (var i in paramstrs) {
+      var param = paramstrs[i].split(/=/);
+      if (param.length == 2)
+        params[param[0]] = unescape(param[1]).replace(/\+/g," ");
+    }
+  }
+  if (document.cookie.length > 0) {
+    var cookiestrs = document.cookie.split(/; */);
+    for (var i in cookiestrs) {
+      var eql = cookiestrs[i].indexOf('=');
+      if (eql >= 0)
+        cookies[cookiestrs[i].substring(0,eql)] =
+          unescape(cookiestrs[i].substring(eql+1));
+    }
+  }
+  if (params["v"]) bugform.version.value = params["v"];
+  DoUserFields(RestoreUserField);
+  if (bugform.platform.value == "") {
+    if (bugform.platform_options.selectedIndex == 0) UpdatePlatformUser();
+    else UpdatePlatformOptions();
+  }
+  if (bugform.email.value == "")     bugform.email.focus();
+  else if (bugform.name.value == "") bugform.name.focus();
+  else                               bugform.subject.focus();
+}
+
+function SaveUserField(field, name) {
+  if (field.value != "") {
+    var d = new Date();
+    d.setTime(d.getTime()+(365*24*60*60*1000));
+    document.cookie = name + "=" + escape(field.value)
+                    + "; expires="+ d.toGMTString()
+                    + "; path=/";
+  }
+}
+function RestoreUserField(field, name) {
+  if (field.value == "" && cookies[name]) field.value = cookies[name];
+}
+function DoUserFields(op) {
+  op(bugform.email, "email");
+  op(bugform.name, "name");
+  op(bugform.version, "version");
+  op(bugform.platform, "platform");
+  op(bugform.platform_user, "platform_user");
+  op(bugform.platform_options, "platform_options");
+}
+
+function CheckSubmit() {
+  DoUserFields(SaveUserField);
+  if (bugform.email.value == "") {
+    window.alert("Please enter an Email");
+    return false;
+  }
+  if (bugform.subject.value == "" && bugform.description.value == "") {
+    window.alert("Please enter a summary and/or a description"
+                 + " of your bug");
+    return false;
+  }
+  if (bugform.version.value == "") {
+    window.alert("Please enter your Racket version");
+    return false;
+  }
+  return true;
+}
+
+var old_platform_user = null;
+function UpdatePlatformUser() {
+  var newval = bugform.platform_user.value;
+  if (old_platform_user != newval) {
+    if (newval == "" && old_platform_user != browser_platform) {
+      newval = browser_platform;
+      bugform.platform_user.value = browser_platform;
+      bugform.platform_user.select();
+    }
+    bugform.platform.value = newval;
+    bugform.platform_options.selectedIndex = 0;
+    bugform.platform_user.focus();
+    old_platform_user = newval;
+  }
+}
+
+function UpdatePlatformOptions() {
+  var d = new Date();
+  var opts = bugform.platform_options;
+  var newval = opts.options[opts.selectedIndex].value;
+  if (newval == "") {
+    bugform.platform.value = browser_platform;
+    bugform.platform_user.value = old_platform_user = browser_platform;
+  } else {
+    bugform.platform.value = newval;
+    bugform.platform_user.value = old_platform_user = "...or type";
+  }
+  bugform.platform_user.select();
+  opts.focus();
+}
+//]]>
+</script>
+</head>
+<body><div class="navbar gumby-content" style="position: fixed;" gumby-fixed="top" id="nav1"><div class="row"><a class="toggle" gumby-trigger="#nav1 &gt; .row &gt; ul" href="#"><i class="icon-menu"></i></a>
+<a class="four columns logo" href="https://racket-lang.org/"><img class="logo" src="/logo-and-text-1-2.png" width="198" height="60" alt="Racket" /></a>
+<span class="one colums"></span> <ul class="five columns">
+
+
+</ul></div></div><div style="height: 60px;"></div>
+<div class="bodycontent"><p><strong>Thanks!</strong></p>
+<p>Your Racket bug report has been submitted.</p>
+<p>You should receive an email confirming your report in a few minutes.
+The confirmation will be sent to the email address you specified in
+your report.</p>
+<p>If you do not receive such confirmation, please report the problem to
+<tt><small>racket@racket-lang.org</small></tt>
+or to the Racket
+<a href="http://lists.racket-lang.org/users/">mailing list</a>.</p></div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+//<![CDATA[
+window.jQuery || document.write('<script src=/jquery-1.9.1.min.js><\/script>')
+//]]>
+</script>
+<script src="/gumby.min.js"></script>
+<script src="/plugins.js"></script>
+<script src="/main.js"></script>
+</body></html>
